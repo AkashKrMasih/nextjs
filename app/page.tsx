@@ -1,5 +1,18 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import { Source_Serif_4, Inter } from 'next/font/google';
+
+const serif = Source_Serif_4({
+  subsets: ['latin'],
+  weight: ['400', '600'],
+  variable: '--font-serif',
+});
+
+const sans = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-sans',
+});
 
 export default async function Home() {
   const posts = await prisma.post.findMany({
@@ -7,22 +20,46 @@ export default async function Home() {
   });
 
   return (
-    <main className="max-w-2xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">My Blog</h1>
-      <Link href="/new" className="text-blue-600 underline mb-4 block">
-        + New Post
-      </Link>
-      <div className="space-y-4">
-        {posts.map((post) => (
-          <div key={post.id} className="border rounded p-4">
-            <Link href={`/posts/${post.id}`}>
-              <h2 className="text-xl font-semibold">{post.title}</h2>
-            </Link>
-            <p className="text-gray-600 text-sm">
-              {post.createdAt.toDateString()}
-            </p>
+    <main
+      className={`${serif.variable} ${sans.variable} min-h-screen bg-[#FAF8F3] text-[#1E1B16]`}
+    >
+      <div className="max-w-2xl mx-auto px-6 py-16">
+        <header className="flex items-baseline justify-between border-b border-[#D8D2C4] pb-6 mb-10">
+          <h1 className="font-[family-name:var(--font-serif)] text-2xl tracking-tight">
+            My Blog
+          </h1>
+          <Link
+            href="/new"
+            className="font-[family-name:var(--font-sans)] text-sm text-[#55624A] hover:text-[#1E1B16] transition-colors"
+          >
+            new entry
+          </Link>
+        </header>
+
+        {posts.length === 0 ? (
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[#8A8375]">
+            Nothing here yet. Write your first entry.
+          </p>
+        ) : (
+          <div>
+            {posts.map((post, i) => (
+              <Link key={post.id} href={`/posts/${post.id}`} className="group block">
+                <article
+                  className={`py-6 ${i !== 0 ? 'border-t border-[#D8D2C4]' : ''}`}
+                >
+                  <div className="flex items-baseline justify-between gap-4">
+                    <h2 className="font-[family-name:var(--font-serif)] text-xl leading-snug group-hover:text-[#55624A] transition-colors">
+                      {post.title}
+                    </h2>
+                    <time className="font-[family-name:var(--font-sans)] text-xs text-[#8A8375] whitespace-nowrap shrink-0">
+                      {post.createdAt.toDateString()}
+                    </time>
+                  </div>
+                </article>
+              </Link>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </main>
   );
