@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { ProductDetail } from '@/app/components/ProductDetail';
+import "../../../src/styles/index.css";
 
 export default async function ProductPage({
                                             params,
