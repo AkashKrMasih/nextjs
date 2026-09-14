@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { UserRound } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function AdminUsersPage() {
   const users = await prisma.user.findMany({
@@ -77,20 +78,12 @@ export default async function AdminUsersPage() {
                     })}
                   </td>
                   <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/60"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-md border border-destructive/30 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <Link
+                      href={`/admin/users/${user.id}`}
+                      className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/60"
+                    >
+                      Edit / Delete
+                    </Link>
                   </td>
                 </tr>
               ))}
