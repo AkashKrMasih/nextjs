@@ -39,8 +39,11 @@ export default async function AdminUsersPage() {
                 <th className="border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
                   Email
                 </th>
-                <th className="w-44 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                <th className="w-44 border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
                   Joined
+                </th>
+                <th className="w-40 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                  Actions
                 </th>
               </tr>
               </thead>
@@ -66,12 +69,28 @@ export default async function AdminUsersPage() {
                   <td className="border-r border-border/60 px-3 py-2 text-foreground">
                     {user.email}
                   </td>
-                  <td className="px-3 py-2 text-muted-foreground">
+                  <td className="border-r border-border/60 px-3 py-2 text-muted-foreground">
                     {user.createdAt.toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
                     })}
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/60"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-md border border-destructive/30 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
