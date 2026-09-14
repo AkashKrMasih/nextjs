@@ -1,22 +1,21 @@
-// app/signup/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useActionState } from 'react';
 import { signup } from '@/app/actions/user';
 
 export default function SignupPage() {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [pending, setPending] = useState(false);
+  const [state, formAction, pending] = useActionState(signup, undefined);
 
   function validateEmail(value: string) {
-    if (value.length === 0) return '';
+    if (value.length === 0) return 'Email is required';
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     return valid ? '' : 'Enter a valid email address';
   }
 
   function validatePassword(value: string) {
-    if (value.length === 0) return '';
+    if (value.length === 0) return 'Password is required';
     return value.length >= 8 ? '' : 'Password must be at least 8 characters';
   }
 
@@ -33,6 +32,22 @@ export default function SignupPage() {
     setTimeout(() => ripple.remove(), 500);
   }
 
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const form = e.currentTarget;
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+
+    const emailErr = validateEmail(email);
+    const passwordErr = validatePassword(password);
+
+    setEmailError(emailErr);
+    setPasswordError(passwordErr);
+
+    if (emailErr || passwordErr) {
+      e.preventDefault(); // stops the server action from firing
+    }
+  }
+
   return (
     <div className="page">
       <div className="card">
@@ -47,11 +62,7 @@ export default function SignupPage() {
           Sign up to start saving your work and picking up where you left off.
         </p>
 
-        <form
-          action={signup}
-          onSubmit={() => setPending(true)}
-          noValidate
-        >
+        <form action={formAction} onSubmit={handleSubmit} noValidate>
           <div className="field">
             <input
               type="email"
@@ -86,6 +97,8 @@ export default function SignupPage() {
           <p className={`supporting-text ${passwordError ? 'error' : ''}`}>
             {passwordError || 'Use 8 or more characters'}
           </p>
+
+          {state?.error && <p className="supporting-text error">{state.error}</p>}
 
           <button type="submit" onClick={handleRipple} disabled={pending}>
             {pending ? 'Creating account…' : 'Create account'}
