@@ -2,7 +2,7 @@
 
 import { createUser, getUserByEmail, verifyPassword } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
+import { createSession, destroySession } from '@/lib/session'
 
 // Shape returned to useActionState/useFormState on the client.
 export type AuthState = {
@@ -22,7 +22,11 @@ export async function signup(
 
   try {
     const user = await createUser(email, password)
-    await createSession(user.id)
+    await createSession({
+      userId: user.id,
+      email: user.email,
+      name: user.name, // TODO: signup doesn't collect a name yet — add a `name` field to the form if you want this populated
+    })
   } catch (err) {
     return { error: 'Could not create account. Try a different email.' }
   }
@@ -52,17 +56,15 @@ export async function login(
     return { error: 'Invalid email or password' }
   }
 
-  await createSession(user.id)
+  await createSession({
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+  })
   redirect('/dashboard')
 }
 
-// Minimal session cookie helper. Swap for your real session/JWT logic.
-async function createSession(userId: string) {
-  const cookieStore = await cookies()
-  cookieStore.set('session', userId, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-  })
+export async function logout() {
+  await destroySession()
+  redirect('/login')
 }
