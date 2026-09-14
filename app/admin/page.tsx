@@ -33,61 +33,94 @@ export default async function AdminProductsPage() {
           <p className="text-sm text-muted-foreground">No products yet. Add your first one to get started.</p>
         </div>
       ) : (
-        <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {products.map((product) => {
-            const inStock = product.stock > 0;
-            return (
-              <div
-                key={product.id}
-                className="group overflow-hidden rounded-[20px] border border-border bg-card transition-all hover:shadow-md"
-              >
-                <div className="relative aspect-square overflow-hidden bg-muted">
-                  {product.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                      No image
-                    </div>
-                  )}
-                  <span
-                    className={[
-                      'absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-medium',
-                      inStock ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700',
-                    ].join(' ')}
+        <div className="mt-10 overflow-hidden rounded-lg border border-border">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="w-16 border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                  #
+                </th>
+                <th className="w-16 border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                  Image
+                </th>
+                <th className="border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                  Name
+                </th>
+                <th className="w-32 border-r border-border/60 px-3 py-2.5 text-right font-medium text-muted-foreground">
+                  Price
+                </th>
+                <th className="w-36 border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                  Stock
+                </th>
+                <th className="w-28 px-3 py-2.5 text-center font-medium text-muted-foreground">
+                  Actions
+                </th>
+              </tr>
+              </thead>
+              <tbody>
+              {products.map((product, i) => {
+                const inStock = product.stock > 0;
+                return (
+                  <tr
+                    key={product.id}
+                    className="border-b border-border/60 last:border-b-0 even:bg-muted/20 hover:bg-muted/40"
                   >
-                    {inStock ? `${product.stock} in stock` : 'Out of stock'}
-                  </span>
-                </div>
-
-                <div className="space-y-1 p-4">
-                  <p className="line-clamp-2 text-sm font-medium leading-tight text-foreground">
-                    {product.name}
-                  </p>
-                  <p className="text-sm text-foreground">{formatPrice(product.price)}</p>
-
-                  <div className="flex gap-2 pt-3">
-                    <button
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-                    >
-                      <Pencil className="size-3.5" />
-                      Edit
-                    </button>
-                    <button
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-red-200 px-3 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
-                    >
-                      <Trash2 className="size-3.5" />
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                    <td className="border-r border-border/60 px-3 py-2 text-muted-foreground">
+                      {i + 1}
+                    </td>
+                    <td className="border-r border-border/60 px-3 py-2">
+                      <div className="flex size-9 items-center justify-center overflow-hidden rounded bg-muted">
+                        {product.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[9px] text-muted-foreground">None</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="border-r border-border/60 px-3 py-2 text-foreground">
+                      {product.name}
+                    </td>
+                    <td className="border-r border-border/60 px-3 py-2 text-right tabular-nums text-foreground">
+                      {formatPrice(product.price)}
+                    </td>
+                    <td className="border-r border-border/60 px-3 py-2">
+                        <span
+                          className={[
+                            'inline-flex items-center rounded px-2 py-0.5 text-xs font-medium',
+                            inStock ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700',
+                          ].join(' ')}
+                        >
+                          {inStock ? `${product.stock} in stock` : 'Out of stock'}
+                        </span>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          aria-label="Edit product"
+                          className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                          <Pencil className="size-3.5" />
+                        </button>
+                        <button
+                          aria-label="Delete product"
+                          className="rounded p-1.5 text-red-600 transition-colors hover:bg-red-50"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </main>
