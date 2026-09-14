@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 import { formatPrice } from '@/lib/money';
+import { DeleteProductButton } from './delete-product-button';
 
 export default async function AdminProductsPage() {
   const products = await prisma.product.findMany({
@@ -101,18 +102,14 @@ export default async function AdminProductsPage() {
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center justify-center gap-1">
-                        <button
+                        <Link
+                          href={`/admin/products/${product.id}/edit`}
                           aria-label="Edit product"
                           className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                           <Pencil className="size-3.5" />
-                        </button>
-                        <button
-                          aria-label="Delete product"
-                          className="rounded p-1.5 text-red-600 transition-colors hover:bg-red-50"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
+                        </Link>
+                        <DeleteProductButton id={product.id} name={product.name} />
                       </div>
                     </td>
                   </tr>
