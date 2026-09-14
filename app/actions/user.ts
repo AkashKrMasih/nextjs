@@ -1,7 +1,6 @@
 'use server'
 
-import { createUser, getUserByEmail } from '@/lib/auth'
-import bcrypt from 'bcryptjs'
+import { createUser, getUserByEmail, verifyPassword } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 
@@ -47,7 +46,7 @@ export async function login(
     return { error: 'Invalid email or password' }
   }
 
-  const isValid = await bcrypt.compare(password, user.password)
+  const isValid = await verifyPassword(password, user)
 
   if (!isValid) {
     return { error: 'Invalid email or password' }
