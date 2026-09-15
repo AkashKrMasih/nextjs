@@ -21,6 +21,9 @@ model Product {
   imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  reviews     Review[]
+  avgRating   Float    @default(0)
+  reviewCount Int      @default(0)
 }
 
 enum Role {
@@ -37,4 +40,52 @@ model User {
   role          Role     @default(CUSTOMER)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  reviews       Review[]
+}
+
+model Review {
+  id String @id @default(cuid())
+
+  rating  Int // 1-5, enforce in app layer + optional DB check
+  title   String?
+  comment String? @db.Text
+
+  // Verified purchase badge
+  isVerifiedPurchase Boolean @default(false)
+
+  // Moderation
+  status ReviewStatus @default(PENDING)
+
+  // Helpful votes
+  helpfulCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  images ReviewImage[]
+
+  @@unique([productId, userId]) // one review per user per product
+  @@index([productId])
+  @@index([userId])
+  @@index([status])
+}
+
+model ReviewImage {
+  id       String @id @default(cuid())
+  url      String
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
