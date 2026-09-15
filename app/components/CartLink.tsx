@@ -8,7 +8,7 @@ export function CartLink() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const sync = () => setCount(cartCount());
+    const sync = async () => setCount(await cartCount());
     sync();
     window.addEventListener(CART_EVENT, sync);
     window.addEventListener('storage', sync);
