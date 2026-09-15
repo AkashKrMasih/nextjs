@@ -1,6 +1,13 @@
+// lib/session.ts
 import 'server-only';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+
+if (!process.env.JWT_SECRET) {
+  throw new Error(
+    'JWT_SECRET is not set. Add it to your .env.local file (e.g. JWT_SECRET=<a long random string>) and restart the dev server.'
+  );
+}
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 const COOKIE_NAME = 'session';
@@ -10,6 +17,7 @@ export type SessionPayload = {
   userId: number;
   email: string;
   name: string;
+  role: string;
 };
 
 /**
@@ -17,10 +25,10 @@ export type SessionPayload = {
  */
 export async function createSession(payload: SessionPayload) {
   const token = await new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime(`${MAX_AGE_SECONDS}s`)
-    .sign(secret);
+  .setProtectedHeader({ alg: 'HS256' })
+  .setIssuedAt()
+  .setExpirationTime(`${MAX_AGE_SECONDS}s`)
+  .sign(secret);
 
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
