@@ -17,7 +17,7 @@ export async function SiteHeader() {
           <Link href="/" className="hover:text-[#1E1B16]">
             Catalog
           </Link>
-          <Link href="/products/new" className="hover:text-[#1E1B16]">
+          <Link href="/admin/products/new" className="hover:text-[#1E1B16]">
             Add product
           </Link>
           <CartLink />
