@@ -1,7 +1,20 @@
+// lib/auth.ts
+
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { createSession, destroySession } from '@/lib/session'
+import { getSession, createSession, destroySession } from '@/lib/session'
 
+export async function auth() {
+  const session = await getSession()
+  if (!session) return null
+
+  return {
+    userId: session.userId,
+    email: session.email,
+    name: session.name,
+    role: session.role,
+  }
+}
 export async function createUser(email: string, plainPassword: string) {
   const saltRounds = 10
   const passwordSalt = await bcrypt.genSalt(saltRounds)
