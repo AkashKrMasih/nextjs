@@ -6,8 +6,7 @@ import { login } from '@/app/users/actions';
 
 export default function LoginPage() {
   const [emailError, setEmailError] = useState('');
-  const [pending, setPending] = useState(false);
-  const [state, formAction] = useActionState(login, undefined)
+  const [state, formAction, pending] = useActionState(login, undefined)
 
   function validateEmail(value: string) {
     if (value.length === 0) return '';
@@ -40,7 +39,7 @@ export default function LoginPage() {
         <h1>Welcome back</h1>
         <p className="subtitle">Log in to pick up right where you left off.</p>
 
-        <form action={formAction} onSubmit={() => setPending(true)} noValidate>
+        <form action={formAction} noValidate>
           <div className="field">
             <input
               type="email"
@@ -72,6 +71,8 @@ export default function LoginPage() {
           <div className="forgot-row">
             <a href="/forgot-password">Forgot password?</a>
           </div>
+
+          {state?.error && <p className="form-error">{state.error}</p>}
 
           <button type="submit" onClick={handleRipple} disabled={pending}>
             {pending ? 'Logging in…' : 'Log in'}

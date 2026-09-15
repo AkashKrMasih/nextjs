@@ -63,7 +63,7 @@ export async function login(
     email: user.email,
     name: user.name,
   })
-  redirect('/dashboard')
+  redirect('/')
 }
 
 export async function logout() {
