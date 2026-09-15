@@ -1,7 +1,6 @@
 import 'server-only';
-import { prisma } from '@/lib/prisma'; // your existing Prisma client singleton
+import { prisma } from '@/lib/prisma'; // existing Prisma client singleton
 import { getOrCreateGuestSessionId, getGuestSessionId } from '@/lib/cart_session';
-// Swap this for whatever your auth lib exposes (Clerk, Lucia, etc.)
 import { auth } from '@/lib/auth';
 
 export type CartItemDTO = {
