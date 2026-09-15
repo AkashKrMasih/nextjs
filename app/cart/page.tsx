@@ -16,8 +16,8 @@ export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [ready, setReady] = useState(false);
 
-  function refresh() {
-    setItems(readCart());
+  async function refresh() {
+    setItems(await readCart());
   }
 
   useEffect(() => {
