@@ -17,13 +17,16 @@ export async function SiteHeader() {
           <Link href="/" className="hover:text-[#1E1B16]">
             Catalog
           </Link>
-          <Link href="/admin/products/new" className="hover:text-[#1E1B16]">
-            Add product
-          </Link>
           <CartLink />
 
           {session ? (
+            <>
+              <Link href="/admin/products/new" className="hover:text-[#1E1B16]">
+                Add product
+              </Link>
+
             <div className="group relative">
+
               <button
                 type="button"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EFE9DC] text-[#55624A] transition-colors hover:bg-[#E3DCC9] hover:text-[#1E1B16]"
@@ -80,6 +83,7 @@ export async function SiteHeader() {
                 </div>
               </div>
             </div>
+            </>
           ) : (
             <Link href="/login" className="hover:text-[#1E1B16]">
               Log in
