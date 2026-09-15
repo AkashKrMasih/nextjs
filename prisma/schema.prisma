@@ -89,3 +89,35 @@ enum ReviewStatus {
   APPROVED
   REJECTED
 }
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    Int? // set once a guest logs in / for logged-in users
+  sessionId String? // set for guest carts (httpOnly cookie value)
+  status    CartStatus @default(ACTIVE)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([sessionId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  name      String
+  price     Decimal  @db.Decimal(10, 2) // snapshot at add-time; re-validate against product price at checkout
+  quantity  Int
+  createdAt DateTime @default(now())
+
+  @@unique([cartId, productId])
+}
+
+enum CartStatus {
+  ACTIVE
+  CONVERTED // turned into an Order at checkout
+  ABANDONED // optional: set by a cleanup job after N days of inactivity
+}

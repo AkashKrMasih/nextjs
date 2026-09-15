@@ -6,7 +6,6 @@ export type CartItem = {
 };
 
 export const CART_EVENT = 'shop-cart-changed';
-const KEY = 'shop-cart';
 
 function emit() {
   if (typeof window !== 'undefined') {
@@ -14,61 +13,72 @@ function emit() {
   }
 }
 
-export function readCart(): CartItem[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as CartItem[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
+async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    ...init,
+    headers: {'Content-Type': 'application/json', ...init?.headers},
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Cart request failed (${res.status})`);
   }
+  return res.json();
 }
 
-export function writeCart(items: CartItem[]) {
-  localStorage.setItem(KEY, JSON.stringify(items));
+export async function readCart(): Promise<CartItem[]> {
+  const {items} = await api<{ items: CartItem[] }>('/api/cart');
+  return items;
+}
+
+export async function addToCart(
+  item: Omit<CartItem, 'quantity'>,
+  quantity = 1
+): Promise<CartItem[]> {
+  const {items} = await api<{ items: CartItem[] }>('/api/cart', {
+    method: 'POST',
+    body:   JSON.stringify({...item, quantity}),
+  });
   emit();
+  return items;
 }
 
-export function addToCart(item: Omit<CartItem, 'quantity'>, quantity = 1) {
-  const items = readCart();
-  const existing = items.find((entry) => entry.id === item.id);
-  if (existing) {
-    existing.quantity += quantity;
-  } else {
-    items.push({ ...item, quantity });
-  }
-  writeCart(items);
+export async function updateQuantity(id: number, quantity: number): Promise<CartItem[]> {
+  const {items} = await api<{ items: CartItem[] }>('/api/cart', {
+    method: 'PATCH',
+    body:   JSON.stringify({id, quantity}),
+  });
+  emit();
+  return items;
 }
 
-export function updateQuantity(id: number, quantity: number) {
-  if (quantity < 1) {
-    removeFromCart(id);
-    return;
-  }
-  writeCart(
-    readCart().map((entry) =>
-      entry.id === id ? { ...entry, quantity } : entry
-    )
-  );
+export async function removeFromCart(id: number): Promise<CartItem[]> {
+  const {items} = await api<{ items: CartItem[] }>(`/api/cart?id=${id}`, {
+    method: 'DELETE',
+  });
+  emit();
+  return items;
 }
 
-export function removeFromCart(id: number) {
-  writeCart(readCart().filter((entry) => entry.id !== id));
+export async function clearCart(): Promise<CartItem[]> {
+  const {items} = await api<{ items: CartItem[] }>('/api/cart', {method: 'DELETE'});
+  emit();
+  return items;
 }
 
-export function clearCart() {
-  writeCart([]);
+export async function cartCount(): Promise<number> {
+  const items = await readCart();
+  return items.reduce((sum, item) => sum + item.quantity, 0);
 }
 
-export function cartCount() {
-  return readCart().reduce((sum, item) => sum + item.quantity, 0);
+export async function cartTotal(): Promise<number> {
+  const items = await readCart();
+  return items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 }
 
-export function cartTotal() {
-  return readCart().reduce(
-    (sum, item) => sum + Number(item.price) * item.quantity,
-    0
-  );
+// Call once, right after a successful login (e.g. in your NextAuth
+// signIn callback or a post-login effect), to fold the guest cart in.
+export async function mergeGuestCartOnLogin(): Promise<CartItem[]> {
+  const {items} = await api<{ items: CartItem[] }>('/api/cart/merge', {method: 'POST'});
+  emit();
+  return items;
 }
