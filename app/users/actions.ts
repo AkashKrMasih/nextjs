@@ -33,7 +33,7 @@ export async function signup(
     return { error: 'Could not create account. Try a different email.' }
   }
 
-  redirect('/dashboard')
+  redirect('/')
 }
 
 export async function login(
@@ -47,22 +47,33 @@ export async function login(
     return { error: 'Email and password are required' }
   }
 
-  const user = await getUserByEmail(email)
-  if (!user) {
-    return { error: 'Invalid email or password' }
+  try {
+    const user = await getUserByEmail(email)
+    if (!user) {
+      return { error: 'Invalid email or password' }
+    }
+
+    const isValid = await verifyPassword(password, user)
+
+    if (!isValid) {
+      return { error: 'Invalid email or password' }
+    }
+
+    await createSession({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role
+    })
+  } catch (err) {
+    // Log the real error server-side so it shows up in your terminal/logs.
+    // Without this, any throw from getUserByEmail/verifyPassword/createSession
+    // was an unhandled server action error — no state.error was ever set,
+    // which is why the form appeared to do nothing.
+    console.error('Login failed:', err)
+    return { error: 'Something went wrong. Please try again.' }
   }
 
-  const isValid = await verifyPassword(password, user)
-
-  if (!isValid) {
-    return { error: 'Invalid email or password' }
-  }
-
-  await createSession({
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-  })
   redirect('/')
 }
 
