@@ -22,13 +22,22 @@ Create a `.env` file in the project root:
 cp .env.example .env
 ```
 
-At minimum, set your database connection string:
+At minimum, set your database connection string and a JWT secret:
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/DATABASE_NAME"
+JWT_SECRET="your-generated-secret-here"
 ```
 
 > The `DATABASE_URL` format depends on your database provider. See the [Prisma connection URL reference](https://www.prisma.io/docs/orm/reference/connection-urls).
+
+`JWT_SECRET` is used to sign and verify authentication tokens. Generate a strong random value rather than typing one by hand:
+
+```bash
+openssl rand -base64 32
+```
+
+Copy the output into `JWT_SECRET` in your `.env` file. Keep this value private — never commit it to version control, and use a different secret per environment (development, staging, production). If it's ever exposed, rotate it immediately; existing tokens signed with the old secret will be invalidated.
 
 ### 3. Set up the database
 
@@ -87,6 +96,9 @@ The database service isn't running, or the host/port in `DATABASE_URL` is wrong.
 
 **`Environment variable not found: DATABASE_URL`**
 The `.env` file is missing or not in the project root. Prisma reads `.env` from the directory containing `prisma/schema.prisma`'s parent by default.
+
+**`JWT_SECRET is not defined` / auth requests failing with a 500**
+The `.env` file is missing a `JWT_SECRET` value, or the server was started before it was added. Add `JWT_SECRET` to `.env` (see step 2 above) and restart `npm run dev`.
 
 **Port 3000 already in use**
 Run on a different port: `npm run dev -- -p 3001`.
