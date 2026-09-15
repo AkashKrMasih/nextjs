@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useActionState } from 'react';
-import { signup } from '@/app/actions/user';
+import { signup } from '@/app/users/actions';
 
 export default function SignupPage() {
   const [emailError, setEmailError] = useState('');

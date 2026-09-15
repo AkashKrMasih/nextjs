@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { login } from '@/app/actions/user';
+import { login } from '@/app/users/actions';
 
 export default function LoginPage() {
   const [emailError, setEmailError] = useState('');
