@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Package, Users } from 'lucide-react';
+import {ArrowLeft, Package, Users} from 'lucide-react';
 
 const NAV_ITEMS = [
+  { href: '/', label: 'Back', icon: ArrowLeft },
   { href: '/admin', label: 'Products', icon: Package },
   { href: '/admin/users', label: 'Users', icon: Users },
 ];
