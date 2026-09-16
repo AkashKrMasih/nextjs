@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { cartTotal, readCart, type CartItem } from '@/lib/cart';
 import { formatPrice } from '@/lib/money';
 import CheckoutForm from '@/app/components/checkout/CheckoutForm';
+import {auth} from "@/lib/auth";
 
 type SessionUser = { id: string; email: string; name: string | null };
 type AuthState = 'loading' | 'authed' | 'anonymous';
@@ -30,8 +31,7 @@ export default function CheckoutPage() {
 
       // ADAPT: if you already have a session-check call elsewhere in the app,
       // reuse it instead of this fetch.
-      const res = await fetch('/api/auth/session');
-      const data = await res.json();
+      const data = await auth();
       if (data.user) {
         setUser(data.user);
         setAuthState('authed');

@@ -47,7 +47,7 @@ export async function updateCurrencySettings(
 }
 
 
-const DEFAULT_CURRENCY: CurrencySettings = {
+export const DEFAULT_CURRENCY: CurrencySettings = {
   symbol: "$",
   code:   "USD",
 };
