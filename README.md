@@ -6,7 +6,22 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 - **npm** (ships with Node) — check with `npm -v`
 - A running database instance (PostgreSQL, MySQL, or SQLite) matching the `provider` in `prisma/schema.prisma`
 
+> **Development environment:** This project is developed and tested on **Ubuntu 24.04 LTS**. It should work on other Linux distros, macOS, and WSL2, but Ubuntu 24.04 is the reference environment for these instructions.
+
 ## Getting Started
+
+### Quick start (Ubuntu 24.04)
+
+A `setup.sh` script is included to automate everything in this section — checking/installing Node.js, running `npm install`, creating `.env` with a generated `JWT_SECRET`, and running the Prisma migrations.
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+The script will pause and ask you to fill in `DATABASE_URL` in `.env` if it's missing, then continue with the Prisma setup. Skip to [Run the development server](#5-run-the-development-server) once it finishes, or follow the manual steps below if you'd rather run each command yourself.
+
+### Manual setup
 
 ### 1. Install dependencies
 
@@ -77,6 +92,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 | Command | Description |
 | --- | --- |
+| `./setup.sh` | One-shot project setup (Node check, install, `.env`, Prisma migrate/generate) |
 | `npm run dev` | Start the development server |
 | `npm run build` | Create a production build |
 | `npm run start` | Serve the production build |
@@ -102,6 +118,12 @@ The `.env` file is missing a `JWT_SECRET` value, or the server was started befor
 
 **Port 3000 already in use**
 Run on a different port: `npm run dev -- -p 3001`.
+
+**`setup.sh: Permission denied`**
+Make the script executable first: `chmod +x setup.sh`.
+
+**`setup.sh` prompts for `sudo`**
+This only happens if Node.js or `openssl` isn't already installed — the script installs them via `apt`/NodeSource. If you're on a system without `sudo` access, install Node.js 18.18+ manually first, then re-run the script.
 
 ## Learn More
 
