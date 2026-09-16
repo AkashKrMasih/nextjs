@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma'; // ADAPT: path to your Prisma singleton
-import { getCurrentUser } from '@/lib/auth'; // ADAPT: your custom session helper
+import { auth } from '@/lib/auth'; // ADAPT: your custom session helper
 
 type RequestBody = {
   items: { id: string; quantity: number }[];
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
   }
 
-  const user = await getCurrentUser();
+  const user = await auth();
 
   if (!user && !guestEmail) {
     return NextResponse.json(
