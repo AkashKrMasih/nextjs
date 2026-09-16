@@ -125,6 +125,7 @@ enum CartStatus {
 model AdminSettings {
   id        Int      @id @default(1) // fixed to 1 — singleton row
   stripe    Json? // { publishableKey, secretKey, webhookSecret }
+  currency  Json? // { symbol, code } e.g. { symbol: "₹", code: "INR" }
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
