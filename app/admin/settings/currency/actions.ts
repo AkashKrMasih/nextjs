@@ -1,12 +1,12 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import {prisma} from "@/lib/prisma";
+import {revalidatePath} from "next/cache";
+import {z} from "zod";
 
 const currencySchema = z.object({
   symbol: z.string().min(1, "Symbol is required").max(5),
-  code: z
+  code:   z
           .string()
           .length(3, "Currency code must be 3 letters")
           .transform((v) => v.toUpperCase()),
@@ -16,8 +16,8 @@ export type CurrencySettings = z.infer<typeof currencySchema>;
 
 export async function getCurrencySettings(): Promise<CurrencySettings | null> {
   const settings = await prisma.adminSettings.findUnique({
-    where: { id: 1 },
-    select: { currency: true },
+    where:  {id: 1},
+    select: {currency: true},
   });
 
   if (!settings?.currency) return null;
@@ -32,16 +32,42 @@ export async function updateCurrencySettings(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.issues.map((i) => i.message).join(", "),
+      error:   parsed.error.issues.map((i) => i.message).join(", "),
     };
   }
 
   await prisma.adminSettings.upsert({
-    where: { id: 1 },
-    update: { currency: parsed.data },
-    create: { id: 1, currency: parsed.data },
+    where:  {id: 1},
+    update: {currency: parsed.data},
+    create: {id: 1, currency: parsed.data},
   });
 
   revalidatePath("/admin/settings/currency");
-  return { success: true };
+  return {success: true};
+}
+
+
+const DEFAULT_CURRENCY: CurrencySettings = {
+  symbol: "$",
+  code:   "USD",
+};
+
+/**
+ * Returns the current system currency code (e.g. "INR").
+ * Falls back to "USD" if not configured or blank.
+ */
+export async function getCurrencyCode(): Promise<string> {
+  const settings = await getCurrencySettings();
+  const code     = settings?.code?.trim();
+  return code ? code : DEFAULT_CURRENCY.code;
+}
+
+/**
+ * Returns the current system currency symbol (e.g. "₹").
+ * Falls back to "$" if not configured or blank.
+ */
+export async function getCurrencySymbol(): Promise<string> {
+  const settings = await getCurrencySettings();
+  const symbol   = settings?.symbol?.trim();
+  return symbol ? symbol : DEFAULT_CURRENCY.symbol;
 }
