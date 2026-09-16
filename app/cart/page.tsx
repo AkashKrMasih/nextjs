@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { cartTotal, readCart, type CartItem } from '@/lib/cart';
 import { formatPrice } from '@/lib/money';
-import CheckoutForm from '@/components/checkout/CheckoutForm';
+import CheckoutForm from '@/app/components/checkout/CheckoutForm';
 
 type SessionUser = { id: string; email: string; name: string | null };
 type AuthState = 'loading' | 'authed' | 'anonymous';
