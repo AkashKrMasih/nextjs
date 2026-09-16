@@ -13,17 +13,18 @@ datasource db {
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   name        String
-  description String   @default("")
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int      @default(0)
+  description String      @default("")
+  price       Decimal     @db.Decimal(10, 2)
+  stock       Int         @default(0)
   imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   reviews     Review[]
-  avgRating   Float    @default(0)
-  reviewCount Int      @default(0)
+  avgRating   Float       @default(0)
+  reviewCount Int         @default(0)
+  orderItems  OrderItem[]
 }
 
 enum Role {
@@ -41,6 +42,7 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   reviews       Review[]
+  orders        Order[]
 }
 
 model Review {
@@ -148,7 +150,7 @@ model OrderItem {
   id        String  @id @default(cuid())
   orderId   String
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
+  productId Int
   product   Product @relation(fields: [productId], references: [id])
   name      String // snapshot at purchase time
   unitPrice Int // cents, snapshot at purchase time
