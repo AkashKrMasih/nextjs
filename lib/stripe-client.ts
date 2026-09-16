@@ -1,12 +1,14 @@
 'use client';
 
-import { loadStripe, type Stripe } from '@stripe/stripe-js';
+import {loadStripe, type Stripe} from '@stripe/stripe-js';
+import {getPublishableKey} from "@/app/admin/settings/stripe/actions";
 
 let stripePromise: Promise<Stripe | null>;
 
-export function getStripe() {
+export async function getStripe() {
   if (!stripePromise) {
-    stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+    const key     = await getPublishableKey();
+    stripePromise = loadStripe(key);
   }
   return stripePromise;
 }
