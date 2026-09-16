@@ -21,9 +21,17 @@ export async function SiteHeader() {
 
           {session ? (
             <>
-              <Link href="/admin/products/new" className="hover:text-[#1E1B16]">
-                Add product
-              </Link>
+
+              {session.role === 'ADMIN' && (
+                <>
+                  <Link href="/admin/products/new" className="hover:text-[#1E1B16]">
+                    Add product
+                  </Link>
+                  <Link href="/admin" className="hover:text-[#1E1B16]">
+                    Dashboard
+                  </Link>
+                </>
+              )}
 
             <div className="group relative">
 
