@@ -2,33 +2,95 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import {
-  cartTotal,
-  clearCart,
-  readCart,
-  removeFromCart,
-  updateQuantity,
-  type CartItem,
-} from '@/lib/cart';
+import { cartTotal, readCart, type CartItem } from '@/lib/cart';
 import { formatPrice } from '@/lib/money';
+import CheckoutForm from '@/components/checkout/CheckoutForm';
 
-export default function CartPage() {
+type SessionUser = { id: string; email: string; name: string | null };
+type AuthState = 'loading' | 'authed' | 'anonymous';
+type FlowState = 'choice' | 'guest-form' | 'paying';
+
+export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [ready, setReady] = useState(false);
 
-  async function refresh() {
-    setItems(await readCart());
+  const [authState, setAuthState] = useState<AuthState>('loading');
+  const [user, setUser] = useState<SessionUser | null>(null);
+
+  const [flow, setFlow] = useState<FlowState>('choice');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [creatingIntent, setCreatingIntent] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setItems(await readCart());
+      setReady(true);
+
+      // ADAPT: if you already have a session-check call elsewhere in the app,
+      // reuse it instead of this fetch.
+      const res = await fetch('/api/auth/session');
+      const data = await res.json();
+      if (data.user) {
+        setUser(data.user);
+        setAuthState('authed');
+      } else {
+        setAuthState('anonymous');
+      }
+    })();
+  }, []);
+
+  // Once we know who's paying (logged-in user, or guest who entered an email),
+  // create the PaymentIntent and move into the card-form step.
+  async function startPayment(guestEmailValue?: string) {
+    setError(null);
+    setCreatingIntent(true);
+    try {
+      const res = await fetch('/api/checkout/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
+          guestEmail: guestEmailValue,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not start checkout');
+      setClientSecret(data.clientSecret);
+      setFlow('paying');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setCreatingIntent(false);
+    }
   }
 
   useEffect(() => {
-    refresh();
-    setReady(true);
-  }, []);
+    if (ready && authState === 'authed' && flow === 'choice') {
+      startPayment();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, authState]);
 
-  if (!ready) {
+  if (!ready || authState === 'loading') {
     return (
       <main className="mx-auto max-w-2xl px-6 py-12">
-        <p className="text-sm text-[#8A8375]">Loading cart…</p>
+        <p className="text-sm text-[#8A8375]">Loading checkout…</p>
+      </main>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <main className="mx-auto max-w-2xl px-6 py-12">
+        <p className="text-sm text-[#8A8375]">
+          Your cart is empty.{' '}
+          <Link href="/" className="text-[#55624A] underline">
+            Browse the catalog
+          </Link>
+          .
+        </p>
       </main>
     );
   }
@@ -37,72 +99,99 @@ export default function CartPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <h1 className="text-3xl tracking-tight">Cart</h1>
-      <p className="mt-1 text-sm text-[#8A8375]">
-        Stored in this browser only. Checkout and accounts are not enabled yet.
-      </p>
+      <h1 className="text-3xl tracking-tight">Checkout</h1>
 
-      {items.length === 0 ? (
-        <p className="mt-8 text-sm text-[#8A8375]">
-          Your cart is empty.{' '}
-          <Link href="/" className="text-[#55624A] underline">
-            Browse the catalog
-          </Link>
-          .
-        </p>
-      ) : (
-        <div className="mt-8 space-y-4">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between gap-4 border-b border-[#D8D2C4] pb-4"
-            >
-              <div>
-                <Link href={`/products/${item.id}`} className="hover:text-[#55624A]">
-                  {item.name}
-                </Link>
-                <p className="text-sm text-[#8A8375]">{formatPrice(item.price)}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  className="w-16 rounded border border-[#D8D2C4] bg-white p-1 text-center"
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={(e) => {
-                    updateQuantity(item.id, Number(e.target.value));
-                    refresh();
-                  }}
-                />
-                <button
-                  type="button"
-                  className="text-sm text-red-800"
-                  onClick={() => {
-                    removeFromCart(item.id);
-                    refresh();
-                  }}
-                >
-                  Remove
-                </button>
-              </div>
+      <div className="mt-6 space-y-2 border-b border-[#D8D2C4] pb-6">
+        {items.map((item) => (
+          <div key={item.id} className="flex justify-between text-sm">
+            <span>
+              {item.name} × {item.quantity}
+            </span>
+            <span className="text-[#8A8375]">{formatPrice(item.price * item.quantity)}</span>
+          </div>
+        ))}
+        <div className="flex justify-between pt-2 text-base">
+          <span>Total</span>
+          <span>{formatPrice(total)}</span>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        {authState === 'anonymous' && flow === 'choice' && (
+          <div className="space-y-6">
+            <p className="text-sm text-[#8A8375]">
+              Log in for order history and faster checkout next time, or continue as a guest.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Link
+                href={`/login?redirect=${encodeURIComponent('/cart/checkout')}`}
+                className="rounded border border-[#55624A] px-4 py-2 text-center text-sm text-[#55624A]"
+              >
+                Log in
+              </Link>
+              <button
+                type="button"
+                onClick={() => setFlow('guest-form')}
+                className="rounded bg-[#55624A] px-4 py-2 text-center text-sm text-white"
+              >
+                Continue as guest
+              </button>
             </div>
-          ))}
+          </div>
+        )}
 
-          <div className="flex items-center justify-between pt-4">
-            <p className="text-lg">Total {formatPrice(total)}</p>
+        {authState === 'anonymous' && flow === 'guest-form' && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              startPayment(guestEmail);
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label htmlFor="guestEmail" className="block text-sm text-[#8A8375]">
+                Email for your receipt
+              </label>
+              <input
+                id="guestEmail"
+                type="email"
+                required
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+                className="mt-1 w-full rounded border border-[#D8D2C4] p-2 text-sm"
+              />
+            </div>
+            {error && <p className="text-sm text-red-800">{error}</p>}
+            <button
+              type="submit"
+              disabled={creatingIntent}
+              className="rounded bg-[#55624A] px-4 py-2 text-sm text-white disabled:opacity-50"
+            >
+              {creatingIntent ? 'Loading…' : 'Continue to payment'}
+            </button>
             <button
               type="button"
-              className="text-sm text-[#8A8375] underline"
-              onClick={() => {
-                clearCart();
-                refresh();
-              }}
+              onClick={() => setFlow('choice')}
+              className="ml-3 text-sm text-[#8A8375] underline"
             >
-              Clear cart
+              Back
             </button>
-          </div>
-        </div>
-      )}
+          </form>
+        )}
+
+        {flow === 'paying' && clientSecret && (
+          <CheckoutForm
+            clientSecret={clientSecret}
+            payerLabel={user?.email ?? guestEmail}
+          />
+        )}
+
+        {authState === 'authed' && flow === 'choice' && creatingIntent && (
+          <p className="text-sm text-[#8A8375]">Preparing checkout…</p>
+        )}
+
+        {error && flow !== 'guest-form' && <p className="mt-4 text-sm text-red-800">{error}</p>}
+      </div>
     </main>
   );
 }
