@@ -121,3 +121,10 @@ enum CartStatus {
   CONVERTED // turned into an Order at checkout
   ABANDONED // optional: set by a cleanup job after N days of inactivity
 }
+
+model AdminSettings {
+  id        Int      @id @default(1) // fixed to 1 — singleton row
+  stripe    Json? // { publishableKey, secretKey, webhookSecret }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
