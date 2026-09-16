@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowLeft, Package, Users, Settings, ChevronDown, CreditCard } from 'lucide-react';
+import { ArrowLeft, Package, Users, Settings, ChevronDown, CreditCard, Coins } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Back', icon: ArrowLeft },
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
 
 const SETTINGS_ITEMS = [
   { href: '/admin/settings/stripe', label: 'Stripe', icon: CreditCard },
+  { href: '/admin/settings/currency', label: 'Currency', icon: Coins },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
