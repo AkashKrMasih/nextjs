@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { cartTotal, readCart, type CartItem } from '@/lib/cart';
-import { formatPrice } from '@/lib/money';
+import {useEffect, useState} from 'react';
+import {cartTotal, readCart, type CartItem} from '@/lib/cart';
+import {formatPrice} from '@/lib/money';
 import CheckoutForm from '@/app/components/checkout/CheckoutForm';
 import {auth} from "@/lib/auth";
 
@@ -16,12 +16,12 @@ export default function CheckoutPage() {
   const [ready, setReady] = useState(false);
 
   const [authState, setAuthState] = useState<AuthState>('loading');
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [user, setUser]           = useState<SessionUser | null>(null);
 
-  const [flow, setFlow] = useState<FlowState>('choice');
-  const [guestEmail, setGuestEmail] = useState('');
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [flow, setFlow]                     = useState<FlowState>('choice');
+  const [guestEmail, setGuestEmail]         = useState('');
+  const [clientSecret, setClientSecret]     = useState<string | null>(null);
+  const [error, setError]                   = useState<string | null>(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
 
   useEffect(() => {
@@ -31,7 +31,9 @@ export default function CheckoutPage() {
 
       // ADAPT: if you already have a session-check call elsewhere in the app,
       // reuse it instead of this fetch.
-      const data = await auth();
+      const res  = await fetch('/api/auth/session');
+      const data = await res.json();
+      
       if (data.user) {
         setUser(data.user);
         setAuthState('authed');
@@ -47,11 +49,11 @@ export default function CheckoutPage() {
     setError(null);
     setCreatingIntent(true);
     try {
-      const res = await fetch('/api/checkout/create-payment-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
+      const res  = await fetch('/api/checkout/create-payment-intent', {
+        method:  'POST',
+        headers: {'Content-Type': 'application/json'},
+        body:    JSON.stringify({
+          items:      items.map((i) => ({id: i.id, quantity: i.quantity})),
           guestEmail: guestEmailValue,
         }),
       });
