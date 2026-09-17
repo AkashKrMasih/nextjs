@@ -29,6 +29,7 @@ export async function signup(
       userId: user.id,
       email: user.email,
       name: user.name, // TODO: signup doesn't collect a name yet — add a `name` field to the form if you want this populated
+      role: user.role,
     })
   } catch (err) {
     return { error: 'Could not create account. Try a different email.' }

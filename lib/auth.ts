@@ -1,8 +1,8 @@
 // lib/auth.ts
 
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
-import { getSession, createSession, destroySession } from '@/lib/session'
+import {prisma} from '@/lib/prisma'
+import {getSession, destroySession} from '@/lib/session'
 
 export async function auth() {
   const session = await getSession()
@@ -10,20 +10,21 @@ export async function auth() {
 
   return {
     userId: session.userId,
-    email: session.email,
-    name: session.name,
-    role: session.role,
+    email:  session.email,
+    name:   session.name,
+    role:   session.role,
   }
 }
+
 export async function createUser(email: string, plainPassword: string) {
-  const saltRounds = 10
-  const passwordSalt = await bcrypt.genSalt(saltRounds)
+  const saltRounds     = 10
+  const passwordSalt   = await bcrypt.genSalt(saltRounds)
   const hashedPassword = await bcrypt.hash(plainPassword, passwordSalt)
 
   const user = await prisma.user.create({
     data: {
       email,
-      password: hashedPassword,
+      password:      hashedPassword,
       password_salt: passwordSalt,
     },
   })
@@ -33,7 +34,7 @@ export async function createUser(email: string, plainPassword: string) {
 
 export async function getUserByEmail(email: string) {
   const user = await prisma.user.findUnique({
-    where: { email },
+    where: {email},
   })
 
   return user
