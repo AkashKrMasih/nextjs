@@ -5,6 +5,7 @@
 import { createUser, getUserByEmail, verifyPassword } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { createSession, destroySession } from '@/lib/session'
+import bcrypt from "bcryptjs";
 
 // Shape returned to useActionState/useFormState on the client.
 export type AuthState = {
@@ -52,6 +53,9 @@ export async function login(
     if (!user) {
       return { error: 'Invalid email or password' }
     }
+
+    console.log('hash:', user?.password, 'length:', user?.password.length)
+    console.log('matches "password":', await bcrypt.compare(password, user!.password))
 
     const isValid = await verifyPassword(password, user)
 

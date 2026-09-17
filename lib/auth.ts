@@ -48,21 +48,6 @@ export async function verifyPassword(plainPassword: string, user: { password: st
   return bcrypt.compare(plainPassword, user.password)
 }
 
-export async function login(email: string, plainPassword: string) {
-  const user = await getUserByEmail(email)
-  if (!user || !(await verifyPassword(plainPassword, user))) {
-    return null
-  }
-
-  await createSession({
-    userId: user.id,
-    email: user.email,
-    name: user.name, // adjust if your User model names this field differently
-  })
-
-  return user
-}
-
 export async function logout() {
   await destroySession()
 }
