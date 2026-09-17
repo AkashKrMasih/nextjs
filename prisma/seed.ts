@@ -24,7 +24,7 @@ async function main() {
   console.log("Seeding database...");
 
   // --- Users ---
-  const adminCreds = await hashPassword("password");
+  const adminCreds = await hashPassword(DEFAULT_PASSWORD);
 
   const adminUser = {
     email: "admin@admin.us",
