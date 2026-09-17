@@ -76,7 +76,7 @@ export default function CheckoutPage() {
 
   if (!ready || authState === 'loading') {
     return (
-      <main className="mx-auto max-w-2xl px-6 py-12">
+      <main className="mx-auto max-w-6xl px-6 py-12">
         <p className="text-sm text-[#8A8375]">Loading checkout…</p>
       </main>
     );
@@ -84,7 +84,7 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <main className="mx-auto max-w-2xl px-6 py-12">
+      <main className="mx-auto max-w-6xl px-6 py-12">
         <p className="text-sm text-[#8A8375]">
           Your cart is empty.{' '}
           <Link href="/" className="text-[#55624A] underline">
@@ -99,7 +99,7 @@ export default function CheckoutPage() {
   const total = items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-6 py-12">
       <h1 className="text-3xl tracking-tight">Checkout</h1>
 
       <div className="mt-6 space-y-2 border-b border-[#D8D2C4] pb-6">
