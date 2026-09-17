@@ -1,5 +1,6 @@
 // lib/money.ts
-import {DEFAULT_CURRENCY, getCurrencyCode} from "@/app/admin/settings/currency/actions";
+import {getCurrencyCode} from "@/app/admin/settings/currency/actions";
+import {DEFAULT_CURRENCY} from "@/app/admin/settings/currency/constants";
 
 // Synchronous formatter — takes currency as a parameter, no top-level await
 export function formatPrice(

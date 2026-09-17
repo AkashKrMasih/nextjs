@@ -33,7 +33,7 @@ export default function CheckoutPage() {
       // reuse it instead of this fetch.
       const res  = await fetch('/api/auth/session');
       const data = await res.json();
-      
+
       if (data.user) {
         setUser(data.user);
         setAuthState('authed');
