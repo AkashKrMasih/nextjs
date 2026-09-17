@@ -1,33 +1,50 @@
 import "dotenv/config";
 import {faker} from "@faker-js/faker";
+import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
 
 const NUM_USERS    = 20;
 const NUM_PRODUCTS = 150;
 
+const SALT_ROUNDS = 10;
+
+// Default plaintext password for every seeded fake user, so you have a
+// known set of test credentials to log in with. Only used for seeding.
+const DEFAULT_PASSWORD = "password123";
+
+async function hashPassword(plainPassword: string) {
+  const passwordSalt   = await bcrypt.genSalt(SALT_ROUNDS);
+  const hashedPassword = await bcrypt.hash(plainPassword, passwordSalt);
+
+  return { password: hashedPassword, password_salt: passwordSalt };
+}
+
 async function main() {
   console.log("Seeding database...");
 
   // --- Users ---
-  // NOTE: these are fake placeholder values, not real hashes.
-  // If you need users that can actually log in, hash a real
-  // password with bcrypt here instead.
+  const adminCreds = await hashPassword("password");
+
   const adminUser = {
-    email:         "admin@admin.us",
-    name:          "Admin",
-    role:          "ADMIN",
-    password:      "password",
-    password_salt: faker.string.alphanumeric(16),
+    email: "admin@admin.us",
+    name:  "Admin",
+    role:  "ADMIN",
+    ...adminCreds,
   };
 
-  const fakeUsers = Array.from({length: NUM_USERS - 1}).map(() => ({
-    email:         faker.internet.email().toLowerCase(),
-    name:          faker.person.fullName(),
-    role:          "CUSTOMER",
-    password:      faker.string.alphanumeric(60),
-    password_salt: faker.string.alphanumeric(16),
-  }));
+  const fakeUsers = await Promise.all(
+    Array.from({length: NUM_USERS - 1}).map(async () => {
+      const creds = await hashPassword(DEFAULT_PASSWORD);
+
+      return {
+        email: faker.internet.email().toLowerCase(),
+        name:  faker.person.fullName(),
+        role:  "CUSTOMER",
+        ...creds,
+      };
+    })
+  );
 
   const users = [adminUser, ...fakeUsers];
 
@@ -50,6 +67,8 @@ async function main() {
   });
 
   console.log(`Seeded ${NUM_USERS} users and ${NUM_PRODUCTS} products.`);
+  console.log(`Admin login: admin@admin.us / password`);
+  console.log(`All other users: <their email> / ${DEFAULT_PASSWORD}`);
 }
 
 main()
