@@ -2,10 +2,9 @@
 
 import Link from 'next/link';
 import {useEffect, useState} from 'react';
-import {cartTotal, readCart, type CartItem} from '@/lib/cart';
+import {readCart, type CartItem} from '@/lib/cart';
 import {formatPrice} from '@/lib/money';
 import CheckoutForm from '@/app/components/checkout/CheckoutForm';
-import {auth} from "@/lib/auth";
 
 type SessionUser = { id: string; email: string; name: string | null };
 type AuthState = 'loading' | 'authed' | 'anonymous';
@@ -97,7 +96,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const total = cartTotal();
+  const total = items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
