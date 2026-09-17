@@ -42,13 +42,12 @@ export async function POST(req: NextRequest) {
     if (item.quantity < 1) {
       throw new Error(`Invalid quantity for ${product.id}`);
     }
-    // ADAPT: `product.price` assumed to be an Int in cents, matching
-    // your cart's formatPrice/cartTotal convention.
-    amountTotal += product.price * item.quantity;
+    const unitPriceCents = Math.round(Number(product.price) * 100);
+    amountTotal += unitPriceCents * item.quantity;
     return {
       productId: product.id,
       name: product.name,
-      unitPrice: product.price,
+      unitPrice: unitPriceCents,
       quantity: item.quantity,
     };
   });
@@ -59,7 +58,7 @@ export async function POST(req: NextRequest) {
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amountTotal,
-    currency: getCurrencyCode(), // ADAPT: pull from config if you support multiple currencies
+    currency: (await getCurrencyCode()).toLowerCase(), // ADAPT: pull from config if you support multiple currencies
     receipt_email: user?.email ?? guestEmail,
     metadata: {
       userId: user?.id ?? '',
