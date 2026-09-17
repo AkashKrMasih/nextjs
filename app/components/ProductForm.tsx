@@ -109,12 +109,9 @@ export function ProductForm({
           {...field('stock', {})}
         />
       </div>
-      <input
-        className="w-full rounded border border-[#D8D2C4] bg-white p-2"
-        placeholder="Image URL (optional)"
-        type="url"
-        {...field('imageUrl', {})}
-      />
+
+      <input name="images" type="file" accept="image/*" multiple />
+
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       <button
         className="rounded bg-[#55624A] px-4 py-2 text-white disabled:opacity-60"
