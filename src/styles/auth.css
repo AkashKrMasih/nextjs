@@ -201,7 +201,7 @@ button[type='submit']:disabled {
     text-decoration: underline;
 }
 
-:global(.ripple) {
+.ripple {
     position: absolute;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.5);

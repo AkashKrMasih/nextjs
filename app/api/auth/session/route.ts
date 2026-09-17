@@ -5,6 +5,8 @@ import { auth } from '@/lib/auth'; // ADAPT: your custom session helper
 // delete this file and point the checkout page's fetch at that one instead.
 export async function GET() {
   const user = await auth();
+  console.info("user............................................");
+  console.info(user);
   if (!user) {
     return NextResponse.json({ user: null });
   }
