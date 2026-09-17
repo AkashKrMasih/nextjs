@@ -15,8 +15,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 A `setup.sh` script is included to automate everything in this section — checking/installing Node.js, running `npm install`, creating `.env` with a generated `JWT_SECRET`, and running the Prisma migrations.
 
 ```bash
-chmod +x setup.sh
-./setup.sh
+bash setup.sh
 ```
 
 The script will pause and ask you to fill in `DATABASE_URL` in `.env` if it's missing, then continue with the Prisma setup. Skip to [Run the development server](#5-run-the-development-server) once it finishes, or follow the manual steps below if you'd rather run each command yourself.
