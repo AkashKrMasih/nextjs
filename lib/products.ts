@@ -3,7 +3,6 @@ export type ProductInput = {
   description: string;
   price: string;
   stock: number;
-  imageUrl: string | null;
 };
 
 export function parseProductBody(body: unknown): ProductInput | { error: string } {
@@ -42,16 +41,10 @@ export function parseProductBody(body: unknown): ProductInput | { error: string 
     return { error: 'Stock must be a whole number greater than or equal to 0' };
   }
 
-  const imageUrl =
-    typeof data.imageUrl === 'string' && data.imageUrl.trim()
-      ? data.imageUrl.trim()
-      : null;
-
   return {
     name,
     description,
     price: priceNumber.toFixed(2),
     stock,
-    imageUrl,
   };
 }
