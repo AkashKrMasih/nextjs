@@ -24,7 +24,7 @@ async function main() {
   const fakeUsers = Array.from({length: NUM_USERS - 1}).map(() => ({
     email:         faker.internet.email().toLowerCase(),
     name:          faker.person.fullName(),
-    role:          "USER",
+    role:          "CUSTOMER",
     password:      faker.string.alphanumeric(60),
     password_salt: faker.string.alphanumeric(16),
   }));
