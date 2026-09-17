@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   Elements,
   PaymentElement,
   useElements,
   useStripe,
 } from '@stripe/react-stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import { getStripe } from '@/lib/stripe-client';
 
 function PaymentForm({ payerLabel }: { payerLabel: string }) {
@@ -60,9 +61,19 @@ export default function CheckoutForm({
   clientSecret: string;
   payerLabel: string;
 }) {
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+
+  useEffect(() => {
+    setStripePromise(getStripe());
+  }, []);
+
+  if (!stripePromise) {
+    return null; // or a lightweight skeleton/spinner while Stripe initializes
+  }
+
   return (
     <Elements
-      stripe={getStripe()}
+      stripe={stripePromise}
       options={{
         clientSecret,
         appearance: {
