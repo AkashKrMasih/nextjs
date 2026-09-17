@@ -48,6 +48,8 @@ async function main() {
 
   const users = [adminUser, ...fakeUsers];
 
+  await prisma.user.deleteMany();
+
   await prisma.user.createMany({
     data:           users,
     skipDuplicates: true, // in case faker generates a duplicate email
