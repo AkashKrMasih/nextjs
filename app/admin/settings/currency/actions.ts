@@ -3,6 +3,7 @@
 import {prisma} from "@/lib/prisma";
 import {revalidatePath} from "next/cache";
 import {z} from "zod";
+import {DEFAULT_CURRENCY} from "@/app/admin/settings/currency/constants";
 
 const currencySchema = z.object({
   symbol: z.string().min(1, "Symbol is required").max(5),
@@ -45,12 +46,6 @@ export async function updateCurrencySettings(
   revalidatePath("/admin/settings/currency");
   return {success: true};
 }
-
-
-export const DEFAULT_CURRENCY: CurrencySettings = {
-  symbol: "$",
-  code:   "USD",
-};
 
 /**
  * Returns the current system currency code (e.g. "INR").
