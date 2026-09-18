@@ -1,53 +1,212 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-type ProductFormValues = {
+type Category = {
+  id: number;
+  name: string;
+};
+
+type ImageField = {
+  key: string;
+  url: string;
+  isPrimary: boolean;
+};
+
+type VariantAttribute = {
+  key: string;
+  name: string;
+  value: string;
+};
+
+type VariantField = {
+  key: string;
+  sku: string;
+  name: string;
+  price: string; // optional override; blank = use the product's base price
+  quantity: string;
+  isDefault: boolean;
+  attributes: VariantAttribute[];
+};
+
+export type ProductFormValues = {
   name: string;
   description: string;
   price: string;
-  stock: string;
-  imageUrl: string;
+  categoryId: string; // '' = no category
+  images: ImageField[];
+  variants: VariantField[];
 };
 
+let uid = 0;
+function newKey() {
+  uid += 1;
+  return `k${Date.now()}-${uid}`;
+}
+
+function emptyVariant(isDefault = false): VariantField {
+  return {
+    key: newKey(),
+    sku: '',
+    name: '',
+    price: '',
+    quantity: '0',
+    isDefault,
+    attributes: [],
+  };
+}
+
+function emptyValues(): ProductFormValues {
+  return {
+    name: '',
+    description: '',
+    price: '',
+    categoryId: '',
+    images: [],
+    variants: [emptyVariant(true)],
+  };
+}
+
 export function ProductForm({
-  productId,
-  initial,
-}: {
+                              productId,
+                              initial,
+                            }: {
   productId?: number;
   initial?: ProductFormValues;
 }) {
   const router = useRouter();
-  const [values, setValues] = useState<ProductFormValues>(
-    initial ?? {
-      name: '',
-      description: '',
-      price: '',
-      stock: '0',
-      imageUrl: '',
-    }
-  );
+  const [values, setValues] = useState<ProductFormValues>(initial ?? emptyValues());
+  const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    fetch('/api/categories')
+    .then((res) => (res.ok ? res.json() : []))
+    .then((data) => setCategories(Array.isArray(data) ? data : []))
+    .catch(() => setCategories([]));
+  }, []);
+
+  function update<K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) {
+    setValues((current) => ({ ...current, [key]: value }));
+  }
+
+  // --- images ---
+  function addImage() {
+    update('images', [
+      ...values.images,
+      { key: newKey(), url: '', isPrimary: values.images.length === 0 },
+    ]);
+  }
+
+  function updateImage(key: string, patch: Partial<ImageField>) {
+    update('images', values.images.map((img) => (img.key === key ? { ...img, ...patch } : img)));
+  }
+
+  function removeImage(key: string) {
+    const remaining = values.images.filter((img) => img.key !== key);
+    if (remaining.length && !remaining.some((img) => img.isPrimary)) {
+      remaining[0] = { ...remaining[0], isPrimary: true };
+    }
+    update('images', remaining);
+  }
+
+  function makePrimary(key: string) {
+    update('images', values.images.map((img) => ({ ...img, isPrimary: img.key === key })));
+  }
+
+  // --- variants ---
+  function addVariant() {
+    update('variants', [...values.variants, emptyVariant(false)]);
+  }
+
+  function updateVariant(key: string, patch: Partial<VariantField>) {
+    update('variants', values.variants.map((v) => (v.key === key ? { ...v, ...patch } : v)));
+  }
+
+  function removeVariant(key: string) {
+    const remaining = values.variants.filter((v) => v.key !== key);
+    if (remaining.length && !remaining.some((v) => v.isDefault)) {
+      remaining[0] = { ...remaining[0], isDefault: true };
+    }
+    update('variants', remaining);
+  }
+
+  function makeDefaultVariant(key: string) {
+    update('variants', values.variants.map((v) => ({ ...v, isDefault: v.key === key })));
+  }
+
+  function addAttribute(variantKey: string) {
+    const variant = values.variants.find((v) => v.key === variantKey);
+    if (!variant) return;
+    updateVariant(variantKey, {
+      attributes: [...variant.attributes, { key: newKey(), name: '', value: '' }],
+    });
+  }
+
+  function updateAttribute(
+    variantKey: string,
+    attrKey: string,
+    patch: Partial<VariantAttribute>
+  ) {
+    const variant = values.variants.find((v) => v.key === variantKey);
+    if (!variant) return;
+    updateVariant(variantKey, {
+      attributes: variant.attributes.map((a) => (a.key === attrKey ? { ...a, ...patch } : a)),
+    });
+  }
+
+  function removeAttribute(variantKey: string, attrKey: string) {
+    const variant = values.variants.find((v) => v.key === variantKey);
+    if (!variant) return;
+    updateVariant(variantKey, {
+      attributes: variant.attributes.filter((a) => a.key !== attrKey),
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
     setError('');
+
+    if (values.variants.some((v) => !v.sku.trim())) {
+      setError('Every variant needs a SKU.');
+      return;
+    }
+    if (!values.variants.some((v) => v.isDefault)) {
+      setError('Pick one variant as the default.');
+      return;
+    }
+
+    setSaving(true);
+
+    const body = {
+      name: values.name,
+      description: values.description,
+      price: values.price,
+      categoryId: values.categoryId ? Number(values.categoryId) : null,
+      images: values.images
+            .filter((img) => img.url.trim())
+            .map((img) => ({ url: img.url.trim(), isPrimary: img.isPrimary })),
+      variants: values.variants.map((v) => ({
+        sku: v.sku.trim(),
+        name: v.name.trim() || null,
+        price: v.price.trim() || null,
+        isDefault: v.isDefault,
+        quantity: Number(v.quantity) || 0,
+        attributes: v.attributes.reduce<Record<string, string>>((acc, a) => {
+          if (a.name.trim()) acc[a.name.trim()] = a.value;
+          return acc;
+        }, {}),
+      })),
+    };
 
     const response = await fetch(
       productId ? `/api/products/${productId}` : '/api/products',
       {
         method: productId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: values.name,
-          description: values.description,
-          price: values.price,
-          stock: Number(values.stock),
-          imageUrl: values.imageUrl,
-        }),
+        body: JSON.stringify(body),
       }
     );
 
@@ -63,54 +222,197 @@ export function ProductForm({
     router.refresh();
   }
 
-  function field(
-    key: keyof ProductFormValues,
-    props: React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    return {
-      ...props,
-      value: values[key],
-      onChange: (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      ) => setValues((current) => ({ ...current, [key]: e.target.value })),
-    };
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <input
-        className="w-full rounded border border-[#D8D2C4] bg-white p-2"
-        placeholder="Product name"
-        required
-        {...field('name', {})}
-      />
-      <textarea
-        className="h-32 w-full rounded border border-[#D8D2C4] bg-white p-2"
-        placeholder="Description"
-        {...field('description', {})}
-      />
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Basic info */}
+      <section className="space-y-4">
         <input
           className="w-full rounded border border-[#D8D2C4] bg-white p-2"
-          placeholder="Price"
-          type="number"
-          min="0"
-          step="0.01"
+          placeholder="Product name"
           required
-          {...field('price', {})}
+          value={values.name}
+          onChange={(e) => update('name', e.target.value)}
         />
-        <input
-          className="w-full rounded border border-[#D8D2C4] bg-white p-2"
-          placeholder="Stock"
-          type="number"
-          min="0"
-          step="1"
-          required
-          {...field('stock', {})}
+        <textarea
+          className="h-32 w-full rounded border border-[#D8D2C4] bg-white p-2"
+          placeholder="Description"
+          value={values.description}
+          onChange={(e) => update('description', e.target.value)}
         />
-      </div>
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            className="w-full rounded border border-[#D8D2C4] bg-white p-2"
+            placeholder="Base price"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+            value={values.price}
+            onChange={(e) => update('price', e.target.value)}
+          />
+          <select
+            className="w-full rounded border border-[#D8D2C4] bg-white p-2"
+            value={values.categoryId}
+            onChange={(e) => update('categoryId', e.target.value)}
+          >
+            <option value="">No category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </section>
 
-      <input name="images" type="file" accept="image/*" multiple />
+      {/* Images */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-[#55624A]">Images</h2>
+          <button type="button" onClick={addImage} className="text-sm text-[#55624A] underline">
+            + Add image
+          </button>
+        </div>
+        {values.images.length === 0 ? (
+          <p className="text-sm text-[#8A8375]">No images yet.</p>
+        ) : (
+          values.images.map((img) => (
+            <div key={img.key} className="flex items-center gap-2">
+              <input
+                className="flex-1 rounded border border-[#D8D2C4] bg-white p-2"
+                placeholder="Image URL"
+                value={img.url}
+                onChange={(e) => updateImage(img.key, { url: e.target.value })}
+              />
+              <label className="flex items-center gap-1 text-xs text-[#55624A]">
+                <input
+                  type="radio"
+                  name="primaryImage"
+                  checked={img.isPrimary}
+                  onChange={() => makePrimary(img.key)}
+                />
+                Primary
+              </label>
+              <button
+                type="button"
+                onClick={() => removeImage(img.key)}
+                className="text-xs text-red-700"
+              >
+                Remove
+              </button>
+            </div>
+          ))
+        )}
+      </section>
+
+      {/* Variants */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-[#55624A]">Variants</h2>
+          <button type="button" onClick={addVariant} className="text-sm text-[#55624A] underline">
+            + Add variant
+          </button>
+        </div>
+
+        {values.variants.map((v, i) => (
+          <div key={v.key} className="space-y-3 rounded border border-[#D8D2C4] p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#8A8375]">Variant {i + 1}</span>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-1 text-xs text-[#55624A]">
+                  <input
+                    type="radio"
+                    name="defaultVariant"
+                    checked={v.isDefault}
+                    onChange={() => makeDefaultVariant(v.key)}
+                  />
+                  Default
+                </label>
+                {values.variants.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(v.key)}
+                    className="text-xs text-red-700"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                className="rounded border border-[#D8D2C4] bg-white p-2"
+                placeholder="SKU"
+                required
+                value={v.sku}
+                onChange={(e) => updateVariant(v.key, { sku: e.target.value })}
+              />
+              <input
+                className="rounded border border-[#D8D2C4] bg-white p-2"
+                placeholder="Variant name (e.g. Red / Large)"
+                value={v.name}
+                onChange={(e) => updateVariant(v.key, { name: e.target.value })}
+              />
+              <input
+                className="rounded border border-[#D8D2C4] bg-white p-2"
+                placeholder="Price override (optional)"
+                type="number"
+                min="0"
+                step="0.01"
+                value={v.price}
+                onChange={(e) => updateVariant(v.key, { price: e.target.value })}
+              />
+              <input
+                className="rounded border border-[#D8D2C4] bg-white p-2"
+                placeholder="Stock quantity"
+                type="number"
+                min="0"
+                step="1"
+                required
+                value={v.quantity}
+                onChange={(e) => updateVariant(v.key, { quantity: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#8A8375]">Attributes</span>
+                <button
+                  type="button"
+                  onClick={() => addAttribute(v.key)}
+                  className="text-xs text-[#55624A] underline"
+                >
+                  + Add attribute
+                </button>
+              </div>
+              {v.attributes.map((a) => (
+                <div key={a.key} className="flex items-center gap-2">
+                  <input
+                    className="w-1/3 rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
+                    placeholder="color"
+                    value={a.name}
+                    onChange={(e) => updateAttribute(v.key, a.key, { name: e.target.value })}
+                  />
+                  <input
+                    className="flex-1 rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
+                    placeholder="Red"
+                    value={a.value}
+                    onChange={(e) => updateAttribute(v.key, a.key, { value: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeAttribute(v.key, a.key)}
+                    className="text-xs text-red-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       <button
