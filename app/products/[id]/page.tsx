@@ -11,11 +11,15 @@ export default async function ProductPage({
   const productId = Number(id);
 
   const [product, related] = await Promise.all([
-    prisma.product.findUnique({ where: { id: productId } }),
+    prisma.product.findUnique({
+      where: { id: productId },
+      include: { images: true },
+    }),
     prisma.product.findMany({
       where: { id: { not: productId } },
       orderBy: { id: 'desc' },
       take: 4,
+      include: { images: true },
     }),
   ]);
 
