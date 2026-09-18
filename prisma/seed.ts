@@ -14,7 +14,7 @@ const SALT_ROUNDS = 10;
 
 // Default plaintext password for every seeded fake user, so you have a
 // known set of test credentials to log in with. Only used for seeding.
-const DEFAULT_PASSWORD = "password123";
+const DEFAULT_PASSWORD = "password";
 
 // Same target directory the upload route writes to, so seeded images are
 // served the same way real uploads are.
@@ -199,7 +199,7 @@ async function main() {
   );
 
   console.log(`Seeded ${NUM_USERS} users and ${NUM_PRODUCTS} products.`);
-  console.log(`Admin login: admin@admin.us / password`);
+  console.log(`Admin login: admin@admin.us / ${DEFAULT_PASSWORD}`);
   console.log(`All other users: <their email> / ${DEFAULT_PASSWORD}`);
 }
 
