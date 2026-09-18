@@ -13,26 +13,103 @@ datasource db {
 }
 
 model Product {
-  id          Int         @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
-  description String      @default("")
-  price       Decimal     @db.Decimal(10, 2)
-  stock       Int         @default(0)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  reviews     Review[]
-  avgRating   Float       @default(0)
-  reviewCount Int         @default(0)
-  orderItems  OrderItem[]
-  images      ProductImage[]
+  description String   @default("")
+  price       Decimal  @db.Decimal(10, 2) // default price; a variant may override this
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  reviews     Review[]
+  avgRating   Float    @default(0)
+  reviewCount Int      @default(0)
+
+  images   ProductImage[]
+  variants ProductVariant[]
+
+  @@index([categoryId])
+}
+
+model Category {
+  id          Int     @id @default(autoincrement())
+  name        String
+  slug        String  @unique
+  description String?
+
+  // self-relation for optional subcategories (nullable parentId = top-level category)
+  parentId Int?
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryHierarchy")
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+}
+
+// A purchasable variation of a Product (e.g. "Red / Large").
+// Every product should have at least one variant, even if it doesn't have
+// real options — see the isDefault flag below.
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sku   String   @unique
+  name  String? // e.g. "Red / Large"; null is fine for a default/simple-product variant
+  price Decimal? @db.Decimal(10, 2) // overrides Product.price when set
+
+  // Flexible variant options, e.g. { "color": "Red", "size": "L" }.
+  // Enforce shape/required option keys in the app layer.
+  attributes Json?
+
+  // True for the single auto-created variant on a product that has no real
+  // options — lets cart/order code always deal with a variantId.
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inventory  Inventory?
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+}
+
+// Kept separate from ProductVariant on purpose so it can grow independently
+// (multi-warehouse, reservations, low-stock alerts, etc.) without touching
+// the product/variant models again.
+model Inventory {
+  id        String         @id @default(cuid())
+  variantId String         @unique
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  quantity Int @default(0)
+  reserved Int @default(0) // held for pending carts/orders; available = quantity - reserved
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // NOTE: 1:1 with variant for now. When you need multi-location stock later,
+  // drop the @unique on variantId, add a Location/Warehouse model, and key
+  // this on (variantId, locationId) instead.
 }
 
 model ProductImage {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   url       String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  isPrimary Boolean @default(false) // enforce "only one primary per product" in the app layer
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId Int
+
+  @@index([productId])
 }
 
 enum Role {
@@ -114,16 +191,17 @@ model Cart {
 }
 
 model CartItem {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   cartId    String
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  productId Int
-  name      String
-  price     Decimal  @db.Decimal(10, 2) // snapshot at add-time; re-validate against product price at checkout
+  cart      Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  name      String // snapshot at add-time; re-validate against variant/product at checkout
+  price     Decimal        @db.Decimal(10, 2) // snapshot at add-time
   quantity  Int
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
 
-  @@unique([cartId, productId])
+  @@unique([cartId, variantId])
 }
 
 enum CartStatus {
@@ -155,11 +233,11 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
+  id        String         @id @default(cuid())
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
   name      String // snapshot at purchase time
   unitPrice Int // cents, snapshot at purchase time
   quantity  Int
