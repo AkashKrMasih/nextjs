@@ -59,3 +59,4 @@ next-env.d.ts
 /.windsurf/**
 /nestjs/node_modules/**
 /nestjs/.idea/**
+/public/uploads/products/**
