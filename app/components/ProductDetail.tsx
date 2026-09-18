@@ -10,10 +10,17 @@ import {
   Truck,
   ShieldCheck,
   RotateCcw,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { formatPrice } from '@/lib/money';
 import { AddToCartButton } from '@/app/components/AddToCartButton';
 import { DeleteProductButton } from '@/app/components/DeleteProductButton';
+
+type ProductImage = {
+  id: string;
+  url: string;
+};
 
 type Product = {
   id: number;
@@ -21,8 +28,95 @@ type Product = {
   price: number | string;
   stock: number;
   description: string | null;
-  imageUrl: string | null;
+  images: ProductImage[];
 };
+
+function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: string }) {
+  const [active, setActive] = useState(0);
+
+  if (images.length === 0) {
+    return (
+      <div className="relative aspect-square overflow-hidden rounded-[28px] bg-muted">
+        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+          No image
+        </div>
+      </div>
+    );
+  }
+
+  const goTo = (index: number) => {
+    setActive(((index % images.length) + images.length) % images.length);
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Main image */}
+      <div className="group relative aspect-square overflow-hidden rounded-[28px] bg-muted">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          key={images[active].id}
+          src={images[active].url}
+          alt={`${name} — image ${active + 1} of ${images.length}`}
+          className="h-full w-full object-cover"
+        />
+
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={() => goTo(active - 1)}
+              aria-label="Previous image"
+              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-background"
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+            <button
+              onClick={() => goTo(active + 1)}
+              aria-label="Next image"
+              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-background"
+            >
+              <ChevronRight className="size-5" />
+            </button>
+
+            {/* Dots */}
+            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+              {images.map((img, index) => (
+                <button
+                  key={img.id}
+                  onClick={() => goTo(index)}
+                  aria-label={`Go to image ${index + 1}`}
+                  className={[
+                    'h-1.5 rounded-full transition-all',
+                    index === active ? 'w-4 bg-background' : 'w-1.5 bg-background/60',
+                  ].join(' ')}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Thumbnails */}
+      {images.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {images.map((img, index) => (
+            <button
+              key={img.id}
+              onClick={() => goTo(index)}
+              aria-label={`View image ${index + 1}`}
+              className={[
+                'relative aspect-square w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-colors',
+                index === active ? 'border-primary' : 'border-transparent hover:border-border',
+              ].join(' ')}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={img.url} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function ProductDetail({
                                 product,
@@ -50,16 +144,9 @@ export function ProductDetail({
       </Link>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-16">
-        {/* Image */}
-        <div className="relative aspect-square overflow-hidden rounded-[28px] bg-muted">
-          {product.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              No image
-            </div>
-          )}
+        {/* Image carousel */}
+        <div className="relative">
+          <ProductImageCarousel images={product.images} name={product.name} />
           <span
             className={[
               'absolute top-4 left-4 rounded-full px-3 py-1 text-xs font-medium',
@@ -168,32 +255,35 @@ export function ProductDetail({
         <section className="mt-20">
           <h2 className="mb-6 text-2xl font-normal text-foreground">You may also like</h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {related.map((item) => (
-              <Link
-                key={item.id}
-                href={`/products/${item.id}`}
-                className="group overflow-hidden rounded-[20px] border border-border bg-card transition-all hover:shadow-md"
-              >
-                <div className="aspect-square overflow-hidden bg-muted">
-                  {item.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                      No image
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-1 p-4">
-                  <p className="line-clamp-2 text-sm font-medium leading-tight text-foreground">{item.name}</p>
-                  <p className="text-sm text-foreground">{formatPrice(item.price)}</p>
-                </div>
-              </Link>
-            ))}
+            {related.map((item) => {
+              const thumb = item.images[0]?.url ?? null;
+              return (
+                <Link
+                  key={item.id}
+                  href={`/products/${item.id}`}
+                  className="group overflow-hidden rounded-[20px] border border-border bg-card transition-all hover:shadow-md"
+                >
+                  <div className="aspect-square overflow-hidden bg-muted">
+                    {thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={thumb}
+                        alt={item.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                        No image
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1 p-4">
+                    <p className="line-clamp-2 text-sm font-medium leading-tight text-foreground">{item.name}</p>
+                    <p className="text-sm text-foreground">{formatPrice(item.price)}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}

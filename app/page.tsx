@@ -5,6 +5,7 @@ import Link from 'next/link';
 export default async function Home() {
   const products = await prisma.product.findMany({
     orderBy: { createdAt: 'desc' },
+    include: { images: true },
   });
 
   return (
@@ -41,10 +42,10 @@ export default async function Home() {
                 className="block overflow-hidden rounded-lg border border-[#D8D2C4] bg-white hover:border-[#55624A]"
               >
                 <div className="aspect-[4/3] bg-[#EFEBE3]">
-                  {product.imageUrl ? (
+                  {product.images[0]?.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={product.imageUrl}
+                      src={product.images[0].url}
                       alt={product.name}
                       className="h-full w-full object-cover"
                     />
