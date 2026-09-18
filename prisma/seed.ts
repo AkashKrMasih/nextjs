@@ -3,7 +3,7 @@ import { faker } from "@faker-js/faker";
 import bcrypt from "bcryptjs";
 import path from "path";
 import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, writeFile, unlink } from "fs/promises";
 
 import { prisma } from "@/lib/prisma";
 
@@ -78,6 +78,29 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
+// Prisma has no before_destroy-style callback, so this stands in for one:
+// look up every ProductImage row, delete its file off disk, THEN let the
+// caller delete the rows themselves. Only touches files under
+// /uploads/products/ — a row whose download failed and fell back to a
+// remote picsum URL has nothing local to clean up, so it's skipped.
+async function deleteLocalProductImageFiles() {
+  const images = await prisma.productImage.findMany({ select: { url: true } });
+
+  await mapWithConcurrency(images, IMAGE_CONCURRENCY, async ({ url }) => {
+    if (!url.startsWith("/uploads/products/")) return;
+
+    const filePath = path.join(process.cwd(), "public", url);
+    try {
+      await unlink(filePath);
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code !== "ENOENT") {
+        console.warn(`  ! failed to delete ${filePath}:`, (err as Error).message);
+      }
+    }
+  });
+}
+
 async function main() {
   console.log("Seeding database...");
 
@@ -115,6 +138,9 @@ async function main() {
 
   // --- Products ---
   await mkdir(UPLOAD_DIR, { recursive: true });
+
+  console.log("Deleting local image files for existing products...");
+  await deleteLocalProductImageFiles();
 
   await prisma.productImage.deleteMany();
   await prisma.product.deleteMany();
