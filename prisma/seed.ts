@@ -7,8 +7,9 @@ import { mkdir, writeFile, unlink } from "fs/promises";
 
 import { prisma } from "@/lib/prisma";
 
-const NUM_USERS    = 20;
-const NUM_PRODUCTS = 150;
+const NUM_USERS      = 20;
+const NUM_CATEGORIES = 8;
+const NUM_PRODUCTS   = 150;
 
 const SALT_ROUNDS = 10;
 
@@ -27,6 +28,19 @@ const IMAGE_CONCURRENCY = 10;
 // Each product gets a random number of images in this range.
 const MIN_IMAGES_PER_PRODUCT = 2;
 const MAX_IMAGES_PER_PRODUCT = 5;
+
+// Every product gets 1-4 variants. Products with exactly 1 variant are
+// treated as "simple" products (isDefault = true, no real options).
+// Products with more than 1 get color/size combos and isDefault = false,
+// matching the ProductVariant.isDefault comment in schema.prisma.
+const MIN_VARIANTS_PER_PRODUCT = 1;
+const MAX_VARIANTS_PER_PRODUCT = 4;
+const VARIANT_COLORS = ["Black", "White", "Red", "Blue", "Green", "Gray"];
+const VARIANT_SIZES  = ["XS", "S", "M", "L", "XL"];
+
+// Odds that a non-default variant overrides the product's base price
+// (e.g. a Large costs a bit more than a Small).
+const VARIANT_PRICE_OVERRIDE_CHANCE = 0.3;
 
 async function hashPassword(plainPassword: string) {
   const passwordSalt   = await bcrypt.genSalt(SALT_ROUNDS);
@@ -101,6 +115,17 @@ async function deleteLocalProductImageFiles() {
   });
 }
 
+// Builds up to `count` unique {color, size} combos for a multi-variant
+// product. Capped by however many distinct combos actually exist.
+function buildVariantAttributeCombos(count: number): { color: string; size: string }[] {
+  const colors = faker.helpers.arrayElements(VARIANT_COLORS, Math.min(count, VARIANT_COLORS.length));
+  const sizes  = faker.helpers.arrayElements(VARIANT_SIZES, Math.min(count, VARIANT_SIZES.length));
+
+  const combos = colors.flatMap((color) => sizes.map((size) => ({ color, size })));
+
+  return faker.helpers.arrayElements(combos, Math.min(count, combos.length));
+}
+
 async function main() {
   console.log("Seeding database...");
 
@@ -136,26 +161,82 @@ async function main() {
     skipDuplicates: true, // in case faker generates a duplicate email
   });
 
-  // --- Products ---
+  // --- Products (+ images, variants, inventory) ---
   await mkdir(UPLOAD_DIR, { recursive: true });
 
   console.log("Deleting local image files for existing products...");
   await deleteLocalProductImageFiles();
 
-  await prisma.productImage.deleteMany();
+  // Cascades handle ProductImage / ProductVariant / Inventory automatically
+  // (all declared onDelete: Cascade off Product / ProductVariant).
   await prisma.product.deleteMany();
+  await prisma.category.deleteMany();
+
+  // --- Categories ---
+  // Flat, top-level categories only — schema supports subcategories via
+  // parentId, but a seed doesn't need that depth to be useful.
+  const categoryNames = faker.helpers.uniqueArray(() => faker.commerce.department(), NUM_CATEGORIES);
+
+  const categories = await Promise.all(
+    categoryNames.map((name) =>
+      prisma.category.create({
+        data: {
+          name,
+          slug:        faker.helpers.slugify(name).toLowerCase(),
+          description: faker.lorem.sentence(),
+        },
+      })
+    )
+  );
 
   const productDrafts = Array.from({length: NUM_PRODUCTS}).map(() => {
     const imageCount = faker.number.int({min: MIN_IMAGES_PER_PRODUCT, max: MAX_IMAGES_PER_PRODUCT});
+    const variantCount = faker.number.int({min: MIN_VARIANTS_PER_PRODUCT, max: MAX_VARIANTS_PER_PRODUCT});
+    const basePrice = Number(faker.commerce.price({min: 5, max: 500}));
 
     return {
       name:            faker.commerce.productName(),
       description:     faker.commerce.productDescription(),
-      price:           Number(faker.commerce.price({min: 5, max: 500})),
-      stock:           faker.number.int({min: 0, max: 200}),
+      price:           basePrice,
+      // ~85% of products get a category; the rest exercise the nullable FK.
+      categoryId:      faker.datatype.boolean({probability: 0.85})
+                         ? faker.helpers.arrayElement(categories).id
+                         : null,
       remoteImageUrls: Array.from({length: imageCount}, () => faker.image.urlPicsumPhotos()),
+      variants:        buildProductVariantDrafts(variantCount, basePrice),
     };
   });
+
+  function buildProductVariantDrafts(count: number, basePrice: number) {
+    if (count === 1) {
+      // Simple product: one auto-created variant, no real options.
+      return [
+        {
+          sku:        `SKU-${randomUUID().slice(0, 8).toUpperCase()}`,
+          name:       null as string | null,
+          price:      null as number | null,
+          attributes: null as Record<string, string> | null,
+          isDefault:  true,
+        },
+      ];
+    }
+
+    const combos = buildVariantAttributeCombos(count);
+
+    return combos.map(({color, size}) => {
+      const overridesPrice = faker.datatype.boolean({probability: VARIANT_PRICE_OVERRIDE_CHANCE});
+
+      return {
+        sku:        `SKU-${randomUUID().slice(0, 8).toUpperCase()}`,
+        name:       `${color} / ${size}`,
+        price:      overridesPrice
+                      ? Number((basePrice + faker.number.int({min: -10, max: 20})).toFixed(2))
+                      : null,
+        attributes: {color, size},
+        isDefault:  false,
+      };
+    });
+  }
 
   // Flatten every product's image URLs into one list of download tasks so
   // IMAGE_CONCURRENCY limits total in-flight requests across ALL products,
@@ -180,25 +261,49 @@ async function main() {
     console.warn(`  ${failedCount} image(s) failed to download; falling back to remote URLs for those.`);
   }
 
-  // images is a related table (ProductImage[]), so each product needs its
-  // own create() call with a nested `images: { create: [...] } }` — the
-  // same pattern the /api/products POST route uses. createMany() can't do
-  // nested writes, so we can't batch this the way a scalar imageUrl could.
+  // images/variants are related tables, so each product needs its own
+  // create() call with nested `create: [...]` writes — createMany() can't
+  // do nested writes, so we can't batch this the way scalar columns could.
+  // Variant -> Inventory is nested one level deeper (inventory quantity
+  // replaces the old Product.stock column).
   await mapWithConcurrency(productDrafts, IMAGE_CONCURRENCY, (draft, i) =>
     prisma.product.create({
       data: {
         name:        draft.name,
         description: draft.description,
         price:       draft.price,
-        stock:       draft.stock,
+        categoryId:  draft.categoryId,
         images: {
-          create: localUrlsByProduct[i].map((url) => ({ url })),
+          create: localUrlsByProduct[i].map((url, imageIndex) => ({
+            url,
+            isPrimary: imageIndex === 0, // first image is the primary one
+          })),
+        },
+        variants: {
+          create: draft.variants.map((variant) => ({
+            sku:        variant.sku,
+            name:       variant.name,
+            price:      variant.price,
+            attributes: variant.attributes ?? undefined,
+            isDefault:  variant.isDefault,
+            inventory: {
+              create: (() => {
+                const quantity = faker.number.int({min: 0, max: 200});
+                return {
+                  quantity,
+                  reserved: faker.number.int({min: 0, max: Math.min(quantity, 20)}),
+                };
+              })(),
+            },
+          })),
         },
       },
     })
   );
 
-  console.log(`Seeded ${NUM_USERS} users and ${NUM_PRODUCTS} products.`);
+  const totalVariants = productDrafts.reduce((sum, d) => sum + d.variants.length, 0);
+
+  console.log(`Seeded ${NUM_USERS} users, ${categories.length} categories, ${NUM_PRODUCTS} products, and ${totalVariants} variants.`);
   console.log(`Admin login: admin@admin.us / ${DEFAULT_PASSWORD}`);
   console.log(`All other users: <their email> / ${DEFAULT_PASSWORD}`);
 }
