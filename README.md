@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app), using [Prisma](https://github.com/prisma/orm) as the ORM.
 
+This project is free to use by anyone.
+
 ## Prerequisites
 
 - **Node.js 18.18 or later** (20+ recommended) — check with `node -v`
