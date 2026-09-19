@@ -27,10 +27,7 @@ export default async function EditCategoryPage({
     notFound();
   }
 
-  const boundUpdateCategory = async (
-    state: CategoryFormState,
-    formData: FormData
-  ) => updateCategory(id, state, formData);
+  const boundUpdateCategory = updateCategory.bind(null, id);
 
   return (
     <div className="mx-auto max-w-lg p-6">
