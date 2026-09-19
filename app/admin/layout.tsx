@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {ArrowLeft, Package, Users, Settings, ChevronDown, CreditCard, Coins, FolderTree} from 'lucide-react';
+import {ArrowLeft, Package, Users, Settings, ChevronDown, CreditCard, Coins, FolderTree, Warehouse} from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Back', icon: ArrowLeft },
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/categories', label: 'Categories', icon: FolderTree },
+  { href: '/admin/inventory', label: 'Inventories', icon: Warehouse },
   { href: '/admin/users', label: 'Users', icon: Users },
 ];
 
