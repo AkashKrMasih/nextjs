@@ -1,12 +1,12 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Layers } from 'lucide-react';
 import { EditProductForm } from './edit-product-form';
 
 export default async function EditProductPage({
-  params,
-}: {
+                                                params,
+                                              }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
@@ -34,12 +34,24 @@ export default async function EditProductPage({
         Back to products
       </Link>
 
-      <h1 className="mt-4 text-3xl leading-tight tracking-tight text-foreground">
-        Edit product
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Update the details for {product.name}.
-      </p>
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl leading-tight tracking-tight text-foreground">
+            Edit product
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Update the details for {product.name}.
+          </p>
+        </div>
+
+        <Link
+          href={`/admin/products/${productId}/variants`}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          <Layers className="size-4" />
+          Manage variants
+        </Link>
+      </div>
 
       <EditProductForm product={product} />
     </main>
