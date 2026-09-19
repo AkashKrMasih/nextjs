@@ -19,19 +19,6 @@ export default function SignupPage() {
     return value.length >= 8 ? '' : 'Password must be at least 8 characters';
   }
 
-  function handleRipple(e: React.MouseEvent<HTMLButtonElement>) {
-    const button = e.currentTarget;
-    const rect = button.getBoundingClientRect();
-    const ripple = document.createElement('span');
-    const size = Math.max(rect.width, rect.height);
-    ripple.className = 'ripple';
-    ripple.style.width = ripple.style.height = `${size}px`;
-    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
-    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
-    button.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 500);
-  }
-
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     const form = e.currentTarget;
     const email = (form.elements.namedItem('email') as HTMLInputElement).value;
@@ -49,70 +36,77 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="page">
-      <div className="card">
-        <div className="brand-mark">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-          </svg>
-        </div>
-
-        <h1>Create your account</h1>
-        <p className="subtitle">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm p-8">
+        <h1 className="text-2xl font-semibold text-gray-900">Create your account</h1>
+        <p className="mt-1 mb-6 text-sm text-gray-500">
           Sign up to start saving your work and picking up where you left off.
         </p>
 
-        <form action={formAction} onSubmit={handleSubmit} noValidate>
-          <div className="field">
+        <form action={formAction} onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email address
+            </label>
             <input
               type="email"
               id="email"
               name="email"
-              placeholder=" "
               required
               autoComplete="email"
-              className={emailError ? 'invalid' : ''}
+              className={`w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                emailError ? 'border-red-500' : 'border-gray-300'
+              }`}
               onBlur={(e) => setEmailError(validateEmail(e.target.value))}
               onChange={(e) => emailError && setEmailError(validateEmail(e.target.value))}
             />
-            <label htmlFor="email">Email address</label>
+            {emailError && <p className="mt-1 text-xs text-red-600">{emailError}</p>}
           </div>
-          <p className={`supporting-text ${emailError ? 'error' : ''}`}>{emailError}</p>
 
-          <div className="field">
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <input
               type="password"
               id="password"
               name="password"
-              placeholder=" "
               required
               minLength={8}
               autoComplete="new-password"
-              className={passwordError ? 'invalid' : ''}
+              className={`w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                passwordError ? 'border-red-500' : 'border-gray-300'
+              }`}
               onBlur={(e) => setPasswordError(validatePassword(e.target.value))}
               onChange={(e) => passwordError && setPasswordError(validatePassword(e.target.value))}
             />
-            <label htmlFor="password">Password</label>
+            <p className={`mt-1 text-xs ${passwordError ? 'text-red-600' : 'text-gray-500'}`}>
+              {passwordError || 'Use 8 or more characters'}
+            </p>
           </div>
-          <p className={`supporting-text ${passwordError ? 'error' : ''}`}>
-            {passwordError || 'Use 8 or more characters'}
-          </p>
 
-          {state?.error && <p className="supporting-text error">{state.error}</p>}
+          {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
 
-          <button type="submit" onClick={handleRipple} disabled={pending}>
+          <button
+            type="submit"
+            disabled={pending}
+            className="mt-2 w-full rounded-md bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+          >
             {pending ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
-        <div className="divider-row">
-          <div className="line" />
-          <span>or</span>
-          <div className="line" />
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-xs text-gray-500">or</span>
+          <div className="flex-1 h-px bg-gray-200" />
         </div>
 
-        <p className="footer-text">
-          Already have an account? <a href="/login">Log in</a>
+        <p className="text-center text-sm text-gray-600">
+          Already have an account?{' '}
+          <a href="/login" className="font-medium text-blue-600 hover:underline">
+            Log in
+          </a>
         </p>
       </div>
     </div>
