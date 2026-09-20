@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { AddressManager } from './AddressManager';
 
 export default async function AddressPage({
