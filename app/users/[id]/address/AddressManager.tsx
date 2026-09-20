@@ -72,7 +72,7 @@ export function AddressManager({
           <p className="text-sm text-[#55624A]">You haven&apos;t saved any addresses yet.</p>
         </div>
       ) : (
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {addresses.map((address) => (
             <li
               key={address.id}
