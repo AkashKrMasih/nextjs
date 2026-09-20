@@ -10,20 +10,6 @@ export default async function Home() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
-      <div className="mb-10 flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl tracking-tight">Catalog</h1>
-          <p className="mt-1 text-sm text-[#8A8375]">
-            Browse products. Add, edit, or delete without an account.
-          </p>
-        </div>
-        <Link
-          href="/products/new"
-          className="rounded bg-[#55624A] px-4 py-2 text-sm text-white"
-        >
-          Add product
-        </Link>
-      </div>
 
       {products.length === 0 ? (
         <p className="text-sm text-[#8A8375]">
