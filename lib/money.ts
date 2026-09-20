@@ -1,5 +1,4 @@
 // lib/money.ts
-import {getCurrencyCode} from "@/app/admin/settings/currency/actions";
 import {DEFAULT_CURRENCY} from "@/app/admin/settings/currency/constants";
 
 // Synchronous formatter — takes currency as a parameter, no top-level await
@@ -16,6 +15,6 @@ export function formatPrice(
 
 // Async helper for places that need to fetch it fresh (server components, actions)
 export async function getFormattedPrice(value: { toString(): string } | string | number) {
-  const code = (await getCurrencyCode()).toLowerCase();
+  const code = (process.env.CURRENCY_CODE).toLowerCase();
   return formatPrice(value, code);
 }

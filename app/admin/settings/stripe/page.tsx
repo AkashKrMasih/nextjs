@@ -1,5 +1,4 @@
-import { getStripeSettings } from "./actions";
-import { StripeSettingsForm } from "./StripeSettingsForm";
+import {StripeSettingsForm} from "./StripeSettingsForm";
 
 // Show only the last 4 characters of a secret; never send the full value
 // to the client for a read-only, env-driven field.
@@ -12,22 +11,20 @@ export default async function StripeSettingsPage() {
   // If Stripe keys are fixed via environment variables, use those directly
   // and skip the database lookup entirely.
   const envPublishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
-  const envSecretKey = process.env.STRIPE_SECRET_KEY;
-  const envWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  const isEnvLocked = Boolean(envPublishableKey && envSecretKey);
+  const envSecretKey      = process.env.STRIPE_SECRET_KEY;
+  const envWebhookSecret  = process.env.STRIPE_WEBHOOK_SECRET;
+  const isEnvLocked       = Boolean(envPublishableKey && envSecretKey);
 
-  const settings = isEnvLocked
-    ? {
-        publishableKey: envPublishableKey!,
-        secretKey: mask(envSecretKey!),
-        webhookSecret: envWebhookSecret ? mask(envWebhookSecret) : "",
-      }
-    : await getStripeSettings();
+  const settings = {
+    publishableKey: envPublishableKey!,
+    secretKey:      mask(envSecretKey!),
+    webhookSecret:  envWebhookSecret ? mask(envWebhookSecret) : "",
+  };
 
   return (
     <div className="max-w-xl mx-auto py-10">
       <h1 className="text-2xl font-semibold mb-6">Stripe API Keys</h1>
-      <StripeSettingsForm initialValues={settings} readOnly={isEnvLocked} />
+      <StripeSettingsForm initialValues={settings}/>
     </div>
   );
 }
