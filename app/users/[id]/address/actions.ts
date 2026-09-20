@@ -15,9 +15,18 @@ async function requireOwner(userId: string) {
   if (!session) {
     throw new Error('Not authenticated');
   }
-  if (session.id !== userId && session.role !== 'ADMIN') {
+  if (session.userId !== userId) {
     throw new Error('Not authorized');
   }
+
+  // Guards against a stale session cookie pointing at a user id that no
+  // longer exists (e.g. after a dev DB reset) — without this check that
+  // case surfaces as a confusing UserAddress_userId_fkey violation instead.
+  const userExists = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  if (!userExists) {
+    throw new Error('Your session is out of date. Please log out and log back in.');
+  }
+
   return session;
 }
 

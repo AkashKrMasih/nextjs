@@ -14,7 +14,7 @@ const COOKIE_NAME = 'session';
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
 export type SessionPayload = {
-  userId: number;
+  userId: string;
   email: string;
   name: string;
   role: string;
