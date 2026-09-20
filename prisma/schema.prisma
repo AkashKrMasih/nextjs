@@ -129,6 +129,38 @@ model User {
   reviews        Review[]
   orders         Order[]
   orderAddresses OrderAddress[]
+  addresses      UserAddress[]
+}
+
+// Saved delivery addresses for logged-in users, so they can pick from a
+// list at checkout instead of retyping. Guest checkouts have no login
+// session to attach these to, so guests fill OrderAddress fresh each time.
+model UserAddress {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  label   String? // e.g. "Home", "Work" — optional, user-facing only
+  name    String // recipient name
+  phone   String?
+
+  address1   String
+  address2   String?
+  city       String
+  state      String?
+  postalCode String
+  country    String
+
+  // Exactly one default per user — enforce in app layer (unset the previous
+  // default in the same transaction when a new one is set).
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderAddresses OrderAddress[] // orders that were snapshotted from this saved address
+
+  @@index([userId])
 }
 
 model Review {
@@ -231,8 +263,10 @@ model Order {
   items                 OrderItem[]
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
-  userAddressId         String?
-  address               OrderAddress @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // OrderAddress owns the FK (orderId @unique on that side), so this side
+  // is just the reverse lookup — no fields/references here.
+  address OrderAddress?
 }
 
 model OrderItem {
@@ -262,6 +296,15 @@ model OrderAddress {
   userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  // Optional: if a logged-in user picked one of their saved addresses at
+  // checkout, this points back to it. Null for guest orders (no saved
+  // address exists) and still null if the user typed a one-off address
+  // instead of picking a saved one. This is a pointer only — the fields
+  // below are always the source of truth for what the order actually
+  // shipped to, even if the saved address is edited/deleted later.
+  savedAddressId String?
+  savedAddress   UserAddress? @relation(fields: [savedAddressId], references: [id], onDelete: SetNull)
+
   name       String
   phone      String?
   address1   String
@@ -272,4 +315,5 @@ model OrderAddress {
   country    String
 
   @@index([userId])
+  @@index([savedAddressId])
 }
