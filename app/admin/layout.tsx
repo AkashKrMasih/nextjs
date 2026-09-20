@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {ArrowLeft, Package, Users, Settings, ChevronDown, CreditCard, Coins, FolderTree, Warehouse} from 'lucide-react';
@@ -20,15 +20,18 @@ const SETTINGS_ITEMS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
   const settingsActive = SETTINGS_ITEMS.some((item) => pathname === item.href);
+  const [settingsOpen, setSettingsOpen] = useState(settingsActive);
+
+  useEffect(() => {
+    if (settingsActive) setSettingsOpen(true);
+  }, [settingsActive]);
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-56 shrink-0 border-r border-border bg-card">
+      <aside className="w-56 shrink-0 border-r border-gray-200 bg-white">
         <div className="px-6 py-6">
-          <span className="text-lg font-medium tracking-tight text-foreground">Admin</span>
+          <span className="text-lg font-medium tracking-tight text-gray-900">Admin</span>
         </div>
 
         <nav className="flex flex-col gap-1 px-3">
@@ -41,8 +44,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className={[
                   'flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-colors',
                   active
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
                 ].join(' ')}
               >
                 <Icon className="size-4" />
@@ -59,8 +62,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className={[
                 'flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-colors',
                 settingsActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  ? 'bg-blue-500 text-blue-700 text-white'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
               ].join(' ')}
             >
               <Settings className="size-4" />
@@ -84,8 +87,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       className={[
                         'flex items-center gap-3 rounded-full px-4 py-2 text-sm font-medium transition-colors',
                         active
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
                       ].join(' ')}
                     >
                       <Icon className="size-4" />
