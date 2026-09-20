@@ -38,6 +38,56 @@ const MAX_VARIANTS_PER_PRODUCT = 4;
 const VARIANT_COLORS = ["Black", "White", "Red", "Blue", "Green", "Gray"];
 const VARIANT_SIZES  = ["XS", "S", "M", "L", "XL"];
 
+// Fixed set of electronics categories — every seeded product belongs to
+// (or is deliberately left out of, per CATEGORY_ASSIGN_CHANCE below) one
+// of these, instead of faker's random commerce departments.
+const ELECTRONICS_CATEGORIES = [
+  "Smartphones",
+  "Laptops & Computers",
+  "Audio & Headphones",
+  "Cameras & Drones",
+  "Wearable Tech",
+  "Smart Home",
+  "Gaming",
+  "TV & Home Theater",
+];
+
+// Product "type" nouns, paired with a faker commerce adjective to build
+// realistic-sounding electronics product names, e.g. "Ergonomic Bluetooth
+// Speaker" or "Sleek 4K Monitor".
+const ELECTRONICS_PRODUCT_TYPES = [
+  "Smartphone",
+  "Laptop",
+  "Tablet",
+  "Bluetooth Speaker",
+  "Wireless Headphones",
+  "Earbuds",
+  "Smartwatch",
+  "Fitness Tracker",
+  "4K Monitor",
+  "Mechanical Keyboard",
+  "Wireless Mouse",
+  "Webcam",
+  "Digital Camera",
+  "Drone",
+  "Action Camera",
+  "VR Headset",
+  "Gaming Console",
+  "Gaming Controller",
+  "Power Bank",
+  "Wireless Charger",
+  "Smart Speaker",
+  "Smart Thermostat",
+  "Smart Light Bulb",
+  "Security Camera",
+  "Router",
+  "External SSD",
+  "Graphics Card",
+  "Soundbar",
+  "Projector",
+  "Streaming Media Player",
+];
+
 // Odds that a non-default variant overrides the product's base price
 // (e.g. a Large costs a bit more than a Small).
 const VARIANT_PRICE_OVERRIDE_CHANCE = 0.3;
@@ -174,8 +224,10 @@ async function main() {
 
   // --- Categories ---
   // Flat, top-level categories only — schema supports subcategories via
-  // parentId, but a seed doesn't need that depth to be useful.
-  const categoryNames = faker.helpers.uniqueArray(() => faker.commerce.department(), NUM_CATEGORIES);
+  // parentId, but a seed doesn't need that depth to be useful. Fixed
+  // electronics categories (not faker.commerce.department()) so every
+  // category actually fits an electronics storefront.
+  const categoryNames = ELECTRONICS_CATEGORIES.slice(0, NUM_CATEGORIES);
 
   const categories = await Promise.all(
     categoryNames.map((name) =>
@@ -194,8 +246,10 @@ async function main() {
     const variantCount = faker.number.int({min: MIN_VARIANTS_PER_PRODUCT, max: MAX_VARIANTS_PER_PRODUCT});
     const basePrice = Number(faker.commerce.price({min: 5, max: 500}));
 
+    const productType = faker.helpers.arrayElement(ELECTRONICS_PRODUCT_TYPES);
+
     return {
-      name:            faker.commerce.productName(),
+      name:            `${faker.commerce.productAdjective()} ${productType}`,
       description:     faker.commerce.productDescription(),
       price:           basePrice,
       // ~85% of products get a category; the rest exercise the nullable FK.
