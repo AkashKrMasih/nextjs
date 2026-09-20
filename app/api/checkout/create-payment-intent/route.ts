@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
-import {getCurrencyCode} from "@/app/admin/settings/currency/actions";
 
 type RequestBody = {
   items: { id: string; quantity: number }[];
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amountTotal,
-    currency: (await getCurrencyCode()).toLowerCase(), // ADAPT: pull from config if you support multiple currencies
+    currency: (process.env.CURRENCY_CODE).toLowerCase(), // ADAPT: pull from config if you support multiple currencies
     receipt_email: user?.email ?? guestEmail,
     metadata: {
       userId: user?.id ?? '',
