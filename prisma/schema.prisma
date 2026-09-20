@@ -118,16 +118,17 @@ enum Role {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String?
-  password      String
-  password_salt String
-  role          Role     @default(CUSTOMER)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  reviews       Review[]
-  orders        Order[]
+  id             String         @id @default(cuid())
+  email          String         @unique
+  name           String?
+  password       String
+  password_salt  String
+  role           Role           @default(CUSTOMER)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  reviews        Review[]
+  orders         Order[]
+  orderAddresses OrderAddress[]
 }
 
 model Review {
@@ -219,17 +220,19 @@ model AdminSettings {
 }
 
 model Order {
-  id                    String      @id @default(cuid())
+  id                    String       @id @default(cuid())
   userId                String? // null for guest checkout
-  user                  User?       @relation(fields: [userId], references: [id])
+  user                  User?        @relation(fields: [userId], references: [id])
   guestEmail            String? // set when userId is null
-  status                OrderStatus @default(PENDING)
+  status                OrderStatus  @default(PENDING)
   amountTotal           Int // cents, matches Stripe's PaymentIntent.amount
-  currency              String      @default("usd")
-  stripePaymentIntentId String      @unique
+  currency              String       @default("usd")
+  stripePaymentIntentId String       @unique
   items                 OrderItem[]
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  userAddressId         String?
+  address               OrderAddress @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model OrderItem {
@@ -247,4 +250,26 @@ enum OrderStatus {
   PENDING
   PAID
   FAILED
+}
+
+model OrderAddress {
+  id      String @id @default(cuid())
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Optional: links the address back to the account for guest checkouts
+  // (userId is null) or logged-in orders. Kept nullable to match Order.userId.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  name       String
+  phone      String?
+  address1   String
+  address2   String?
+  city       String
+  state      String?
+  postalCode String
+  country    String
+
+  @@index([userId])
 }
