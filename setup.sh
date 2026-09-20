@@ -9,8 +9,10 @@
 #   4. Creates .env from .env.example (if not already present)
 #   5. Generates a JWT_SECRET and writes it into .env (if not already set)
 #   6. Prompts for/validates DATABASE_URL
-#   7. Runs prisma migrate dev + prisma generate
-#   8. Optionally runs the seed script
+#   7. Warns if CURRENCY_CODE, CURRENCY_SYMBOL, STRIPE_SECRET_KEY, or
+#      STRIPE_PUBLISHABLE_KEY are missing from .env
+#   8. Runs prisma migrate dev + prisma generate
+#   9. Optionally runs the seed script
 #
 # Usage:
 #   chmod +x setup.sh
@@ -135,7 +137,28 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 7. Prisma: migrate + generate
+# 7. Check currency and Stripe configuration
+# ---------------------------------------------------------------------------
+missing_vars=()
+
+for var in CURRENCY_CODE CURRENCY_SYMBOL STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY; do
+  if ! grep -qE "^${var}=.+" .env 2>/dev/null; then
+    missing_vars+=("$var")
+  fi
+done
+
+if (( ${#missing_vars[@]} > 0 )); then
+  warn "The following variables are missing from .env: ${missing_vars[*]}"
+  echo "  CURRENCY_CODE / CURRENCY_SYMBOL control how prices are displayed (e.g. USD / \$)."
+  echo "  STRIPE_SECRET_KEY / STRIPE_PUBLISHABLE_KEY are required for payments (checkout will not work without them)."
+  echo "  Get Stripe keys from: https://dashboard.stripe.com/apikeys"
+  echo "  See .env.example for the expected format, then add them to .env."
+else
+  ok "Currency and Stripe configuration found in .env."
+fi
+
+# ---------------------------------------------------------------------------
+# 8. Prisma: migrate + generate
 # ---------------------------------------------------------------------------
 if [[ -f prisma/schema.prisma ]]; then
   info "Running prisma migrate dev..."
@@ -145,7 +168,7 @@ if [[ -f prisma/schema.prisma ]]; then
   npx prisma generate
 
   # ---------------------------------------------------------------------
-  # 8. Optional seed
+  # 9. Optional seed
   # ---------------------------------------------------------------------
   if grep -q '"seed"' package.json 2>/dev/null || grep -q 'prisma.*seed' package.json 2>/dev/null; then
     read -rp "Seed script detected. Run 'npx prisma db seed' now? [y/N] " reply
