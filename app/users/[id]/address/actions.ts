@@ -16,6 +16,9 @@ async function requireOwner(userId: string) {
     throw new Error('Not authenticated');
   }
   if (session.userId !== userId) {
+    console.log(session);
+    console.log("userId...................");
+    console.log(userId);
     throw new Error('Not authorized');
   }
 
