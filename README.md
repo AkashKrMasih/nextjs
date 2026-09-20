@@ -43,6 +43,10 @@ At minimum, set your database connection string and a JWT secret:
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/DATABASE_NAME"
 JWT_SECRET="your-generated-secret-here"
+CURRENCY_CODE="USD"
+CURRENCY_SYMBOL="$"
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_PUBLISHABLE_KEY="pk_test_..."
 ```
 
 > The `DATABASE_URL` format depends on your database provider. See the [Prisma connection URL reference](https://www.prisma.io/docs/orm/reference/connection-urls).
@@ -54,6 +58,10 @@ openssl rand -base64 32
 ```
 
 Copy the output into `JWT_SECRET` in your `.env` file. Keep this value private — never commit it to version control, and use a different secret per environment (development, staging, production). If it's ever exposed, rotate it immediately; existing tokens signed with the old secret will be invalidated.
+
+`CURRENCY_CODE` and `CURRENCY_SYMBOL` control how prices are formatted throughout the app (e.g. `USD` / `$`, `EUR` / `€`, `INR` / `₹`).
+
+`STRIPE_SECRET_KEY` and `STRIPE_PUBLISHABLE_KEY` are required for checkout/payments to work. Get both from your [Stripe dashboard](https://dashboard.stripe.com/apikeys) — use the `sk_test_...` / `pk_test_...` pair for development and the live pair only in production. `setup.sh` will warn you if any of these four variables are missing from `.env`.
 
 ### 3. Set up the database
 
@@ -116,6 +124,9 @@ The `.env` file is missing or not in the project root. Prisma reads `.env` from 
 
 **`JWT_SECRET is not defined` / auth requests failing with a 500**
 The `.env` file is missing a `JWT_SECRET` value, or the server was started before it was added. Add `JWT_SECRET` to `.env` (see step 2 above) and restart `npm run dev`.
+
+**Prices display incorrectly, or checkout/payments fail**
+`.env` is likely missing `CURRENCY_CODE`, `CURRENCY_SYMBOL`, `STRIPE_SECRET_KEY`, or `STRIPE_PUBLISHABLE_KEY`. `setup.sh` warns about any of these that are missing — check its output, or compare your `.env` against `.env.example` and fill in the missing values (Stripe keys come from your [Stripe dashboard](https://dashboard.stripe.com/apikeys)).
 
 **Port 3000 already in use**
 Run on a different port: `npm run dev -- -p 3001`.
