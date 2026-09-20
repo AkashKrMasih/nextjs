@@ -72,7 +72,7 @@ export async function SiteHeader() {
                   </div>
                   <div className="border-t border-[#D8D2C4] pt-2">
                     <Link
-                      href={`/users/${session.id}/address`}
+                      href={`/users/${session.userId}/address`}
                       className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-[#55624A] transition-colors hover:bg-[#EFE9DC] hover:text-[#1E1B16]"
                       role="menuitem"
                     >

@@ -16,7 +16,7 @@ export default async function AddressPage({
   }
 
   // Only the account owner (or an admin) can view/manage this address book.
-  if (session.id !== id && session.role !== 'ADMIN') {
+  if (session.userId !== id) {
     notFound();
   }
 
