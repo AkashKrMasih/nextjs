@@ -1,8 +1,12 @@
-import { getCurrencySettings } from "./actions";
 import CurrencySettingsForm from "./CurrencySettingsForm";
 
 export default async function CurrencySettingsPage() {
-  const currency = await getCurrencySettings();
+  // If currency is fixed via environment variables, use that directly
+  // and skip the database lookup entirely.
+  const envCode = process.env.CURRENCY_CODE;
+  const envSymbol = process.env.CURRENCY_SYMBOL;
+
+  const currency = { code: envCode!, symbol: envSymbol! }
 
   return (
     <div className="max-w-xl mx-auto py-8">
