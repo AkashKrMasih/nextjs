@@ -25,11 +25,11 @@ export async function GET() {
     const title = attr.title.trim();
     if (!title) continue;
 
-    const dedupeKey = title.toLowerCase();
-    if (!byTitle.has(dedupeKey)) {
-      byTitle.set(dedupeKey, { title, values: new Set() });
+    const toLowerCaseTitle = title.toLowerCase();
+    if (!byTitle.has(toLowerCaseTitle)) {
+      byTitle.set(toLowerCaseTitle, { title, values: new Set() });
     }
-    const entry = byTitle.get(dedupeKey)!;
+    const entry = byTitle.get(toLowerCaseTitle)!;
 
     for (const { value } of attr.values) {
       const trimmed = value.trim();
