@@ -117,8 +117,9 @@ model ProductImage {
 }
 
 // A named attribute belonging to a product (e.g. "Color", "Material").
-// Actual values live in AttributeValue so an attribute can hold one or
-// many values (e.g. Color -> Red, Blue).
+// Each attribute holds a single value (e.g. Material -> Cotton). To give
+// a product multiple values for the same concept, add multiple
+// ProductAttribute rows with the same title.
 model ProductAttribute {
   id    String @id @default(cuid())
   title String
