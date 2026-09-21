@@ -20,17 +20,11 @@ type VariantAttribute = {
   value: string;
 };
 
-// Product-level attributes, e.g. Material -> [Cotton, Wool].
-// Mirrors the ProductAttribute / AttributeValue models.
-type AttributeValueField = {
-  key: string;
-  value: string;
-};
-
+// Product-level attribute, e.g. Material -> Cotton. Mirrors ProductAttribute.
 type AttributeField = {
   key: string;
   title: string;
-  values: AttributeValueField[];
+  value: string;
 };
 
 // Suggestions for the title/value autocompletes, sourced from attributes
@@ -82,7 +76,7 @@ function emptyAttribute(): AttributeField {
   return {
     key: newKey(),
     title: '',
-    values: [{ key: newKey(), value: '' }],
+    value: '',
   };
 }
 
@@ -230,34 +224,10 @@ export function ProductForm({
     update('attributes', values.attributes.filter((a) => a.key !== key));
   }
 
-  function addAttributeValueField(attrKey: string) {
-    const attr = values.attributes.find((a) => a.key === attrKey);
-    if (!attr) return;
+  function updateAttributeValue(attrKey: string, value: string) {
     update(
       'attributes',
-      values.attributes.map((a) =>
-        a.key === attrKey ? { ...a, values: [...a.values, { key: newKey(), value: '' }] } : a
-      )
-    );
-  }
-
-  function updateAttributeValueField(attrKey: string, valueKey: string, value: string) {
-    update(
-      'attributes',
-      values.attributes.map((a) =>
-        a.key === attrKey
-          ? { ...a, values: a.values.map((v) => (v.key === valueKey ? { ...v, value } : v)) }
-          : a
-      )
-    );
-  }
-
-  function removeAttributeValueField(attrKey: string, valueKey: string) {
-    update(
-      'attributes',
-      values.attributes.map((a) =>
-        a.key === attrKey ? { ...a, values: a.values.filter((v) => v.key !== valueKey) } : a
-      )
+      values.attributes.map((a) => (a.key === attrKey ? { ...a, value } : a))
     );
   }
 
@@ -284,15 +254,11 @@ export function ProductForm({
       images: values.images
             .filter((img) => img.url.trim())
             .map((img) => ({ url: img.url.trim(), isPrimary: img.isPrimary })),
-      // Sent as plain title/values; the API matches an existing
+      // Sent as plain title/value pairs; the API matches an existing
       // ProductAttribute by title (case-insensitive) or creates a new one.
       attributes: values.attributes
-        .filter((a) => a.title.trim())
-        .map((a) => ({
-          title: a.title.trim(),
-          values: a.values.map((v) => v.value.trim()).filter(Boolean),
-        }))
-        .filter((a) => a.values.length > 0),
+                  .map((a) => ({ title: a.title.trim(), value: a.value.trim() }))
+                  .filter((a) => a.title && a.value),
       variants: values.variants.map((v) => ({
         sku: v.sku.trim(),
         name: v.name.trim() || null,
@@ -459,44 +425,20 @@ export function ProductForm({
                   </button>
                 </div>
 
-                {/* Suggestions for this specific attribute's values */}
+                {/* Suggestions for this specific attribute's value */}
                 <datalist id={valuesListId}>
                   {valueSuggestions.map((v) => (
                     <option key={v} value={v} />
                   ))}
                 </datalist>
 
-                <div className="space-y-1.5 pl-1">
-                  {attr.values.map((v) => (
-                    <div key={v.key} className="flex items-center gap-2">
-                      <input
-                        className="flex-1 rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
-                        placeholder="Value (e.g. Cotton)"
-                        list={valuesListId}
-                        value={v.value}
-                        onChange={(e) =>
-                          updateAttributeValueField(attr.key, v.key, e.target.value)
-                        }
-                      />
-                      {attr.values.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeAttributeValueField(attr.key, v.key)}
-                          className="text-xs text-red-700"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addAttributeValueField(attr.key)}
-                    className="text-xs text-[#55624A] underline"
-                  >
-                    + Add value
-                  </button>
-                </div>
+                <input
+                  className="w-full rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
+                  placeholder="Value (e.g. Cotton)"
+                  list={valuesListId}
+                  value={attr.value}
+                  onChange={(e) => updateAttributeValue(attr.key, e.target.value)}
+                />
               </div>
             );
           })
