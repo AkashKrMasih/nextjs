@@ -223,16 +223,6 @@ export function ProductDetail({
             </button>
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Link
-              href={`/products/${product.id}/edit`}
-              className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              Edit
-            </Link>
-            <DeleteProductButton id={product.id} name={product.name} />
-          </div>
-
           {/* Trust badges */}
           <div className="grid grid-cols-3 gap-2 pt-4">
             {[

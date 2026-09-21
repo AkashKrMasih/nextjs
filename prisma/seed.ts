@@ -21,8 +21,8 @@ const DEFAULT_PASSWORD = "password";
 // served the same way real uploads are.
 const UPLOAD_DIR = path.join(process.cwd(), "public/uploads/products");
 
-// How many images to download in parallel. Picsum will start returning
-// errors/timeouts if you fire too many requests at once.
+// How many images to download in parallel. The image provider will start
+// returning errors/timeouts if you fire too many requests at once.
 const IMAGE_CONCURRENCY = 10;
 
 // Each product gets a random number of images in this range.
@@ -37,6 +37,79 @@ const MIN_VARIANTS_PER_PRODUCT = 1;
 const MAX_VARIANTS_PER_PRODUCT = 4;
 const VARIANT_COLORS = ["Black", "White", "Red", "Blue", "Green", "Gray"];
 const VARIANT_SIZES  = ["XS", "S", "M", "L", "XL"];
+
+// Fixed set of electronics categories — every seeded product belongs to
+// (or is deliberately left out of, per CATEGORY_ASSIGN_CHANCE below) one
+// of these, instead of faker's random commerce departments.
+const ELECTRONICS_CATEGORIES = [
+  "Smartphones",
+  "Laptops & Computers",
+  "Audio & Headphones",
+  "Cameras & Drones",
+  "Wearable Tech",
+  "Smart Home",
+  "Gaming",
+  "TV & Home Theater",
+];
+
+// Product "type" nouns, paired with a faker commerce adjective to build
+// realistic-sounding electronics product names, e.g. "Ergonomic Bluetooth
+// Speaker" or "Sleek 4K Monitor".
+const ELECTRONICS_PRODUCT_TYPES = [
+  "Smartphone",
+  "Laptop",
+  "Tablet",
+  "Bluetooth Speaker",
+  "Wireless Headphones",
+  "Earbuds",
+  "Smartwatch",
+  "Fitness Tracker",
+  "4K Monitor",
+  "Mechanical Keyboard",
+  "Wireless Mouse",
+  "Webcam",
+  "Digital Camera",
+  "Drone",
+  "Action Camera",
+  "VR Headset",
+  "Gaming Console",
+  "Gaming Controller",
+  "Power Bank",
+  "Wireless Charger",
+  "Smart Speaker",
+  "Smart Thermostat",
+  "Smart Light Bulb",
+  "Security Camera",
+  "Router",
+  "External SSD",
+  "Graphics Card",
+  "Soundbar",
+  "Projector",
+  "Streaming Media Player",
+];
+
+// placehold.co background/text colour pairs (hex, no "#") used for the
+// generated placeholder photos below — a small curated palette reads a lot
+// better than fully random hex codes on every image.
+const PLACEHOLDER_COLOR_PAIRS = [
+  { bg: "1f2937", fg: "f9fafb" }, // slate
+  { bg: "111827", fg: "38bdf8" }, // near-black / sky
+  { bg: "0f172a", fg: "a3e635" }, // navy / lime
+  { bg: "27272a", fg: "fbbf24" }, // charcoal / amber
+  { bg: "1e293b", fg: "f472b6" }, // slate / pink
+  { bg: "18181b", fg: "34d399" }, // near-black / emerald
+];
+
+// LoremFlickr (the previous source for topic-matched fake photos) has shut
+// down, so real photos keyed by keyword aren't reliably available without
+// a paid image-API key. Instead we generate a placehold.co image labelled
+// with the product's own type, e.g. "Digital Camera" or "VR Headset" — not
+// a real photo, but unambiguously the right image for that product, and it
+// needs no API key and won't rot the way a dead photo provider would.
+function buildPlaceholderImageUrl(text: string, colors: { bg: string; fg: string }): string {
+  const encodedText = text.split(" ").map(encodeURIComponent).join("+");
+  return `https://placehold.co/640x480/${colors.bg}/${colors.fg}.png?text=${encodedText}`;
+}
 
 // Odds that a non-default variant overrides the product's base price
 // (e.g. a Large costs a bit more than a Small).
@@ -96,7 +169,7 @@ async function mapWithConcurrency<T, R>(
 // look up every ProductImage row, delete its file off disk, THEN let the
 // caller delete the rows themselves. Only touches files under
 // /uploads/products/ — a row whose download failed and fell back to a
-// remote picsum URL has nothing local to clean up, so it's skipped.
+// remote placehold.co URL has nothing local to clean up, so it's skipped.
 async function deleteLocalProductImageFiles() {
   const images = await prisma.productImage.findMany({ select: { url: true } });
 
@@ -174,8 +247,10 @@ async function main() {
 
   // --- Categories ---
   // Flat, top-level categories only — schema supports subcategories via
-  // parentId, but a seed doesn't need that depth to be useful.
-  const categoryNames = faker.helpers.uniqueArray(() => faker.commerce.department(), NUM_CATEGORIES);
+  // parentId, but a seed doesn't need that depth to be useful. Fixed
+  // electronics categories (not faker.commerce.department()) so every
+  // category actually fits an electronics storefront.
+  const categoryNames = ELECTRONICS_CATEGORIES.slice(0, NUM_CATEGORIES);
 
   const categories = await Promise.all(
     categoryNames.map((name) =>
@@ -194,15 +269,26 @@ async function main() {
     const variantCount = faker.number.int({min: MIN_VARIANTS_PER_PRODUCT, max: MAX_VARIANTS_PER_PRODUCT});
     const basePrice = Number(faker.commerce.price({min: 5, max: 500}));
 
+    const productType = faker.helpers.arrayElement(ELECTRONICS_PRODUCT_TYPES);
+    const imageColors = faker.helpers.arrayElement(PLACEHOLDER_COLOR_PAIRS);
+
     return {
-      name:            faker.commerce.productName(),
+      name:            `${faker.commerce.productAdjective()} ${productType}`,
       description:     faker.commerce.productDescription(),
       price:           basePrice,
       // ~85% of products get a category; the rest exercise the nullable FK.
       categoryId:      faker.datatype.boolean({probability: 0.85})
                          ? faker.helpers.arrayElement(categories).id
                          : null,
-      remoteImageUrls: Array.from({length: imageCount}, () => faker.image.urlPicsumPhotos()),
+      // Labelled with the product's own type (e.g. "Digital Camera") so the
+      // downloaded images are obviously the right image for that product;
+      // same colour pair across a product's own images for consistency.
+      remoteImageUrls: Array.from({length: imageCount}, (_, imageIndex) =>
+        buildPlaceholderImageUrl(
+          imageCount > 1 ? `${productType} ${imageIndex + 1}` : productType,
+          imageColors
+        )
+      ),
       variants:        buildProductVariantDrafts(variantCount, basePrice),
     };
   });
