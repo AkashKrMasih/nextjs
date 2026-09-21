@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Heart,
@@ -16,6 +17,7 @@ import {
 import { formatPrice } from '@/lib/money';
 import { AddToCartButton } from '@/app/components/AddToCartButton';
 import { DeleteProductButton } from '@/app/components/DeleteProductButton';
+import { toggleWishlist } from '@/app/actions/wishlist';
 
 type ProductImage = {
   id: string;
@@ -121,12 +123,16 @@ function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: 
 export function ProductDetail({
                                 product,
                                 related,
+                                initialWishlisted = false,
                               }: {
   product: Product;
   related: Product[];
+  initialWishlisted?: boolean;
 }) {
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
-  const [wishlist, setWishlist] = useState(false);
+  const [wishlisted, setWishlisted] = useState(initialWishlisted);
+  const [isWishlistPending, startWishlistTransition] = useTransition();
   const inStock = product.stock > 0;
 
   function handleShare() {
@@ -135,6 +141,25 @@ export function ProductDetail({
     } else if (typeof navigator !== 'undefined') {
       navigator.clipboard.writeText(window.location.href);
     }
+  }
+
+  function handleWishlistToggle() {
+    const next = !wishlisted;
+    setWishlisted(next); // optimistic
+
+    startWishlistTransition(async () => {
+      const result = await toggleWishlist(product.id);
+
+      if (!result.ok) {
+        setWishlisted(!next); // revert on failure
+        if (result.error === 'UNAUTHENTICATED') {
+          router.push(`/login?next=/products/${product.id}`);
+        }
+        return;
+      }
+
+      setWishlisted(result.wishlisted);
+    });
   }
 
   return (
@@ -202,16 +227,18 @@ export function ProductDetail({
             />
 
             <button
-              onClick={() => setWishlist((w) => !w)}
-              aria-label="Add to wishlist"
+              onClick={handleWishlistToggle}
+              disabled={isWishlistPending}
+              aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              aria-pressed={wishlisted}
               className={[
-                'flex h-12 w-12 items-center justify-center rounded-full border transition-all',
-                wishlist
+                'flex h-12 w-12 items-center justify-center rounded-full border transition-all disabled:opacity-60',
+                wishlisted
                   ? 'border-red-300 bg-red-50 text-red-500'
                   : 'border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground',
               ].join(' ')}
             >
-              <Heart className={['size-5', wishlist ? 'fill-red-500' : ''].join(' ')} />
+              <Heart className={['size-5', wishlisted ? 'fill-red-500' : ''].join(' ')} />
             </button>
 
             <button
