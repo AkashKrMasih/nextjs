@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ProductForm } from '@/app/components/ProductForm';
+import { ProductForm } from '../ProductForm';
 
 export default function NewProductPage() {
   return (

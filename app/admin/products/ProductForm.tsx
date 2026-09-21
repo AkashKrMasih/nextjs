@@ -2,33 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-type Category = {
-  id: number;
-  name: string;
-};
-
-type ImageField = {
-  key: string;
-  url: string;
-  isPrimary: boolean;
-};
-
-type VariantAttribute = {
-  key: string;
-  name: string;
-  value: string;
-};
-
-type VariantField = {
-  key: string;
-  sku: string;
-  name: string;
-  price: string; // optional override; blank = use the product's base price
-  quantity: string;
-  isDefault: boolean;
-  attributes: VariantAttribute[];
-};
+import {Category, ImageField, VariantAttribute, AttributeField, AttributeOption, VariantField} from "@/app/admin/products/types";
 
 export type ProductFormValues = {
   name: string;
@@ -37,6 +11,7 @@ export type ProductFormValues = {
   categoryId: string; // '' = no category
   images: ImageField[];
   variants: VariantField[];
+  attributes: AttributeField[];
 };
 
 let uid = 0;
@@ -57,6 +32,14 @@ function emptyVariant(isDefault = false): VariantField {
   };
 }
 
+function emptyAttribute(): AttributeField {
+  return {
+    key: newKey(),
+    title: '',
+    value: '',
+  };
+}
+
 function emptyValues(): ProductFormValues {
   return {
     name: '',
@@ -65,6 +48,7 @@ function emptyValues(): ProductFormValues {
     categoryId: '',
     images: [],
     variants: [emptyVariant(true)],
+    attributes: [],
   };
 }
 
@@ -78,6 +62,7 @@ export function ProductForm({
   const router = useRouter();
   const [values, setValues] = useState<ProductFormValues>(initial ?? emptyValues());
   const [categories, setCategories] = useState<Category[]>([]);
+  const [attributeOptions, setAttributeOptions] = useState<AttributeOption[]>([]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -87,6 +72,24 @@ export function ProductForm({
     .then((data) => setCategories(Array.isArray(data) ? data : []))
     .catch(() => setCategories([]));
   }, []);
+
+  useEffect(() => {
+    fetch('/api/attributes')
+    .then((res) => (res.ok ? res.json() : []))
+    .then((data) => setAttributeOptions(Array.isArray(data) ? data : []))
+    .catch(() => setAttributeOptions([]));
+  }, []);
+
+  // Existing values suggested for a given attribute title, so picking an
+  // already-used title (e.g. "Material") also suggests its known values
+  // (e.g. "Cotton", "Wool") — case-insensitive match on title.
+  function valuesForTitle(title: string): string[] {
+    const normalized = title.trim().toLowerCase();
+    if (!normalized) return [];
+    return (
+      attributeOptions.find((a) => a.title.trim().toLowerCase() === normalized)?.values ?? []
+    );
+  }
 
   function update<K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -165,6 +168,29 @@ export function ProductForm({
     });
   }
 
+  // --- product attributes ---
+  function addAttributeRow() {
+    update('attributes', [...values.attributes, emptyAttribute()]);
+  }
+
+  function updateAttributeTitle(key: string, title: string) {
+    update(
+      'attributes',
+      values.attributes.map((a) => (a.key === key ? { ...a, title } : a))
+    );
+  }
+
+  function removeAttributeRow(key: string) {
+    update('attributes', values.attributes.filter((a) => a.key !== key));
+  }
+
+  function updateAttributeValue(attrKey: string, value: string) {
+    update(
+      'attributes',
+      values.attributes.map((a) => (a.key === attrKey ? { ...a, value } : a))
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -188,6 +214,11 @@ export function ProductForm({
       images: values.images
             .filter((img) => img.url.trim())
             .map((img) => ({ url: img.url.trim(), isPrimary: img.isPrimary })),
+      // Sent as plain title/value pairs; the API matches an existing
+      // ProductAttribute by title (case-insensitive) or creates a new one.
+      attributes: values.attributes
+                  .map((a) => ({ title: a.title.trim(), value: a.value.trim() }))
+                  .filter((a) => a.title && a.value),
       variants: values.variants.map((v) => ({
         sku: v.sku.trim(),
         name: v.name.trim() || null,
@@ -305,6 +336,75 @@ export function ProductForm({
         )}
       </section>
 
+      {/* Product attributes */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-[#55624A]">Attributes</h2>
+          <button
+            type="button"
+            onClick={addAttributeRow}
+            className="text-sm text-[#55624A] underline"
+          >
+            + Add attribute
+          </button>
+        </div>
+        <p className="text-xs text-[#8A8375]">
+          Specs like Material or Weight. Start typing a name to reuse one already in your
+          catalog — anything new is created automatically when you save.
+        </p>
+
+        {/* Shared datalist of known attribute titles, reused by every row below */}
+        <datalist id="attribute-title-options">
+          {attributeOptions.map((opt) => (
+            <option key={opt.title} value={opt.title} />
+          ))}
+        </datalist>
+
+        {values.attributes.length === 0 ? (
+          <p className="text-sm text-[#8A8375]">No attributes yet.</p>
+        ) : (
+          values.attributes.map((attr) => {
+            const valueSuggestions = valuesForTitle(attr.title);
+            const valuesListId = `attribute-values-${attr.key}`;
+            return (
+              <div key={attr.key} className="space-y-2 rounded border border-[#D8D2C4] p-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    className="flex-1 rounded border border-[#D8D2C4] bg-white p-2"
+                    placeholder="Attribute name (e.g. Material)"
+                    list="attribute-title-options"
+                    value={attr.title}
+                    onChange={(e) => updateAttributeTitle(attr.key, e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeAttributeRow(attr.key)}
+                    className="text-xs text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                {/* Suggestions for this specific attribute's value */}
+                <datalist id={valuesListId}>
+                  {valueSuggestions.map((v) => (
+                    <option key={v} value={v} />
+                  ))}
+                </datalist>
+
+                <input
+                  className="w-full rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
+                  placeholder="Value (e.g. Cotton)"
+                  list={valuesListId}
+                  value={attr.value}
+                  onChange={(e) => updateAttributeValue(attr.key, e.target.value)}
+                />
+              </div>
+            );
+          })
+        )}
+      </section>
+
       {/* Variants */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -377,13 +477,13 @@ export function ProductForm({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-[#8A8375]">Attributes</span>
+                <span className="text-xs text-[#8A8375]">Options</span>
                 <button
                   type="button"
                   onClick={() => addAttribute(v.key)}
                   className="text-xs text-[#55624A] underline"
                 >
-                  + Add attribute
+                  + Add option
                 </button>
               </div>
               {v.attributes.map((a) => (

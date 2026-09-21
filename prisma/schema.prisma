@@ -30,6 +30,8 @@ model Product {
   images   ProductImage[]
   variants ProductVariant[]
 
+  attributes ProductAttribute[]
+
   wishlistItems WishlistItem[]
 
   @@index([categoryId])
@@ -112,6 +114,26 @@ model ProductImage {
   productId Int
 
   @@index([productId])
+}
+
+// A named attribute belonging to a product (e.g. "Color", "Material").
+// Each attribute holds a single value (e.g. Material -> Cotton). To give
+// a product multiple values for the same concept, add multiple
+// ProductAttribute rows with the same title.
+model ProductAttribute {
+  id    String @id @default(cuid())
+  title String
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  value String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([title])
 }
 
 enum Role {
