@@ -9,6 +9,7 @@ export async function auth() {
   if (!session) return null
 
   return {
+    id:     session.userId,
     userId: session.userId,
     email:  session.email,
     name:   session.name,
@@ -16,7 +17,7 @@ export async function auth() {
   }
 }
 
-export async function getCurrentUser(){
+export async function getCurrentUser() {
   return auth();
 }
 
