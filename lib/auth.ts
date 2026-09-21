@@ -16,6 +16,10 @@ export async function auth() {
   }
 }
 
+export async function getCurrentUser(){
+  return auth();
+}
+
 export async function createUser(email: string, plainPassword: string) {
   const saltRounds     = 10
   const passwordSalt   = await bcrypt.genSalt(saltRounds)
