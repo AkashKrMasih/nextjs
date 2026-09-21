@@ -9,11 +9,16 @@ export async function auth() {
   if (!session) return null
 
   return {
+    id:     session.userId,
     userId: session.userId,
     email:  session.email,
     name:   session.name,
     role:   session.role,
   }
+}
+
+export async function getCurrentUser() {
+  return auth();
 }
 
 export async function createUser(email: string, plainPassword: string) {
