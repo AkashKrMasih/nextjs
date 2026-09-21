@@ -10,10 +10,13 @@ import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
+  // Each row is one title/value pair — a product that needs multiple values
+  // for the same concept just has multiple rows sharing that title. See the
+  // ProductAttribute model comment in schema.prisma.
   const attributes = await prisma.productAttribute.findMany({
     select: {
       title: true,
-      values: { select: { value: true } },
+      value: true,
     },
   });
 
@@ -31,15 +34,13 @@ export async function GET() {
     }
     const entry = byTitle.get(toLowerCaseTitle)!;
 
-    for (const { value } of attr.values) {
-      const trimmed = value.trim();
-      if (trimmed) entry.values.add(trimmed);
-    }
+    const trimmed = attr.value?.trim();
+    if (trimmed) entry.values.add(trimmed);
   }
 
   const result = Array.from(byTitle.values())
-    .map(({ title, values }) => ({ title, values: Array.from(values).sort() }))
-    .sort((a, b) => a.title.localeCompare(b.title));
+  .map(({ title, values }) => ({ title, values: Array.from(values).sort() }))
+  .sort((a, b) => a.title.localeCompare(b.title));
 
   return NextResponse.json(result);
 }
