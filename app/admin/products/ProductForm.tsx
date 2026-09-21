@@ -2,47 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-type Category = {
-  id: number;
-  name: string;
-};
-
-type ImageField = {
-  key: string;
-  url: string;
-  isPrimary: boolean;
-};
-
-type VariantAttribute = {
-  key: string;
-  name: string;
-  value: string;
-};
-
-// Product-level attribute, e.g. Material -> Cotton. Mirrors ProductAttribute.
-type AttributeField = {
-  key: string;
-  title: string;
-  value: string;
-};
-
-// Suggestions for the title/value autocompletes, sourced from attributes
-// already used elsewhere in the catalog.
-type AttributeOption = {
-  title: string;
-  values: string[];
-};
-
-type VariantField = {
-  key: string;
-  sku: string;
-  name: string;
-  price: string; // optional override; blank = use the product's base price
-  quantity: string;
-  isDefault: boolean;
-  attributes: VariantAttribute[];
-};
+import {Category, ImageField, VariantAttribute, AttributeField, AttributeOption, VariantField} from "@/app/admin/products/types";
 
 export type ProductFormValues = {
   name: string;
