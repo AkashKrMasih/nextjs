@@ -30,6 +30,8 @@ model Product {
   images   ProductImage[]
   variants ProductVariant[]
 
+  attributes ProductAttribute[]
+
   wishlistItems WishlistItem[]
 
   @@index([categoryId])
@@ -112,6 +114,38 @@ model ProductImage {
   productId Int
 
   @@index([productId])
+}
+
+// A named attribute belonging to a product (e.g. "Color", "Material").
+// Actual values live in AttributeValue so an attribute can hold one or
+// many values (e.g. Color -> Red, Blue).
+model ProductAttribute {
+  id    String @id @default(cuid())
+  title String
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  values AttributeValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([title])
+}
+
+model AttributeValue {
+  id    String @id @default(cuid())
+  value String
+
+  attributeId String
+  attribute   ProductAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([attributeId])
 }
 
 enum Role {
