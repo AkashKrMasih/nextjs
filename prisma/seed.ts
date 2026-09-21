@@ -115,6 +115,40 @@ function buildPlaceholderImageUrl(text: string, colors: { bg: string; fg: string
 // (e.g. a Large costs a bit more than a Small).
 const VARIANT_PRICE_OVERRIDE_CHANCE = 0.3;
 
+// Each product gets a random number of ProductAttribute rows (title/value
+// pairs like "Material" -> "Aluminum"), distinct from ProductVariant's
+// color/size options above — these describe the product itself, not a
+// purchasable variation of it.
+const MIN_ATTRIBUTES_PER_PRODUCT = 2;
+const MAX_ATTRIBUTES_PER_PRODUCT = 6;
+
+// Pool of electronics-appropriate attribute titles, each with its own list
+// of plausible values. A product gets a random subset of titles (never the
+// same title twice) with one random value from that title's list.
+const ATTRIBUTE_POOL: { title: string; values: string[] }[] = [
+  { title: "Brand", values: ["Zenith", "Corex", "Nimbus", "Vantek", "Orbis", "Pulsar", "Kinetix", "Aurio"] },
+  { title: "Material", values: ["Aluminum", "Plastic", "Carbon Fiber", "Stainless Steel", "Silicone", "Glass"] },
+  { title: "Color", values: ["Black", "White", "Silver", "Space Gray", "Midnight Blue", "Rose Gold"] },
+  { title: "Connectivity", values: ["Bluetooth 5.3", "Wi-Fi 6", "USB-C", "NFC", "5G", "Wired"] },
+  { title: "Battery Life", values: ["Up to 8 hours", "Up to 20 hours", "Up to 30 hours", "Up to 48 hours", "Up to 10 days"] },
+  { title: "Weight", values: ["120g", "250g", "480g", "1.2kg", "1.8kg", "2.4kg"] },
+  { title: "Warranty", values: ["1 Year", "2 Years", "3 Years", "Limited Lifetime"] },
+  { title: "Water Resistance", values: ["IPX4", "IPX7", "IP68", "Not Rated"] },
+  { title: "Compatibility", values: ["iOS & Android", "Windows & macOS", "Universal", "iOS Only", "Android Only"] },
+  { title: "Storage", values: ["64GB", "128GB", "256GB", "512GB", "1TB"] },
+];
+
+// Picks `count` distinct attribute titles from ATTRIBUTE_POOL (capped by
+// however many titles exist) and one random value for each.
+function buildProductAttributeDrafts(count: number): { title: string; value: string }[] {
+  const chosen = faker.helpers.arrayElements(ATTRIBUTE_POOL, Math.min(count, ATTRIBUTE_POOL.length));
+
+  return chosen.map(({ title, values }) => ({
+    title,
+    value: faker.helpers.arrayElement(values),
+  }));
+}
+
 async function hashPassword(plainPassword: string) {
   const passwordSalt   = await bcrypt.genSalt(SALT_ROUNDS);
   const hashedPassword = await bcrypt.hash(plainPassword, passwordSalt);
@@ -290,6 +324,9 @@ async function main() {
         )
       ),
       variants:        buildProductVariantDrafts(variantCount, basePrice),
+      attributes:      buildProductAttributeDrafts(
+        faker.number.int({min: MIN_ATTRIBUTES_PER_PRODUCT, max: MAX_ATTRIBUTES_PER_PRODUCT})
+      ),
     };
   });
 
@@ -365,6 +402,12 @@ async function main() {
             isPrimary: imageIndex === 0, // first image is the primary one
           })),
         },
+        attributes: {
+          create: draft.attributes.map(({ title, value }) => ({
+            title,
+            value,
+          })),
+        },
         variants: {
           create: draft.variants.map((variant) => ({
             sku:        variant.sku,
@@ -387,9 +430,10 @@ async function main() {
     })
   );
 
-  const totalVariants = productDrafts.reduce((sum, d) => sum + d.variants.length, 0);
+  const totalVariants   = productDrafts.reduce((sum, d) => sum + d.variants.length, 0);
+  const totalAttributes = productDrafts.reduce((sum, d) => sum + d.attributes.length, 0);
 
-  console.log(`Seeded ${NUM_USERS} users, ${categories.length} categories, ${NUM_PRODUCTS} products, and ${totalVariants} variants.`);
+  console.log(`Seeded ${NUM_USERS} users, ${categories.length} categories, ${NUM_PRODUCTS} products, ${totalVariants} variants, and ${totalAttributes} product attributes.`);
   console.log(`Admin login: admin@admin.us / ${DEFAULT_PASSWORD}`);
   console.log(`All other users: <their email> / ${DEFAULT_PASSWORD}`);
 }
