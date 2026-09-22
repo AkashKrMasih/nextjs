@@ -38,3 +38,14 @@ export type VariantField = {
   isDefault: boolean;
   attributes: VariantAttribute[];
 };
+
+
+export type ProductFormValues = {
+  name: string;
+  description: string;
+  price: string;
+  categoryId: string; // '' = no category
+  images: ImageField[];
+  variants: VariantField[];
+  attributes: AttributeField[];
+};

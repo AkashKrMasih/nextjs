@@ -1,20 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {Category, ImageField, VariantAttribute, AttributeField, AttributeOption, VariantField} from "@/app/admin/products/types";
-
-export type ProductFormValues = {
-  name: string;
-  description: string;
-  price: string;
-  categoryId: string; // '' = no category
-  images: ImageField[];
-  variants: VariantField[];
-  attributes: AttributeField[];
-};
+import {useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {
+  Category,
+  ImageField,
+  VariantAttribute,
+  AttributeField,
+  AttributeOption,
+  VariantField,
+  ProductFormValues
+} from "@/app/admin/products/types";
 
 let uid = 0;
+
 function newKey() {
   uid += 1;
   return `k${Date.now()}-${uid}`;
@@ -22,11 +21,11 @@ function newKey() {
 
 function emptyVariant(isDefault = false): VariantField {
   return {
-    key: newKey(),
-    sku: '',
-    name: '',
-    price: '',
-    quantity: '0',
+    key:        newKey(),
+    sku:        '',
+    name:       '',
+    price:      '',
+    quantity:   '0',
     isDefault,
     attributes: [],
   };
@@ -34,7 +33,7 @@ function emptyVariant(isDefault = false): VariantField {
 
 function emptyAttribute(): AttributeField {
   return {
-    key: newKey(),
+    key:   newKey(),
     title: '',
     value: '',
   };
@@ -42,13 +41,13 @@ function emptyAttribute(): AttributeField {
 
 function emptyValues(): ProductFormValues {
   return {
-    name: '',
+    name:        '',
     description: '',
-    price: '',
-    categoryId: '',
-    images: [],
-    variants: [emptyVariant(true)],
-    attributes: [],
+    price:       '',
+    categoryId:  '',
+    images:      [],
+    variants:    [emptyVariant(true)],
+    attributes:  [],
   };
 }
 
@@ -59,12 +58,12 @@ export function ProductForm({
   productId?: number;
   initial?: ProductFormValues;
 }) {
-  const router = useRouter();
-  const [values, setValues] = useState<ProductFormValues>(initial ?? emptyValues());
-  const [categories, setCategories] = useState<Category[]>([]);
+  const router                                  = useRouter();
+  const [values, setValues]                     = useState<ProductFormValues>(initial ?? emptyValues());
+  const [categories, setCategories]             = useState<Category[]>([]);
   const [attributeOptions, setAttributeOptions] = useState<AttributeOption[]>([]);
-  const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [error, setError]                       = useState('');
+  const [saving, setSaving]                     = useState(false);
 
   useEffect(() => {
     fetch('/api/categories')
@@ -92,31 +91,31 @@ export function ProductForm({
   }
 
   function update<K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) {
-    setValues((current) => ({ ...current, [key]: value }));
+    setValues((current) => ({...current, [key]: value}));
   }
 
   // --- images ---
   function addImage() {
     update('images', [
       ...values.images,
-      { key: newKey(), url: '', isPrimary: values.images.length === 0 },
+      {key: newKey(), url: '', isPrimary: values.images.length === 0},
     ]);
   }
 
   function updateImage(key: string, patch: Partial<ImageField>) {
-    update('images', values.images.map((img) => (img.key === key ? { ...img, ...patch } : img)));
+    update('images', values.images.map((img) => (img.key === key ? {...img, ...patch} : img)));
   }
 
   function removeImage(key: string) {
     const remaining = values.images.filter((img) => img.key !== key);
     if (remaining.length && !remaining.some((img) => img.isPrimary)) {
-      remaining[0] = { ...remaining[0], isPrimary: true };
+      remaining[0] = {...remaining[0], isPrimary: true};
     }
     update('images', remaining);
   }
 
   function makePrimary(key: string) {
-    update('images', values.images.map((img) => ({ ...img, isPrimary: img.key === key })));
+    update('images', values.images.map((img) => ({...img, isPrimary: img.key === key})));
   }
 
   // --- variants ---
@@ -125,26 +124,26 @@ export function ProductForm({
   }
 
   function updateVariant(key: string, patch: Partial<VariantField>) {
-    update('variants', values.variants.map((v) => (v.key === key ? { ...v, ...patch } : v)));
+    update('variants', values.variants.map((v) => (v.key === key ? {...v, ...patch} : v)));
   }
 
   function removeVariant(key: string) {
     const remaining = values.variants.filter((v) => v.key !== key);
     if (remaining.length && !remaining.some((v) => v.isDefault)) {
-      remaining[0] = { ...remaining[0], isDefault: true };
+      remaining[0] = {...remaining[0], isDefault: true};
     }
     update('variants', remaining);
   }
 
   function makeDefaultVariant(key: string) {
-    update('variants', values.variants.map((v) => ({ ...v, isDefault: v.key === key })));
+    update('variants', values.variants.map((v) => ({...v, isDefault: v.key === key})));
   }
 
   function addAttribute(variantKey: string) {
     const variant = values.variants.find((v) => v.key === variantKey);
     if (!variant) return;
     updateVariant(variantKey, {
-      attributes: [...variant.attributes, { key: newKey(), name: '', value: '' }],
+      attributes: [...variant.attributes, {key: newKey(), name: '', value: ''}],
     });
   }
 
@@ -156,7 +155,7 @@ export function ProductForm({
     const variant = values.variants.find((v) => v.key === variantKey);
     if (!variant) return;
     updateVariant(variantKey, {
-      attributes: variant.attributes.map((a) => (a.key === attrKey ? { ...a, ...patch } : a)),
+      attributes: variant.attributes.map((a) => (a.key === attrKey ? {...a, ...patch} : a)),
     });
   }
 
@@ -176,7 +175,7 @@ export function ProductForm({
   function updateAttributeTitle(key: string, title: string) {
     update(
       'attributes',
-      values.attributes.map((a) => (a.key === key ? { ...a, title } : a))
+      values.attributes.map((a) => (a.key === key ? {...a, title} : a))
     );
   }
 
@@ -187,7 +186,7 @@ export function ProductForm({
   function updateAttributeValue(attrKey: string, value: string) {
     update(
       'attributes',
-      values.attributes.map((a) => (a.key === attrKey ? { ...a, value } : a))
+      values.attributes.map((a) => (a.key === attrKey ? {...a, value} : a))
     );
   }
 
@@ -207,24 +206,24 @@ export function ProductForm({
     setSaving(true);
 
     const body = {
-      name: values.name,
+      name:        values.name,
       description: values.description,
-      price: values.price,
-      categoryId: values.categoryId ? Number(values.categoryId) : null,
-      images: values.images
-            .filter((img) => img.url.trim())
-            .map((img) => ({ url: img.url.trim(), isPrimary: img.isPrimary })),
+      price:       values.price,
+      categoryId:  values.categoryId ? Number(values.categoryId) : null,
+      images:      values.images
+                   .filter((img) => img.url.trim())
+                   .map((img) => ({url: img.url.trim(), isPrimary: img.isPrimary})),
       // Sent as plain title/value pairs; the API matches an existing
       // ProductAttribute by title (case-insensitive) or creates a new one.
       attributes: values.attributes
-                  .map((a) => ({ title: a.title.trim(), value: a.value.trim() }))
+                  .map((a) => ({title: a.title.trim(), value: a.value.trim()}))
                   .filter((a) => a.title && a.value),
-      variants: values.variants.map((v) => ({
-        sku: v.sku.trim(),
-        name: v.name.trim() || null,
-        price: v.price.trim() || null,
-        isDefault: v.isDefault,
-        quantity: Number(v.quantity) || 0,
+      variants:   values.variants.map((v) => ({
+        sku:        v.sku.trim(),
+        name:       v.name.trim() || null,
+        price:      v.price.trim() || null,
+        isDefault:  v.isDefault,
+        quantity:   Number(v.quantity) || 0,
         attributes: v.attributes.reduce<Record<string, string>>((acc, a) => {
           if (a.name.trim()) acc[a.name.trim()] = a.value;
           return acc;
@@ -235,9 +234,9 @@ export function ProductForm({
     const response = await fetch(
       productId ? `/api/products/${productId}` : '/api/products',
       {
-        method: productId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        method:  productId ? 'PUT' : 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body:    JSON.stringify(body),
       }
     );
 
@@ -313,7 +312,7 @@ export function ProductForm({
                 className="flex-1 rounded border border-[#D8D2C4] bg-white p-2"
                 placeholder="Image URL"
                 value={img.url}
-                onChange={(e) => updateImage(img.key, { url: e.target.value })}
+                onChange={(e) => updateImage(img.key, {url: e.target.value})}
               />
               <label className="flex items-center gap-1 text-xs text-[#55624A]">
                 <input
@@ -356,7 +355,7 @@ export function ProductForm({
         {/* Shared datalist of known attribute titles, reused by every row below */}
         <datalist id="attribute-title-options">
           {attributeOptions.map((opt) => (
-            <option key={opt.title} value={opt.title} />
+            <option key={opt.title} value={opt.title}/>
           ))}
         </datalist>
 
@@ -365,7 +364,7 @@ export function ProductForm({
         ) : (
           values.attributes.map((attr) => {
             const valueSuggestions = valuesForTitle(attr.title);
-            const valuesListId = `attribute-values-${attr.key}`;
+            const valuesListId     = `attribute-values-${attr.key}`;
             return (
               <div key={attr.key} className="space-y-2 rounded border border-[#D8D2C4] p-3">
                 <div className="flex items-center gap-2">
@@ -388,7 +387,7 @@ export function ProductForm({
                 {/* Suggestions for this specific attribute's value */}
                 <datalist id={valuesListId}>
                   {valueSuggestions.map((v) => (
-                    <option key={v} value={v} />
+                    <option key={v} value={v}/>
                   ))}
                 </datalist>
 
@@ -446,13 +445,13 @@ export function ProductForm({
                 placeholder="SKU"
                 required
                 value={v.sku}
-                onChange={(e) => updateVariant(v.key, { sku: e.target.value })}
+                onChange={(e) => updateVariant(v.key, {sku: e.target.value})}
               />
               <input
                 className="rounded border border-[#D8D2C4] bg-white p-2"
                 placeholder="Variant name (e.g. Red / Large)"
                 value={v.name}
-                onChange={(e) => updateVariant(v.key, { name: e.target.value })}
+                onChange={(e) => updateVariant(v.key, {name: e.target.value})}
               />
               <input
                 className="rounded border border-[#D8D2C4] bg-white p-2"
@@ -461,7 +460,7 @@ export function ProductForm({
                 min="0"
                 step="0.01"
                 value={v.price}
-                onChange={(e) => updateVariant(v.key, { price: e.target.value })}
+                onChange={(e) => updateVariant(v.key, {price: e.target.value})}
               />
               <input
                 className="rounded border border-[#D8D2C4] bg-white p-2"
@@ -471,7 +470,7 @@ export function ProductForm({
                 step="1"
                 required
                 value={v.quantity}
-                onChange={(e) => updateVariant(v.key, { quantity: e.target.value })}
+                onChange={(e) => updateVariant(v.key, {quantity: e.target.value})}
               />
             </div>
 
@@ -492,13 +491,13 @@ export function ProductForm({
                     className="w-1/3 rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
                     placeholder="color"
                     value={a.name}
-                    onChange={(e) => updateAttribute(v.key, a.key, { name: e.target.value })}
+                    onChange={(e) => updateAttribute(v.key, a.key, {name: e.target.value})}
                   />
                   <input
                     className="flex-1 rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
                     placeholder="Red"
                     value={a.value}
-                    onChange={(e) => updateAttribute(v.key, a.key, { value: e.target.value })}
+                    onChange={(e) => updateAttribute(v.key, a.key, {value: e.target.value})}
                   />
                   <button
                     type="button"
