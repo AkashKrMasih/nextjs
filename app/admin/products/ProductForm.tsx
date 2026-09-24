@@ -520,7 +520,7 @@ export function ProductForm({
         className="rounded bg-[#55624A] px-4 py-2 text-white disabled:opacity-60"
         disabled={saving}
       >
-        {saving ? 'Saving…' : productId ? 'Save changes' : 'Create product'}
+        {saving ? 'Creating…' : productId ? 'Save changes' : 'Create product'}
       </button>
     </form>
   );
