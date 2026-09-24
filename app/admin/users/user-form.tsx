@@ -92,22 +92,20 @@ export function UserForm({ userId, defaultValues }: UserFormProps) {
         />
       </div>
 
-      {editing ? (
-        <div>
-          <label htmlFor="role" className="block text-sm font-medium text-stone-900">
-            Role
-          </label>
-          <select
-            id="role"
-            name="role"
-            defaultValue={defaultValues?.role ?? 'CUSTOMER'}
-            className="mt-1.5 w-full rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
-          >
-            <option value="CUSTOMER">Customer</option>
-            <option value="ADMIN">Admin</option>
-          </select>
-        </div>
-      ) : null}
+      <div>
+        <label htmlFor="role" className="block text-sm font-medium text-stone-900">
+          Role
+        </label>
+        <select
+          id="role"
+          name="role"
+          defaultValue={defaultValues?.role ?? 'CUSTOMER'}
+          className="mt-1.5 w-full rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
+        >
+          <option value="CUSTOMER">Customer</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+      </div>
 
       <div className="flex items-center gap-3 pt-2">
         <button

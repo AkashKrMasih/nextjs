@@ -24,6 +24,7 @@ export async function POST(request: Request) {
   const name = String(formData.get('name') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
+  const role = String(formData.get('role') ?? 'CUSTOMER');
 
   if (!name) {
     return NextResponse.json({ error: 'Name is required.' }, { status: 400 });
@@ -34,13 +35,16 @@ export async function POST(request: Request) {
   if (!password) {
     return NextResponse.json({ error: 'Password is required.' }, { status: 400 });
   }
+  if (role !== 'CUSTOMER' && role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Role must be customer or admin.' }, { status: 400 });
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json({ error: 'That email is already in use.' }, { status: 400 });
   }
 
-  const user = await createUser(email, password, { name });
+  const user = await createUser(email, password, { name, role });
   const saved = await prisma.user.findUnique({
     where: { id: user.id },
     select: publicUser,
