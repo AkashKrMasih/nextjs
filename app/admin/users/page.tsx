@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { UserRound } from 'lucide-react';
 import Link from 'next/link';
+import { DeleteUserButton } from './delete-user-button';
 
 export default async function AdminUsersPage() {
   const users = await prisma.user.findMany({
@@ -18,6 +19,12 @@ export default async function AdminUsersPage() {
             {users.length} {users.length === 1 ? 'user' : 'users'} registered
           </p>
         </div>
+        <Link
+          href="/admin/users/new"
+          className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
+        >
+          New user
+        </Link>
       </div>
 
       {users.length === 0 ? (
@@ -39,6 +46,9 @@ export default async function AdminUsersPage() {
                 </th>
                 <th className="border-r border-stone-200/60 px-3 py-2.5 text-left font-medium text-stone-500">
                   Email
+                </th>
+                <th className="w-32 border-r border-stone-200/60 px-3 py-2.5 text-left font-medium text-stone-500">
+                  Role
                 </th>
                 <th className="w-44 border-r border-stone-200/60 px-3 py-2.5 text-left font-medium text-stone-500">
                   Joined
@@ -70,6 +80,9 @@ export default async function AdminUsersPage() {
                   <td className="border-r border-stone-200/60 px-3 py-2 text-stone-900">
                     {user.email}
                   </td>
+                  <td className="border-r border-stone-200/60 px-3 py-2 text-stone-900">
+                    {user.role === 'ADMIN' ? 'Admin' : 'Customer'}
+                  </td>
                   <td className="border-r border-stone-200/60 px-3 py-2 text-stone-500">
                     {user.createdAt.toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -78,12 +91,15 @@ export default async function AdminUsersPage() {
                     })}
                   </td>
                   <td className="px-3 py-2">
-                    <Link
-                      href={`/admin/users/${user.id}`}
-                      className="rounded-md border border-stone-200 px-2.5 py-1 text-xs font-medium text-stone-900 hover:bg-stone-100/60"
-                    >
-                      Edit / Delete
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/users/${user.id}`}
+                        className="rounded-md border border-stone-200 px-2.5 py-1 text-xs font-medium text-stone-900 hover:bg-stone-100"
+                      >
+                        Edit
+                      </Link>
+                      <DeleteUserButton userId={user.id} />
+                    </div>
                   </td>
                 </tr>
               ))}
