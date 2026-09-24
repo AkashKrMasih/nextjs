@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { parseProductBody } from '@/lib/products';
+import {
+  isForeignKeyConstraint,
+  isUniqueConstraint,
+  parseProductFormData,
+  updateProductFromForm,
+} from '@/lib/product-form';
 
 function productId(id: string) {
   const n = Number(id);
@@ -39,17 +44,30 @@ export async function PUT(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  const body = await request.json();
-  const parsed = parseProductBody(body);
+  const formData = await request.formData();
+  const parsed = await parseProductFormData(formData);
   if ('error' in parsed) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  const product = await prisma.product.update({
-    where: { id: numericId },
-    data: parsed,
-  });
-  return NextResponse.json(product);
+  try {
+    const product = await updateProductFromForm(numericId, parsed);
+    if ('error' in product) {
+      return NextResponse.json({ error: product.error }, { status: 400 });
+    }
+    return NextResponse.json(product);
+  } catch (error) {
+    if (isUniqueConstraint(error)) {
+      return NextResponse.json({ error: 'A variant SKU already exists' }, { status: 400 });
+    }
+    if (isForeignKeyConstraint(error)) {
+      return NextResponse.json(
+        { error: 'A variant in a cart or order cannot be removed.' },
+        { status: 400 }
+      );
+    }
+    throw error;
+  }
 }
 
 export async function DELETE(
