@@ -137,11 +137,8 @@ export default async function Home({
               0
             );
             return (
-              <li key={product.id}>
-                <Link
-                  href={`/products/${product.id}`}
-                  className="block overflow-hidden rounded-lg border border-stone-300 bg-white hover:border-green-800"
-                >
+              <li key={product.id} className="overflow-hidden rounded-lg border border-stone-300 bg-white hover:border-green-800">
+                <Link href={`/products/${product.id}`} className="block">
                   <div className="aspect-[4/3] bg-stone-100">
                     {product.images[0]?.url ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -156,14 +153,25 @@ export default async function Home({
                       </div>
                     )}
                   </div>
-                  <div className="p-4">
+                  <div className="p-4 pb-2">
                     <h2 className="text-lg leading-snug">{product.name}</h2>
-                    <p className="mt-1 text-sm text-green-800">{formatPrice(product.price)}</p>
                     <p className="mt-1 text-xs text-stone-500">
                       {stock > 0 ? `${stock} in stock` : 'Out of stock'}
                     </p>
                   </div>
                 </Link>
+                <div className="px-4 pb-4">
+                  {product.priceOnRequest ? (
+                    <Link
+                      href={`/products/${product.id}/price-request`}
+                      className="mt-2 inline-block rounded-md bg-green-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-900"
+                    >
+                      Price Request
+                    </Link>
+                  ) : (
+                    <p className="mt-1 text-sm text-green-800">{formatPrice(product.price)}</p>
+                  )}
+                </div>
               </li>
             );
           })}

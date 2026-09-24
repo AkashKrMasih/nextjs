@@ -46,6 +46,7 @@ export type ProductFormValues = {
   name: string;
   description: string;
   price: string;
+  priceOnRequest: boolean;
   categoryId: string; // '' = no category
   images: ImageField[];
   variants: VariantField[];

@@ -24,6 +24,7 @@ export type ParsedProductForm = {
   name: string;
   description: string;
   price: string;
+  priceOnRequest: boolean;
   categoryId: number | null;
   attributes: AttributeInput[];
   variants: VariantInput[];
@@ -74,6 +75,7 @@ export async function parseProductFormData(
   if (!Number.isFinite(priceNumber) || priceNumber < 0) {
     return { error: 'Price must be a number greater than or equal to 0' };
   }
+  const priceOnRequest = formData.get('priceOnRequest') === 'true';
 
   const categoryRaw = String(formData.get('categoryId') ?? '').trim();
   const categoryId = categoryRaw ? Number(categoryRaw) : null;
@@ -145,6 +147,7 @@ export async function parseProductFormData(
     name,
     description,
     price: priceNumber.toFixed(2),
+    priceOnRequest,
     categoryId,
     attributes,
     variants,
@@ -169,6 +172,7 @@ export async function createProductFromForm(parsed: ParsedProductForm) {
       name: parsed.name,
       description: parsed.description,
       price: parsed.price,
+      priceOnRequest: parsed.priceOnRequest,
       categoryId: parsed.categoryId,
       images: { create: parsed.savedImages },
       attributes: { create: parsed.attributes },
@@ -205,6 +209,7 @@ export async function updateProductFromForm(productId: number, parsed: ParsedPro
         name: parsed.name,
         description: parsed.description,
         price: parsed.price,
+        priceOnRequest: parsed.priceOnRequest,
         categoryId: parsed.categoryId,
       },
     });

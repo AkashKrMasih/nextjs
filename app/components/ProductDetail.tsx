@@ -28,6 +28,7 @@ type Product = {
   id: number;
   name: string;
   price: number | string;
+  priceOnRequest: boolean;
   stock: number;
   description: string | null;
   images: ProductImage[];
@@ -188,7 +189,16 @@ export function ProductDetail({
             {product.name}
           </h1>
 
-          <p className="text-3xl font-light text-green-800">{formatPrice(product.price)}</p>
+          {product.priceOnRequest ? (
+            <Link
+              href={`/products/${product.id}/price-request`}
+              className="inline-block rounded-md bg-green-800 px-4 py-2 text-sm font-medium text-white hover:bg-green-900"
+            >
+              Price Request
+            </Link>
+          ) : (
+            <p className="text-3xl font-light text-green-800">{formatPrice(product.price)}</p>
+          )}
 
           {product.description && (
             <p className="whitespace-pre-wrap leading-relaxed text-stone-500">
@@ -219,12 +229,14 @@ export function ProductDetail({
 
           {/* CTAs */}
           <div className="flex flex-wrap items-center gap-3">
-            <AddToCartButton
-              id={product.id}
-              name={product.name}
-              price={product.price.toString()}
-              disabled={!inStock}
-            />
+            {product.priceOnRequest ? null : (
+              <AddToCartButton
+                id={product.id}
+                name={product.name}
+                price={product.price.toString()}
+                disabled={!inStock}
+              />
+            )}
 
             <button
               onClick={handleWishlistToggle}
@@ -275,30 +287,42 @@ export function ProductDetail({
             {related.map((item) => {
               const thumb = item.images[0]?.url ?? null;
               return (
-                <Link
+                <div
                   key={item.id}
-                  href={`/products/${item.id}`}
                   className="group overflow-hidden rounded-2xl border border-stone-200 bg-white transition-all hover:shadow-md"
                 >
-                  <div className="aspect-square overflow-hidden bg-stone-100">
-                    {thumb ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={thumb}
-                        alt={item.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
+                  <Link href={`/products/${item.id}`}>
+                    <div className="aspect-square overflow-hidden bg-stone-100">
+                      {thumb ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={thumb}
+                          alt={item.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-stone-500">
+                          No image
+                        </div>
+                      )}
+                    </div>
+                    <p className="line-clamp-2 px-4 pt-4 text-sm font-medium leading-tight text-stone-900">
+                      {item.name}
+                    </p>
+                  </Link>
+                  <div className="px-4 pb-4 pt-1">
+                    {item.priceOnRequest ? (
+                      <Link
+                        href={`/products/${item.id}/price-request`}
+                        className="text-sm font-medium text-green-800 underline"
+                      >
+                        Price Request
+                      </Link>
                     ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-stone-500">
-                        No image
-                      </div>
+                      <p className="text-sm text-stone-900">{formatPrice(item.price)}</p>
                     )}
                   </div>
-                  <div className="space-y-1 p-4">
-                    <p className="line-clamp-2 text-sm font-medium leading-tight text-stone-900">{item.name}</p>
-                    <p className="text-sm text-stone-900">{formatPrice(item.price)}</p>
-                  </div>
-                </Link>
+                </div>
               );
             })}
           </div>
