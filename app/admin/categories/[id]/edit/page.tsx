@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CategoryForm } from "../../category-form";
-import { updateCategory, type CategoryFormState } from "../../actions";
 
 export default async function EditCategoryPage({
   params,
@@ -27,13 +26,11 @@ export default async function EditCategoryPage({
     notFound();
   }
 
-  const boundUpdateCategory = updateCategory.bind(null, id);
-
   return (
     <div className="mx-auto max-w-lg p-6">
       <h1 className="mb-6 text-xl font-semibold">Edit Category</h1>
       <CategoryForm
-        action={boundUpdateCategory}
+        categoryId={category.id}
         parentOptions={parentOptions}
         defaultValues={{
           name: category.name,
