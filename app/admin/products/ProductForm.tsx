@@ -415,7 +415,8 @@ export function ProductForm({
       </section>
 
       {/* Variants */}
-      <section className="space-y-4">
+      {!productId && (
+        <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium text-[#55624A]">Variants</h2>
           <button type="button" onClick={addVariant} className="text-sm text-[#55624A] underline">
@@ -522,6 +523,7 @@ export function ProductForm({
           </div>
         ))}
       </section>
+      )}
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       <button
