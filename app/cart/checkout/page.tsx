@@ -77,7 +77,7 @@ export default function CheckoutPage() {
   if (!ready || authState === 'loading') {
     return (
       <main className="mx-auto max-w-6xl px-6 py-12">
-        <p className="text-sm text-[#8A8375]">Loading checkout…</p>
+        <p className="text-sm text-stone-500">Loading checkout…</p>
       </main>
     );
   }
@@ -85,9 +85,9 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <main className="mx-auto max-w-6xl px-6 py-12">
-        <p className="text-sm text-[#8A8375]">
+        <p className="text-sm text-stone-500">
           Your cart is empty.{' '}
-          <Link href="/" className="text-[#55624A] underline">
+          <Link href="/" className="text-green-800 underline">
             Browse the catalog
           </Link>
           .
@@ -102,13 +102,13 @@ export default function CheckoutPage() {
     <main className="mx-auto max-w-6xl px-6 py-12">
       <h1 className="text-3xl tracking-tight">Checkout</h1>
 
-      <div className="mt-6 space-y-2 border-b border-[#D8D2C4] pb-6">
+      <div className="mt-6 space-y-2 border-b border-stone-300 pb-6">
         {items.map((item) => (
           <div key={item.id} className="flex justify-between text-sm">
             <span>
               {item.name} × {item.quantity}
             </span>
-            <span className="text-[#8A8375]">{formatPrice(item.price * item.quantity)}</span>
+            <span className="text-stone-500">{formatPrice(item.price * item.quantity)}</span>
           </div>
         ))}
         <div className="flex justify-between pt-2 text-base">
@@ -120,20 +120,20 @@ export default function CheckoutPage() {
       <div className="mt-8">
         {authState === 'anonymous' && flow === 'choice' && (
           <div className="space-y-6">
-            <p className="text-sm text-[#8A8375]">
+            <p className="text-sm text-stone-500">
               Log in for order history and faster checkout next time, or continue as a guest.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Link
                 href={`/login?redirect=${encodeURIComponent('/cart/checkout')}`}
-                className="rounded border border-[#55624A] px-4 py-2 text-center text-sm text-[#55624A]"
+                className="rounded border border-green-800 px-4 py-2 text-center text-sm text-green-800"
               >
                 Log in
               </Link>
               <button
                 type="button"
                 onClick={() => setFlow('guest-form')}
-                className="rounded bg-[#55624A] px-4 py-2 text-center text-sm text-white"
+                className="rounded bg-green-800 px-4 py-2 text-center text-sm text-white"
               >
                 Continue as guest
               </button>
@@ -150,7 +150,7 @@ export default function CheckoutPage() {
             className="space-y-4"
           >
             <div>
-              <label htmlFor="guestEmail" className="block text-sm text-[#8A8375]">
+              <label htmlFor="guestEmail" className="block text-sm text-stone-500">
                 Email for your receipt
               </label>
               <input
@@ -159,21 +159,21 @@ export default function CheckoutPage() {
                 required
                 value={guestEmail}
                 onChange={(e) => setGuestEmail(e.target.value)}
-                className="mt-1 w-full rounded border border-[#D8D2C4] p-2 text-sm"
+                className="mt-1 w-full rounded border border-stone-300 p-2 text-sm"
               />
             </div>
             {error && <p className="text-sm text-red-800">{error}</p>}
             <button
               type="submit"
               disabled={creatingIntent}
-              className="rounded bg-[#55624A] px-4 py-2 text-sm text-white disabled:opacity-50"
+              className="rounded bg-green-800 px-4 py-2 text-sm text-white disabled:opacity-50"
             >
               {creatingIntent ? 'Loading…' : 'Continue to payment'}
             </button>
             <button
               type="button"
               onClick={() => setFlow('choice')}
-              className="ml-3 text-sm text-[#8A8375] underline"
+              className="ml-3 text-sm text-stone-500 underline"
             >
               Back
             </button>
@@ -188,7 +188,7 @@ export default function CheckoutPage() {
         )}
 
         {authState === 'authed' && flow === 'choice' && creatingIntent && (
-          <p className="text-sm text-[#8A8375]">Preparing checkout…</p>
+          <p className="text-sm text-stone-500">Preparing checkout…</p>
         )}
 
         {error && flow !== 'guest-form' && <p className="mt-4 text-sm text-red-800">{error}</p>}

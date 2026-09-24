@@ -55,41 +55,41 @@ export function AddressManager({
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-[#55624A]">
+        <h2 className="text-sm font-medium text-green-800">
           {addresses.length} saved {addresses.length === 1 ? 'address' : 'addresses'}
         </h2>
         <button
           type="button"
           onClick={() => setEditing('new')}
-          className="rounded-md bg-[#1E1B16] px-4 py-2 text-sm font-medium text-[#FAF8F3] transition-colors hover:bg-[#33302A]"
+          className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-800"
         >
           Add address
         </button>
       </div>
 
       {addresses.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-[#D8D2C4] px-6 py-10 text-center">
-          <p className="text-sm text-[#55624A]">You haven&apos;t saved any addresses yet.</p>
+        <div className="mt-6 rounded-lg border border-dashed border-stone-300 px-6 py-10 text-center">
+          <p className="text-sm text-green-800">You haven&apos;t saved any addresses yet.</p>
         </div>
       ) : (
         <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {addresses.map((address) => (
             <li
               key={address.id}
-              className="flex flex-col justify-between rounded-lg border border-[#D8D2C4] bg-[#FAF8F3] p-4"
+              className="flex flex-col justify-between rounded-lg border border-stone-300 bg-stone-50 p-4"
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-[#1E1B16]">
+                  <span className="text-sm font-medium text-stone-900">
                     {address.label || 'Address'}
                   </span>
                   {address.isDefault && (
-                    <span className="rounded-full bg-[#EFE9DC] px-2 py-0.5 text-xs text-[#55624A]">
+                    <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs text-green-800">
                       Default
                     </span>
                   )}
                 </div>
-                <div className="mt-1.5 text-sm text-[#55624A]">
+                <div className="mt-1.5 text-sm text-green-800">
                   <p>{address.name}</p>
                   <p>{address.address1}</p>
                   {address.address2 && <p>{address.address2}</p>}
@@ -106,7 +106,7 @@ export function AddressManager({
                 <button
                   type="button"
                   onClick={() => setEditing(address)}
-                  className="text-[#55624A] hover:text-[#1E1B16]"
+                  className="text-green-800 hover:text-stone-900"
                 >
                   Edit
                 </button>
@@ -115,7 +115,7 @@ export function AddressManager({
                     type="button"
                     disabled={isPending && pendingId === address.id}
                     onClick={() => handleSetDefault(address)}
-                    className="text-[#55624A] hover:text-[#1E1B16] disabled:opacity-50"
+                    className="text-green-800 hover:text-stone-900 disabled:opacity-50"
                   >
                     Set as default
                   </button>
@@ -179,18 +179,18 @@ function AddressFormModal({
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-[#D8D2C4] bg-[#FAF8F3] p-6 shadow-xl"
+        className="max-h-screen w-full max-w-lg overflow-y-auto rounded-lg border border-stone-300 bg-stone-50 p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-[#1E1B16]">
+          <h3 className="text-lg font-medium text-stone-900">
             {isEditing ? 'Edit address' : 'Add address'}
           </h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="text-[#55624A] hover:text-[#1E1B16]"
+            className="text-green-800 hover:text-stone-900"
           >
             ✕
           </button>
@@ -223,29 +223,29 @@ function AddressFormModal({
             <Field label="Country" name="country" defaultValue={address?.country ?? ''} required />
           </div>
 
-          <label className="flex items-center gap-2 pt-1 text-sm text-[#55624A]">
+          <label className="flex items-center gap-2 pt-1 text-sm text-green-800">
             <input
               type="checkbox"
               name="isDefault"
               defaultChecked={address?.isDefault ?? false}
               disabled={address?.isDefault}
-              className="h-4 w-4 rounded border-[#D8D2C4]"
+              className="h-4 w-4 rounded border-stone-300"
             />
             Set as default address
           </label>
 
-          <div className="mt-2 flex justify-end gap-3 border-t border-[#D8D2C4] pt-4">
+          <div className="mt-2 flex justify-end gap-3 border-t border-stone-300 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md px-4 py-2 text-sm text-[#55624A] hover:text-[#1E1B16]"
+              className="rounded-md px-4 py-2 text-sm text-green-800 hover:text-stone-900"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-md bg-[#1E1B16] px-4 py-2 text-sm font-medium text-[#FAF8F3] transition-colors hover:bg-[#33302A] disabled:opacity-50"
+              className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-800 disabled:opacity-50"
             >
               {isSubmitting ? 'Saving…' : 'Save address'}
             </button>
@@ -270,7 +270,7 @@ function Field({
   placeholder?: string;
 }) {
   return (
-    <label className="block text-sm text-[#55624A]">
+    <label className="block text-sm text-green-800">
       {label}
       <input
         type="text"
@@ -278,7 +278,7 @@ function Field({
         defaultValue={defaultValue}
         required={required}
         placeholder={placeholder}
-        className="mt-1 w-full rounded-md border border-[#D8D2C4] bg-white px-3 py-2 text-sm text-[#1E1B16] outline-none focus:border-[#55624A]"
+        className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none focus:border-green-800"
       />
     </label>
   );

@@ -40,19 +40,19 @@ export default function CheckoutSuccessPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      {status === 'checking' && <p className="text-sm text-[#8A8375]">Confirming payment…</p>}
+      {status === 'checking' && <p className="text-sm text-stone-500">Confirming payment…</p>}
 
       {status === 'succeeded' && (
         <>
           <h1 className="text-3xl tracking-tight">Thank you</h1>
-          <p className="mt-2 text-sm text-[#8A8375]">Your order is confirmed.</p>
+          <p className="mt-2 text-sm text-stone-500">Your order is confirmed.</p>
         </>
       )}
 
       {status === 'processing' && (
         <>
           <h1 className="text-3xl tracking-tight">Payment processing</h1>
-          <p className="mt-2 text-sm text-[#8A8375]">
+          <p className="mt-2 text-sm text-stone-500">
             We'll email you once it clears — no need to try again.
           </p>
         </>
@@ -61,8 +61,8 @@ export default function CheckoutSuccessPage() {
       {status === 'failed' && (
         <>
           <h1 className="text-3xl tracking-tight">Payment didn't go through</h1>
-          <p className="mt-2 text-sm text-[#8A8375]">
-            <Link href="/cart/checkout" className="text-[#55624A] underline">
+          <p className="mt-2 text-sm text-stone-500">
+            <Link href="/cart/checkout" className="text-green-800 underline">
               Return to checkout
             </Link>{' '}
             to try again.
