@@ -21,16 +21,27 @@ export async function getCurrentUser() {
   return auth();
 }
 
-export async function createUser(email: string, plainPassword: string) {
-  const saltRounds     = 10
-  const passwordSalt   = await bcrypt.genSalt(saltRounds)
+export async function hashPassword(plainPassword: string) {
+  const saltRounds = 10
+  const passwordSalt = await bcrypt.genSalt(saltRounds)
   const hashedPassword = await bcrypt.hash(plainPassword, passwordSalt)
+  return { password: hashedPassword, password_salt: passwordSalt }
+}
+
+export async function createUser(
+  email: string,
+  plainPassword: string,
+  options?: { name?: string | null; role?: 'CUSTOMER' | 'ADMIN' }
+) {
+  const hashed = await hashPassword(plainPassword)
 
   const user = await prisma.user.create({
     data: {
       email,
-      password:      hashedPassword,
-      password_salt: passwordSalt,
+      name: options?.name ?? null,
+      role: options?.role ?? 'CUSTOMER',
+      password: hashed.password,
+      password_salt: hashed.password_salt,
     },
   })
 
