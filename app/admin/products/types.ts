@@ -6,6 +6,7 @@ export type Category = {
 export type ImageField = {
   key: string;
   file: File | null;
+  url?: string;
   isPrimary: boolean;
 };
 
@@ -31,6 +32,7 @@ export type AttributeOption = {
 
 export type VariantField = {
   key: string;
+  id?: string;
   sku: string;
   name: string;
   price: string; // optional override; blank = use the product's base price

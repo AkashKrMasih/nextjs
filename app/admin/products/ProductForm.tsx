@@ -209,6 +209,7 @@ export function ProductForm({
       .map((a) => ({title: a.title.trim(), value: a.value.trim()}))
       .filter((a) => a.title && a.value);
     const variants = values.variants.map((v) => ({
+      id:         v.id,
       sku:        v.sku.trim(),
       name:       v.name.trim() || null,
       price:      v.price.trim() || null,
@@ -219,6 +220,9 @@ export function ProductForm({
         return acc;
       }, {}),
     }));
+    const existingImages = values.images
+      .filter((img) => img.url && !img.file)
+      .map((img) => ({url: img.url, isPrimary: img.isPrimary}));
 
     const formData = new FormData();
     formData.set('name', values.name);
@@ -227,6 +231,7 @@ export function ProductForm({
     formData.set('categoryId', values.categoryId);
     formData.set('attributes', JSON.stringify(attributes));
     formData.set('variants', JSON.stringify(variants));
+    formData.set('existingImages', JSON.stringify(existingImages));
 
     for (const img of values.images) {
       if (!img.file) continue;
@@ -234,8 +239,8 @@ export function ProductForm({
       formData.append('imageIsPrimary', img.isPrimary ? 'true' : 'false');
     }
 
-    const response = await fetch('/api/products', {
-      method: 'POST',
+    const response = await fetch(productId ? `/api/products/${productId}` : '/api/products', {
+      method: productId ? 'PUT' : 'POST',
       body:   formData,
     });
 
@@ -307,6 +312,9 @@ export function ProductForm({
         ) : (
           values.images.map((img) => (
             <div key={img.key} className="flex items-center gap-2">
+              {img.url && !img.file ? (
+                <img src={img.url} alt="" className="h-12 w-12 rounded object-cover" />
+              ) : null}
               <input
                 className="flex-1 rounded border border-[#D8D2C4] bg-white p-2 text-sm"
                 type="file"
@@ -407,7 +415,8 @@ export function ProductForm({
       </section>
 
       {/* Variants */}
-      <section className="space-y-4">
+      {!productId && (
+        <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium text-[#55624A]">Variants</h2>
           <button type="button" onClick={addVariant} className="text-sm text-[#55624A] underline">
@@ -514,13 +523,14 @@ export function ProductForm({
           </div>
         ))}
       </section>
+      )}
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       <button
         className="rounded bg-[#55624A] px-4 py-2 text-white disabled:opacity-60"
         disabled={saving}
       >
-        {saving ? 'Creating…' : productId ? 'Save changes' : 'Create product'}
+        {saving ? 'Saving…' : productId ? 'Save changes' : 'Create product'}
       </button>
     </form>
   );
