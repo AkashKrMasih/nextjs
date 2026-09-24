@@ -5,7 +5,7 @@ export type Category = {
 
 export type ImageField = {
   key: string;
-  url: string;
+  file: File | null;
   isPrimary: boolean;
 };
 
@@ -37,4 +37,15 @@ export type VariantField = {
   quantity: string;
   isDefault: boolean;
   attributes: VariantAttribute[];
+};
+
+
+export type ProductFormValues = {
+  name: string;
+  description: string;
+  price: string;
+  categoryId: string; // '' = no category
+  images: ImageField[];
+  variants: VariantField[];
+  attributes: AttributeField[];
 };
