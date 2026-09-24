@@ -45,6 +45,7 @@ export default async function EditProductPage({
     name: product.name,
     description: product.description,
     price: product.price.toString(),
+    priceOnRequest: product.priceOnRequest,
     categoryId: product.categoryId ? String(product.categoryId) : '',
     images: product.images.map((image) => ({
       key: image.id,

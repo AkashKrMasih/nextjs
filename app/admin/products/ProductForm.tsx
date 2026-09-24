@@ -43,8 +43,9 @@ function emptyValues(): ProductFormValues {
   return {
     name:        '',
     description: '',
-    price:       '',
-    categoryId:  '',
+    price:           '',
+    priceOnRequest:  false,
+    categoryId:      '',
     images:      [],
     variants:    [emptyVariant(true)],
     attributes:  [],
@@ -228,6 +229,7 @@ export function ProductForm({
     formData.set('name', values.name);
     formData.set('description', values.description);
     formData.set('price', values.price);
+    formData.set('priceOnRequest', values.priceOnRequest ? 'true' : 'false');
     formData.set('categoryId', values.categoryId);
     formData.set('attributes', JSON.stringify(attributes));
     formData.set('variants', JSON.stringify(variants));
@@ -297,6 +299,14 @@ export function ProductForm({
             ))}
           </select>
         </div>
+        <label className="flex items-center gap-2 text-sm text-stone-700">
+          <input
+            type="checkbox"
+            checked={values.priceOnRequest}
+            onChange={(e) => update('priceOnRequest', e.target.checked)}
+          />
+          Price on request
+        </label>
       </section>
 
       {/* Images */}

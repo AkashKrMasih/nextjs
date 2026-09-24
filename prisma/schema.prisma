@@ -16,8 +16,9 @@ model Product {
   id          Int      @id @default(autoincrement())
   name        String
   description String   @default("")
-  price       Decimal  @db.Decimal(10, 2) // default price; a variant may override this
-  createdAt   DateTime @default(now())
+  price          Decimal @db.Decimal(10, 2) // default price; a variant may override this
+  priceOnRequest Boolean @default(false)
+  createdAt      DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   categoryId Int?
@@ -33,6 +34,7 @@ model Product {
   attributes ProductAttribute[]
 
   wishlistItems WishlistItem[]
+  priceRequests PriceRequest[]
 
   @@index([categoryId])
 }
@@ -155,6 +157,25 @@ model User {
   orderAddresses OrderAddress[]
   addresses      UserAddress[]
   wishlist       Wishlist?
+  priceRequests  PriceRequest[]
+}
+
+model PriceRequest {
+  id           String  @id @default(cuid())
+  email        String
+  productTitle String
+  message      String  @db.Text
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([userId])
 }
 
 // Saved delivery addresses for logged-in users, so they can pick from a
