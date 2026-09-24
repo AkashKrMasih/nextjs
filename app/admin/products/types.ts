@@ -5,7 +5,7 @@ export type Category = {
 
 export type ImageField = {
   key: string;
-  url: string;
+  file: File | null;
   isPrimary: boolean;
 };
 

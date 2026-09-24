@@ -98,7 +98,7 @@ export function ProductForm({
   function addImage() {
     update('images', [
       ...values.images,
-      {key: newKey(), url: '', isPrimary: values.images.length === 0},
+      {key: newKey(), file: null, isPrimary: values.images.length === 0},
     ]);
   }
 
@@ -205,40 +205,39 @@ export function ProductForm({
 
     setSaving(true);
 
-    const body = {
-      name:        values.name,
-      description: values.description,
-      price:       values.price,
-      categoryId:  values.categoryId ? Number(values.categoryId) : null,
-      images:      values.images
-                   .filter((img) => img.url.trim())
-                   .map((img) => ({url: img.url.trim(), isPrimary: img.isPrimary})),
-      // Sent as plain title/value pairs; the API matches an existing
-      // ProductAttribute by title (case-insensitive) or creates a new one.
-      attributes: values.attributes
-                  .map((a) => ({title: a.title.trim(), value: a.value.trim()}))
-                  .filter((a) => a.title && a.value),
-      variants:   values.variants.map((v) => ({
-        sku:        v.sku.trim(),
-        name:       v.name.trim() || null,
-        price:      v.price.trim() || null,
-        isDefault:  v.isDefault,
-        quantity:   Number(v.quantity) || 0,
-        attributes: v.attributes.reduce<Record<string, string>>((acc, a) => {
-          if (a.name.trim()) acc[a.name.trim()] = a.value;
-          return acc;
-        }, {}),
-      })),
-    };
+    const attributes = values.attributes
+      .map((a) => ({title: a.title.trim(), value: a.value.trim()}))
+      .filter((a) => a.title && a.value);
+    const variants = values.variants.map((v) => ({
+      sku:        v.sku.trim(),
+      name:       v.name.trim() || null,
+      price:      v.price.trim() || null,
+      isDefault:  v.isDefault,
+      quantity:   Number(v.quantity) || 0,
+      attributes: v.attributes.reduce<Record<string, string>>((acc, a) => {
+        if (a.name.trim()) acc[a.name.trim()] = a.value;
+        return acc;
+      }, {}),
+    }));
 
-    const response = await fetch(
-      productId ? `/api/products/${productId}` : '/api/products',
-      {
-        method:  productId ? 'PUT' : 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body:    JSON.stringify(body),
-      }
-    );
+    const formData = new FormData();
+    formData.set('name', values.name);
+    formData.set('description', values.description);
+    formData.set('price', values.price);
+    formData.set('categoryId', values.categoryId);
+    formData.set('attributes', JSON.stringify(attributes));
+    formData.set('variants', JSON.stringify(variants));
+
+    for (const img of values.images) {
+      if (!img.file) continue;
+      formData.append('images', img.file);
+      formData.append('imageIsPrimary', img.isPrimary ? 'true' : 'false');
+    }
+
+    const response = await fetch('/api/products', {
+      method: 'POST',
+      body:   formData,
+    });
 
     const payload = await response.json();
     setSaving(false);
@@ -309,11 +308,14 @@ export function ProductForm({
           values.images.map((img) => (
             <div key={img.key} className="flex items-center gap-2">
               <input
-                className="flex-1 rounded border border-[#D8D2C4] bg-white p-2"
-                placeholder="Image URL"
-                value={img.url}
-                onChange={(e) => updateImage(img.key, {url: e.target.value})}
+                className="flex-1 rounded border border-[#D8D2C4] bg-white p-2 text-sm"
+                type="file"
+                accept="image/*"
+                onChange={(e) => updateImage(img.key, {file: e.target.files?.[0] ?? null})}
               />
+              {img.file ? (
+                <span className="max-w-32 truncate text-xs text-[#8A8375]">{img.file.name}</span>
+              ) : null}
               <label className="flex items-center gap-1 text-xs text-[#55624A]">
                 <input
                   type="radio"
