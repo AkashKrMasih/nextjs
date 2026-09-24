@@ -27,8 +27,8 @@ export default async function AddressPage({
 
   return (
     <main className="max-w-6xl px-6 py-10">
-      <h1 className="text-2xl tracking-tight text-[#1E1B16]">Saved addresses</h1>
-      <p className="mt-1 text-sm text-[#55624A]">
+      <h1 className="text-2xl tracking-tight text-stone-900">Saved addresses</h1>
+      <p className="mt-1 text-sm text-green-800">
         Manage the addresses you ship to at checkout.
       </p>
 

@@ -19,7 +19,7 @@ export function CartLink() {
   }, []);
 
   return (
-    <Link href="/cart/checkout" className="hover:text-[#1E1B16]">
+    <Link href="/cart/checkout" className="hover:text-stone-900">
       Cart{count > 0 ? ` (${count})` : ''}
     </Link>
   );

@@ -38,8 +38,8 @@ function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: 
 
   if (images.length === 0) {
     return (
-      <div className="relative aspect-square overflow-hidden rounded-[28px] bg-muted">
-        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+      <div className="relative aspect-square overflow-hidden rounded-3xl bg-stone-100">
+        <div className="flex h-full items-center justify-center text-sm text-stone-500">
           No image
         </div>
       </div>
@@ -53,7 +53,7 @@ function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: 
   return (
     <div className="space-y-3">
       {/* Main image */}
-      <div className="group relative aspect-square overflow-hidden rounded-[28px] bg-muted">
+      <div className="group relative aspect-square overflow-hidden rounded-3xl bg-stone-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           key={images[active].id}
@@ -67,14 +67,14 @@ function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: 
             <button
               onClick={() => goTo(active - 1)}
               aria-label="Previous image"
-              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-background"
+              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-stone-900 opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-white"
             >
               <ChevronLeft className="size-5" />
             </button>
             <button
               onClick={() => goTo(active + 1)}
               aria-label="Next image"
-              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-background"
+              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-stone-900 opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-white"
             >
               <ChevronRight className="size-5" />
             </button>
@@ -88,7 +88,7 @@ function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: 
                   aria-label={`Go to image ${index + 1}`}
                   className={[
                     'h-1.5 rounded-full transition-all',
-                    index === active ? 'w-4 bg-background' : 'w-1.5 bg-background/60',
+                    index === active ? 'w-4 bg-white' : 'w-1.5 bg-white/60',
                   ].join(' ')}
                 />
               ))}
@@ -107,7 +107,7 @@ function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: 
               aria-label={`View image ${index + 1}`}
               className={[
                 'relative aspect-square w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-colors',
-                index === active ? 'border-primary' : 'border-transparent hover:border-border',
+                index === active ? 'border-green-800' : 'border-transparent hover:border-stone-200',
               ].join(' ')}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -164,7 +164,7 @@ export function ProductDetail({
 
   return (
     <main className="mx-auto max-w-6xl px-4 md:px-6 py-10">
-      <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+      <Link href="/" className="text-sm text-stone-500 hover:text-green-800 transition-colors">
         ← Catalog
       </Link>
 
@@ -184,33 +184,33 @@ export function ProductDetail({
 
         {/* Info */}
         <div className="space-y-6 lg:pt-2">
-          <h1 className="text-3xl md:text-4xl leading-tight tracking-tight text-foreground">
+          <h1 className="text-3xl md:text-4xl leading-tight tracking-tight text-stone-900">
             {product.name}
           </h1>
 
-          <p className="text-3xl font-light text-primary">{formatPrice(product.price)}</p>
+          <p className="text-3xl font-light text-green-800">{formatPrice(product.price)}</p>
 
           {product.description && (
-            <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+            <p className="whitespace-pre-wrap leading-relaxed text-stone-500">
               {product.description}
             </p>
           )}
 
           {/* Quantity */}
-          <div className="flex items-center overflow-hidden rounded-full border border-border w-fit">
+          <div className="flex items-center overflow-hidden rounded-full border border-stone-200 w-fit">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="flex h-11 w-11 items-center justify-center text-foreground transition-colors hover:bg-muted"
+              className="flex h-11 w-11 items-center justify-center text-stone-900 transition-colors hover:bg-stone-100"
               aria-label="Decrease quantity"
             >
               <Minus className="size-4" />
             </button>
-            <span className="w-10 select-none text-center text-sm font-medium text-foreground">
+            <span className="w-10 select-none text-center text-sm font-medium text-stone-900">
               {quantity}
             </span>
             <button
               onClick={() => setQuantity((q) => q + 1)}
-              className="flex h-11 w-11 items-center justify-center text-foreground transition-colors hover:bg-muted"
+              className="flex h-11 w-11 items-center justify-center text-stone-900 transition-colors hover:bg-stone-100"
               aria-label="Increase quantity"
             >
               <Plus className="size-4" />
@@ -235,7 +235,7 @@ export function ProductDetail({
                 'flex h-12 w-12 items-center justify-center rounded-full border transition-all disabled:opacity-60',
                 wishlisted
                   ? 'border-red-300 bg-red-50 text-red-500'
-                  : 'border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground',
+                  : 'border-stone-200 text-stone-500 hover:border-stone-900/40 hover:text-stone-900',
               ].join(' ')}
             >
               <Heart className={['size-5', wishlisted ? 'fill-red-500' : ''].join(' ')} />
@@ -244,7 +244,7 @@ export function ProductDetail({
             <button
               onClick={handleShare}
               aria-label="Share"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-foreground/40 hover:text-foreground"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-all hover:border-stone-900/40 hover:text-stone-900"
             >
               <Share2 className="size-5" />
             </button>
@@ -257,10 +257,10 @@ export function ProductDetail({
               { icon: ShieldCheck, label: 'Secure checkout', sub: 'Encrypted' },
               { icon: RotateCcw, label: 'Easy returns', sub: '30 days' },
             ].map(({ icon: Icon, label, sub }) => (
-              <div key={label} className="flex flex-col items-center gap-1 rounded-2xl bg-muted/60 p-3 text-center">
-                <Icon className="size-5 text-primary" />
-                <p className="text-xs font-medium leading-tight text-foreground">{label}</p>
-                <p className="text-xs text-muted-foreground">{sub}</p>
+              <div key={label} className="flex flex-col items-center gap-1 rounded-2xl bg-stone-100/60 p-3 text-center">
+                <Icon className="size-5 text-green-800" />
+                <p className="text-xs font-medium leading-tight text-stone-900">{label}</p>
+                <p className="text-xs text-stone-500">{sub}</p>
               </div>
             ))}
           </div>
@@ -270,7 +270,7 @@ export function ProductDetail({
       {/* Related products (real Prisma data) */}
       {related.length > 0 && (
         <section className="mt-20">
-          <h2 className="mb-6 text-2xl font-normal text-foreground">You may also like</h2>
+          <h2 className="mb-6 text-2xl font-normal text-stone-900">You may also like</h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {related.map((item) => {
               const thumb = item.images[0]?.url ?? null;
@@ -278,9 +278,9 @@ export function ProductDetail({
                 <Link
                   key={item.id}
                   href={`/products/${item.id}`}
-                  className="group overflow-hidden rounded-[20px] border border-border bg-card transition-all hover:shadow-md"
+                  className="group overflow-hidden rounded-2xl border border-stone-200 bg-white transition-all hover:shadow-md"
                 >
-                  <div className="aspect-square overflow-hidden bg-muted">
+                  <div className="aspect-square overflow-hidden bg-stone-100">
                     {thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -289,14 +289,14 @@ export function ProductDetail({
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                      <div className="flex h-full items-center justify-center text-xs text-stone-500">
                         No image
                       </div>
                     )}
                   </div>
                   <div className="space-y-1 p-4">
-                    <p className="line-clamp-2 text-sm font-medium leading-tight text-foreground">{item.name}</p>
-                    <p className="text-sm text-foreground">{formatPrice(item.price)}</p>
+                    <p className="line-clamp-2 text-sm font-medium leading-tight text-stone-900">{item.name}</p>
+                    <p className="text-sm text-stone-900">{formatPrice(item.price)}</p>
                   </div>
                 </Link>
               );

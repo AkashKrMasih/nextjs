@@ -261,21 +261,21 @@ export function ProductForm({
       {/* Basic info */}
       <section className="space-y-4">
         <input
-          className="w-full rounded border border-[#D8D2C4] bg-white p-2"
+          className="w-full rounded border border-stone-300 bg-white p-2"
           placeholder="Product name"
           required
           value={values.name}
           onChange={(e) => update('name', e.target.value)}
         />
         <textarea
-          className="h-32 w-full rounded border border-[#D8D2C4] bg-white p-2"
+          className="h-32 w-full rounded border border-stone-300 bg-white p-2"
           placeholder="Description"
           value={values.description}
           onChange={(e) => update('description', e.target.value)}
         />
         <div className="grid grid-cols-2 gap-4">
           <input
-            className="w-full rounded border border-[#D8D2C4] bg-white p-2"
+            className="w-full rounded border border-stone-300 bg-white p-2"
             placeholder="Base price"
             type="number"
             min="0"
@@ -285,7 +285,7 @@ export function ProductForm({
             onChange={(e) => update('price', e.target.value)}
           />
           <select
-            className="w-full rounded border border-[#D8D2C4] bg-white p-2"
+            className="w-full rounded border border-stone-300 bg-white p-2"
             value={values.categoryId}
             onChange={(e) => update('categoryId', e.target.value)}
           >
@@ -302,13 +302,13 @@ export function ProductForm({
       {/* Images */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-[#55624A]">Images</h2>
-          <button type="button" onClick={addImage} className="text-sm text-[#55624A] underline">
+          <h2 className="text-sm font-medium text-green-800">Images</h2>
+          <button type="button" onClick={addImage} className="text-sm text-green-800 underline">
             + Add image
           </button>
         </div>
         {values.images.length === 0 ? (
-          <p className="text-sm text-[#8A8375]">No images yet.</p>
+          <p className="text-sm text-stone-500">No images yet.</p>
         ) : (
           values.images.map((img) => (
             <div key={img.key} className="flex items-center gap-2">
@@ -316,15 +316,15 @@ export function ProductForm({
                 <img src={img.url} alt="" className="h-12 w-12 rounded object-cover" />
               ) : null}
               <input
-                className="flex-1 rounded border border-[#D8D2C4] bg-white p-2 text-sm"
+                className="flex-1 rounded border border-stone-300 bg-white p-2 text-sm"
                 type="file"
                 accept="image/*"
                 onChange={(e) => updateImage(img.key, {file: e.target.files?.[0] ?? null})}
               />
               {img.file ? (
-                <span className="max-w-32 truncate text-xs text-[#8A8375]">{img.file.name}</span>
+                <span className="max-w-32 truncate text-xs text-stone-500">{img.file.name}</span>
               ) : null}
-              <label className="flex items-center gap-1 text-xs text-[#55624A]">
+              <label className="flex items-center gap-1 text-xs text-green-800">
                 <input
                   type="radio"
                   name="primaryImage"
@@ -348,16 +348,16 @@ export function ProductForm({
       {/* Product attributes */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-[#55624A]">Attributes</h2>
+          <h2 className="text-sm font-medium text-green-800">Attributes</h2>
           <button
             type="button"
             onClick={addAttributeRow}
-            className="text-sm text-[#55624A] underline"
+            className="text-sm text-green-800 underline"
           >
             + Add attribute
           </button>
         </div>
-        <p className="text-xs text-[#8A8375]">
+        <p className="text-xs text-stone-500">
           Specs like Material or Weight. Start typing a name to reuse one already in your
           catalog — anything new is created automatically when you save.
         </p>
@@ -370,16 +370,16 @@ export function ProductForm({
         </datalist>
 
         {values.attributes.length === 0 ? (
-          <p className="text-sm text-[#8A8375]">No attributes yet.</p>
+          <p className="text-sm text-stone-500">No attributes yet.</p>
         ) : (
           values.attributes.map((attr) => {
             const valueSuggestions = valuesForTitle(attr.title);
             const valuesListId     = `attribute-values-${attr.key}`;
             return (
-              <div key={attr.key} className="space-y-2 rounded border border-[#D8D2C4] p-3">
+              <div key={attr.key} className="space-y-2 rounded border border-stone-300 p-3">
                 <div className="flex items-center gap-2">
                   <input
-                    className="flex-1 rounded border border-[#D8D2C4] bg-white p-2"
+                    className="flex-1 rounded border border-stone-300 bg-white p-2"
                     placeholder="Attribute name (e.g. Material)"
                     list="attribute-title-options"
                     value={attr.title}
@@ -402,7 +402,7 @@ export function ProductForm({
                 </datalist>
 
                 <input
-                  className="w-full rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
+                  className="w-full rounded border border-stone-300 bg-white p-1.5 text-sm"
                   placeholder="Value (e.g. Cotton)"
                   list={valuesListId}
                   value={attr.value}
@@ -418,18 +418,18 @@ export function ProductForm({
       {!productId && (
         <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-[#55624A]">Variants</h2>
-          <button type="button" onClick={addVariant} className="text-sm text-[#55624A] underline">
+          <h2 className="text-sm font-medium text-green-800">Variants</h2>
+          <button type="button" onClick={addVariant} className="text-sm text-green-800 underline">
             + Add variant
           </button>
         </div>
 
         {values.variants.map((v, i) => (
-          <div key={v.key} className="space-y-3 rounded border border-[#D8D2C4] p-4">
+          <div key={v.key} className="space-y-3 rounded border border-stone-300 p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-[#8A8375]">Variant {i + 1}</span>
+              <span className="text-xs text-stone-500">Variant {i + 1}</span>
               <div className="flex items-center gap-3">
-                <label className="flex items-center gap-1 text-xs text-[#55624A]">
+                <label className="flex items-center gap-1 text-xs text-green-800">
                   <input
                     type="radio"
                     name="defaultVariant"
@@ -452,20 +452,20 @@ export function ProductForm({
 
             <div className="grid grid-cols-2 gap-3">
               <input
-                className="rounded border border-[#D8D2C4] bg-white p-2"
+                className="rounded border border-stone-300 bg-white p-2"
                 placeholder="SKU"
                 required
                 value={v.sku}
                 onChange={(e) => updateVariant(v.key, {sku: e.target.value})}
               />
               <input
-                className="rounded border border-[#D8D2C4] bg-white p-2"
+                className="rounded border border-stone-300 bg-white p-2"
                 placeholder="Variant name (e.g. Red / Large)"
                 value={v.name}
                 onChange={(e) => updateVariant(v.key, {name: e.target.value})}
               />
               <input
-                className="rounded border border-[#D8D2C4] bg-white p-2"
+                className="rounded border border-stone-300 bg-white p-2"
                 placeholder="Price override (optional)"
                 type="number"
                 min="0"
@@ -474,7 +474,7 @@ export function ProductForm({
                 onChange={(e) => updateVariant(v.key, {price: e.target.value})}
               />
               <input
-                className="rounded border border-[#D8D2C4] bg-white p-2"
+                className="rounded border border-stone-300 bg-white p-2"
                 placeholder="Stock quantity"
                 type="number"
                 min="0"
@@ -487,11 +487,11 @@ export function ProductForm({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-[#8A8375]">Options</span>
+                <span className="text-xs text-stone-500">Options</span>
                 <button
                   type="button"
                   onClick={() => addAttribute(v.key)}
-                  className="text-xs text-[#55624A] underline"
+                  className="text-xs text-green-800 underline"
                 >
                   + Add option
                 </button>
@@ -499,13 +499,13 @@ export function ProductForm({
               {v.attributes.map((a) => (
                 <div key={a.key} className="flex items-center gap-2">
                   <input
-                    className="w-1/3 rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
+                    className="w-1/3 rounded border border-stone-300 bg-white p-1.5 text-sm"
                     placeholder="color"
                     value={a.name}
                     onChange={(e) => updateAttribute(v.key, a.key, {name: e.target.value})}
                   />
                   <input
-                    className="flex-1 rounded border border-[#D8D2C4] bg-white p-1.5 text-sm"
+                    className="flex-1 rounded border border-stone-300 bg-white p-1.5 text-sm"
                     placeholder="Red"
                     value={a.value}
                     onChange={(e) => updateAttribute(v.key, a.key, {value: e.target.value})}
@@ -527,7 +527,7 @@ export function ProductForm({
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       <button
-        className="rounded bg-[#55624A] px-4 py-2 text-white disabled:opacity-60"
+        className="rounded bg-green-800 px-4 py-2 text-white disabled:opacity-60"
         disabled={saving}
       >
         {saving ? 'Saving…' : productId ? 'Save changes' : 'Create product'}

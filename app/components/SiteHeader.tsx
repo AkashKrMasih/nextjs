@@ -7,14 +7,14 @@ export async function SiteHeader() {
   const session = await getSession();
 
   return (
-    <header className="border-b border-[#D8D2C4] bg-[#FAF8F3]">
+    <header className="border-b border-stone-300 bg-stone-50">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <Link href="/" className="text-xl tracking-tight">
           Shop
         </Link>
 
-        <nav className="flex items-center gap-5 text-sm text-[#55624A]">
-          <Link href="/" className="hover:text-[#1E1B16]">
+        <nav className="flex items-center gap-5 text-sm text-green-800">
+          <Link href="/" className="hover:text-stone-900">
             Catalog
           </Link>
           <CartLink />
@@ -24,10 +24,10 @@ export async function SiteHeader() {
 
               {session.role === 'ADMIN' && (
                 <>
-                  <Link href="/admin/products/new" className="hover:text-[#1E1B16]">
+                  <Link href="/admin/products/new" className="hover:text-stone-900">
                     Add product
                   </Link>
-                  <Link href="/admin" className="hover:text-[#1E1B16]">
+                  <Link href="/admin" className="hover:text-stone-900">
                     Dashboard
                   </Link>
                 </>
@@ -37,7 +37,7 @@ export async function SiteHeader() {
 
                 <button
                   type="button"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EFE9DC] text-[#55624A] transition-colors hover:bg-[#E3DCC9] hover:text-[#1E1B16]"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-200 text-green-800 transition-colors hover:bg-stone-300 hover:text-stone-900"
                   aria-label="Account menu"
                 >
                   <svg
@@ -59,21 +59,21 @@ export async function SiteHeader() {
                 <div className="absolute right-0 top-full h-2 w-full" />
 
                 <div
-                  className="invisible absolute right-0 top-full z-10 w-56 translate-y-1 rounded-lg border border-[#D8D2C4] bg-[#FAF8F3] p-3 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:translate-y-2 group-hover:opacity-100"
+                  className="invisible absolute right-0 top-full z-10 w-56 translate-y-1 rounded-lg border border-stone-300 bg-stone-50 p-3 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:translate-y-2 group-hover:opacity-100"
                   role="menu"
                 >
                   <div className="mb-2 flex flex-col leading-tight">
-                  <span className="text-sm font-medium text-[#1E1B16]">
+                  <span className="text-sm font-medium text-stone-900">
                     {session.name}
                   </span>
-                    <span className="text-xs text-[#55624A]">
+                    <span className="text-xs text-green-800">
                     {session.email}
                   </span>
                   </div>
-                  <div className="border-t border-[#D8D2C4] pt-2">
+                  <div className="border-t border-stone-300 pt-2">
                     <Link
                       href={`/users/${session.userId}/address`}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-[#55624A] transition-colors hover:bg-[#EFE9DC] hover:text-[#1E1B16]"
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-green-800 transition-colors hover:bg-stone-200 hover:text-stone-900"
                       role="menuitem"
                     >
                       <svg
@@ -92,8 +92,8 @@ export async function SiteHeader() {
                       Addresses
                     </Link>
                   </div>
-                  <div className="mt-2 border-t border-[#D8D2C4] pt-2">
-                    <LogoutButton className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-[#55624A] transition-colors hover:bg-[#EFE9DC] hover:text-[#1E1B16]">
+                  <div className="mt-2 border-t border-stone-300 pt-2">
+                    <LogoutButton className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-green-800 transition-colors hover:bg-stone-200 hover:text-stone-900">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -115,7 +115,7 @@ export async function SiteHeader() {
               </div>
             </>
           ) : (
-            <Link href="/login" className="hover:text-[#1E1B16]">
+            <Link href="/login" className="hover:text-stone-900">
               Log in
             </Link>
           )}

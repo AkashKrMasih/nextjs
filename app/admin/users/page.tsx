@@ -11,39 +11,39 @@ export default async function AdminUsersPage() {
     <main className="mx-auto max-w-6xl px-4 md:px-6 py-10">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl leading-tight tracking-tight text-foreground">
+          <h1 className="text-3xl md:text-4xl leading-tight tracking-tight text-stone-900">
             Users
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-stone-500">
             {users.length} {users.length === 1 ? 'user' : 'users'} registered
           </p>
         </div>
       </div>
 
       {users.length === 0 ? (
-        <div className="mt-10 flex flex-col items-center justify-center rounded-[20px] border border-dashed border-border bg-muted/40 py-20 text-center">
-          <p className="text-sm text-muted-foreground">No users yet.</p>
+        <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-stone-100/40 py-20 text-center">
+          <p className="text-sm text-stone-500">No users yet.</p>
         </div>
       ) : (
-        <div className="mt-10 overflow-hidden rounded-lg border border-border">
+        <div className="mt-10 overflow-hidden rounded-lg border border-stone-200">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="w-16 border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
+              <tr className="border-b border-stone-200 bg-stone-100/50">
+                <th className="w-16 border-r border-stone-200/60 px-3 py-2.5 text-left font-medium text-stone-500">
                   #
                 </th>
-                <th className="w-10 border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground" />
-                <th className="border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                <th className="w-10 border-r border-stone-200/60 px-3 py-2.5 text-left font-medium text-stone-500" />
+                <th className="border-r border-stone-200/60 px-3 py-2.5 text-left font-medium text-stone-500">
                   Name
                 </th>
-                <th className="border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                <th className="border-r border-stone-200/60 px-3 py-2.5 text-left font-medium text-stone-500">
                   Email
                 </th>
-                <th className="w-44 border-r border-border/60 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                <th className="w-44 border-r border-stone-200/60 px-3 py-2.5 text-left font-medium text-stone-500">
                   Joined
                 </th>
-                <th className="w-40 px-3 py-2.5 text-left font-medium text-muted-foreground">
+                <th className="w-40 px-3 py-2.5 text-left font-medium text-stone-500">
                   Actions
                 </th>
               </tr>
@@ -52,25 +52,25 @@ export default async function AdminUsersPage() {
               {users.map((user, i) => (
                 <tr
                   key={user.id}
-                  className="border-b border-border/60 last:border-b-0 even:bg-muted/20 hover:bg-muted/40"
+                  className="border-b border-stone-200/60 last:border-b-0 even:bg-stone-100/20 hover:bg-stone-100/40"
                 >
-                  <td className="border-r border-border/60 px-3 py-2 text-muted-foreground">
+                  <td className="border-r border-stone-200/60 px-3 py-2 text-stone-500">
                     {i + 1}
                   </td>
-                  <td className="border-r border-border/60 px-3 py-2">
-                    <div className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <td className="border-r border-stone-200/60 px-3 py-2">
+                    <div className="flex size-7 items-center justify-center rounded-full bg-stone-100 text-stone-500">
                       <UserRound className="size-3.5" />
                     </div>
                   </td>
-                  <td className="border-r border-border/60 px-3 py-2 text-foreground">
+                  <td className="border-r border-stone-200/60 px-3 py-2 text-stone-900">
                     {user.name ?? (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-stone-500">—</span>
                     )}
                   </td>
-                  <td className="border-r border-border/60 px-3 py-2 text-foreground">
+                  <td className="border-r border-stone-200/60 px-3 py-2 text-stone-900">
                     {user.email}
                   </td>
-                  <td className="border-r border-border/60 px-3 py-2 text-muted-foreground">
+                  <td className="border-r border-stone-200/60 px-3 py-2 text-stone-500">
                     {user.createdAt.toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
@@ -80,7 +80,7 @@ export default async function AdminUsersPage() {
                   <td className="px-3 py-2">
                     <Link
                       href={`/admin/users/${user.id}`}
-                      className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/60"
+                      className="rounded-md border border-stone-200 px-2.5 py-1 text-xs font-medium text-stone-900 hover:bg-stone-100/60"
                     >
                       Edit / Delete
                     </Link>

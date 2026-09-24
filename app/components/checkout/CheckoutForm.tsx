@@ -40,13 +40,13 @@ function PaymentForm({ payerLabel }: { payerLabel: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-sm text-[#8A8375]">Paying as {payerLabel}</p>
+      <p className="text-sm text-stone-500">Paying as {payerLabel}</p>
       <PaymentElement />
       {error && <p className="text-sm text-red-800">{error}</p>}
       <button
         type="submit"
         disabled={!stripe || submitting}
-        className="w-full rounded bg-[#55624A] px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="w-full rounded bg-green-800 px-4 py-2 text-sm text-white disabled:opacity-50"
       >
         {submitting ? 'Processing…' : 'Pay now'}
       </button>
@@ -79,9 +79,9 @@ export default function CheckoutForm({
         appearance: {
           theme: 'stripe',
           variables: {
-            colorPrimary: '#55624A',
+            colorPrimary: '#166534',
             colorBackground: '#ffffff',
-            colorText: '#1a1a1a',
+            colorText: '#1c1917',
             borderRadius: '4px',
           },
         },
