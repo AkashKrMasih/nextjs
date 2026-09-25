@@ -5,7 +5,7 @@
 import { createUser, getUserByEmail, hashPassword, verifyPassword } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { createSession, destroySession } from '@/lib/session'
-import { sendVerificationEmail } from '@/lib/email'
+import { findPasswordResetToken, sendPasswordResetEmail, sendVerificationEmail } from '@/lib/email'
 import { prisma } from '@/lib/prisma'
 import bcrypt from "bcryptjs";
 
@@ -100,6 +100,45 @@ export async function login(
   }
 
   redirect('/')
+}
+
+export async function requestPasswordReset(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const email = String(formData.get('email') ?? '').trim()
+  if (!email) return { error: 'Email is required' }
+
+  const sent = await sendPasswordResetEmail(email)
+  if ('error' in sent) return { error: sent.error }
+
+  return { success: 'If an account exists for that email, a reset link is on its way. It expires in 1 hour.' }
+}
+
+export async function resetPassword(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const token = String(formData.get('token') ?? '')
+  const password = String(formData.get('password') ?? '')
+  if (password.length < 8) {
+    return { error: 'Password must be at least 8 characters' }
+  }
+
+  const record = await findPasswordResetToken(token)
+  if (!record) {
+    return { error: 'This reset link is invalid or has expired.' }
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: record.userId },
+      data: { ...(await hashPassword(password)), emailVerified: true },
+    }),
+    prisma.passwordResetToken.deleteMany({ where: { userId: record.userId } }),
+  ])
+
+  redirect('/login?reset=1')
 }
 
 export async function logout() {
