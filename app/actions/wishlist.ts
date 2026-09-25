@@ -40,6 +40,7 @@ export async function toggleWishlist(productId: number): Promise<ToggleResult> {
   if (existing) {
     await prisma.wishlistItem.delete({ where: { id: existing.id } });
     revalidatePath(`/products/${productId}`);
+    revalidatePath('/wishlist');
     return { ok: true, wishlisted: false };
   }
 
@@ -47,6 +48,7 @@ export async function toggleWishlist(productId: number): Promise<ToggleResult> {
     data: { wishlistId: wishlist.id, productId },
   });
   revalidatePath(`/products/${productId}`);
+  revalidatePath('/wishlist');
   return { ok: true, wishlisted: true };
 }
 
