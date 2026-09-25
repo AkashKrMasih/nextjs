@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { setHomeLayout, type HomeLayout } from '@/app/actions/home-layout';
+import { setHomeLayout, type HomeLayout } from '@/app/home/home-layout';
 
 function screenLayout(): HomeLayout {
   const width = window.innerWidth;

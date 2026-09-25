@@ -3,7 +3,6 @@
 import {prisma} from '@/lib/prisma';
 import {getCurrentUser} from '@/lib/auth';
 import {revalidatePath} from 'next/cache';
-import {log} from "@/lib/utils"
 import chalk from "chalk";
 
 type ToggleResult =
