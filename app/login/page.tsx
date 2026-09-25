@@ -7,11 +7,13 @@ import { login } from '@/app/users/actions';
 import {validateEmail} from "@/lib/utils";
 
 function VerifiedBanner() {
-  const verified = useSearchParams().get('verified') === '1';
-  if (!verified) return null;
+  const params = useSearchParams();
+  const verified = params.get('verified') === '1';
+  const reset = params.get('reset') === '1';
+  if (!verified && !reset) return null;
   return (
     <p className="mb-4 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
-      Email verified. You can log in now.
+      {reset ? 'Password updated. You can log in now.' : 'Email verified. You can log in now.'}
     </p>
   );
 }
