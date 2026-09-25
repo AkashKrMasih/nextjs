@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { priceCart } from '@/lib/discounts';
 
 type RequestBody = {
-  items: { id: string; quantity: number }[];
+  items: { id: number; quantity: number }[];
   guestEmail?: string;
+  discountCode?: string;
 };
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as RequestBody;
-  const { items, guestEmail } = body;
+  const { items, guestEmail, discountCode } = body;
 
   if (!items?.length) {
     return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
@@ -26,38 +27,29 @@ export async function POST(req: NextRequest) {
   }
 
   // Re-price everything from the DB. Never trust price/quantity sent by the client.
-  const productIds = items.map((i) => i.id);
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
-  });
-
-  if (products.length !== productIds.length) {
-    return NextResponse.json({ error: 'One or more items no longer exist' }, { status: 400 });
+  const priced = await priceCart(
+    items.map((item) => ({ id: Number(item.id), quantity: Number(item.quantity) })),
+    discountCode
+  );
+  if ('error' in priced) {
+    return NextResponse.json({ error: priced.error }, { status: 400 });
   }
-
-  let amountTotal = 0;
-  const lineItems = items.map((item) => {
-    const product = products.find((p) => p.id === item.id)!;
-    if (item.quantity < 1) {
-      throw new Error(`Invalid quantity for ${product.id}`);
-    }
-    const unitPriceCents = Math.round(Number(product.price) * 100);
-    amountTotal += unitPriceCents * item.quantity;
-    return {
-      productId: product.id,
-      name: product.name,
-      unitPrice: unitPriceCents,
-      quantity: item.quantity,
-    };
-  });
-
-  if (amountTotal <= 0) {
+  if (priced.amountTotalCents <= 0) {
     return NextResponse.json({ error: 'Invalid order total' }, { status: 400 });
   }
 
+  const lineItems = priced.lines.map((line) => ({
+    variantId: line.variantId,
+    name: line.name,
+    unitPrice: line.unitPriceCents,
+    quantity: line.quantity,
+    discountCode: line.discountCode,
+  }));
+  const amountTotal = priced.amountTotalCents;
+
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amountTotal,
-    currency: (process.env.CURRENCY_CODE).toLowerCase(), // ADAPT: pull from config if you support multiple currencies
+    currency: (process.env.CURRENCY_CODE ?? 'usd').toLowerCase(),
     receipt_email: user?.email ?? guestEmail,
     metadata: {
       userId: user?.id ?? '',
