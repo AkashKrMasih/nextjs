@@ -23,6 +23,9 @@ export async function POST(request: Request) {
 
   try {
     const product = await createProductFromForm(parsed);
+    if ('error' in product) {
+      return NextResponse.json({ error: product.error }, { status: 400 });
+    }
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
     if (isUniqueConstraint(error)) {

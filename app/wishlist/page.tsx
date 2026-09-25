@@ -39,7 +39,7 @@ export default async function WishlistPage() {
             const image = item.product.images[0]?.url;
             return (
               <li key={item.id} className="overflow-hidden rounded-lg border border-stone-300 bg-white">
-                <Link href={`/products/${item.product.id}`} className="flex gap-4 p-4">
+                <Link href={`/products/${item.product.friendlyId}`} className="flex gap-4 p-4">
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded bg-stone-100">
                     {image ? (
                       // eslint-disable-next-line @next/next/no-img-element

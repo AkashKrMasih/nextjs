@@ -42,6 +42,7 @@ function emptyAttribute(): AttributeField {
 function emptyValues(): ProductFormValues {
   return {
     name:        '',
+    friendlyId:  '',
     description: '',
     price:           '',
     priceOnRequest:  false,
@@ -227,6 +228,7 @@ export function ProductForm({
 
     const formData = new FormData();
     formData.set('name', values.name);
+    formData.set('friendlyId', values.friendlyId);
     formData.set('description', values.description);
     formData.set('price', values.price);
     formData.set('priceOnRequest', values.priceOnRequest ? 'true' : 'false');
@@ -254,7 +256,7 @@ export function ProductForm({
       return;
     }
 
-    router.push(`/products/${payload.id}`);
+    router.push(`/products/${payload.friendlyId}`);
     router.refresh();
   }
 
@@ -268,6 +270,12 @@ export function ProductForm({
           required
           value={values.name}
           onChange={(e) => update('name', e.target.value)}
+        />
+        <input
+          className="w-full rounded border border-stone-300 bg-white p-2"
+          placeholder="Friendly id (optional — derived from the title if blank)"
+          value={values.friendlyId}
+          onChange={(e) => update('friendlyId', e.target.value)}
         />
         <textarea
           className="h-32 w-full rounded border border-stone-300 bg-white p-2"

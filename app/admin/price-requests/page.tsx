@@ -6,6 +6,7 @@ export default async function PriceRequestsPage() {
     orderBy: { createdAt: 'desc' },
     include: {
       user: { select: { name: true, email: true } },
+      product: { select: { friendlyId: true } },
     },
   });
 
@@ -22,6 +23,7 @@ export default async function PriceRequestsPage() {
           productTitle: request.productTitle,
           message: request.message,
           productId: request.productId,
+          friendlyId: request.product.friendlyId,
           userName: request.user?.name || request.user?.email || null,
           createdAt: request.createdAt.toLocaleString('en-US', {
             year: 'numeric',

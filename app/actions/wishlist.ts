@@ -23,7 +23,7 @@ export async function toggleWishlist(productId: number): Promise<ToggleResult> {
 
   const product = await prisma.product.findUnique({
     where:  {id: productId},
-    select: {id: true},
+    select: {id: true, friendlyId: true},
   });
   if (!product) {
     return {ok: false, error: 'NOT_FOUND'};
@@ -41,7 +41,7 @@ export async function toggleWishlist(productId: number): Promise<ToggleResult> {
 
   if (existing) {
     await prisma.wishlistItem.delete({where: {id: existing.id}});
-    revalidatePath(`/products/${productId}`);
+    revalidatePath(`/products/${product.friendlyId}`);
     revalidatePath('/wishlist');
     revalidatePath('/');
     return {ok: true, wishlisted: false};
@@ -50,7 +50,7 @@ export async function toggleWishlist(productId: number): Promise<ToggleResult> {
   await prisma.wishlistItem.create({
     data: {wishlistId: wishlist.id, productId},
   });
-  revalidatePath(`/products/${productId}`);
+  revalidatePath(`/products/${product.friendlyId}`);
   revalidatePath('/wishlist');
   revalidatePath('/');
   return {ok: true, wishlisted: true};

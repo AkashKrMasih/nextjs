@@ -43,6 +43,7 @@ export default async function EditProductPage({
 
   const initial: ProductFormValues = {
     name: product.name,
+    friendlyId: product.friendlyId,
     description: product.description,
     price: product.price.toString(),
     priceOnRequest: product.priceOnRequest,

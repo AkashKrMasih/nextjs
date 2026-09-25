@@ -10,6 +10,7 @@ export type PriceRequestRow = {
   productTitle: string;
   message: string;
   productId: number;
+  friendlyId: string;
   userName: string | null;
   createdAt: string;
 };
@@ -117,7 +118,7 @@ export function PriceRequestList({ requests }: { requests: PriceRequestRow[] }) 
               <div>
                 <dt className="font-medium text-gray-500">Product</dt>
                 <dd className="mt-1 text-gray-900">
-                  <Link href={`/products/${selected.productId}`} className="text-blue-700 hover:underline">
+                  <Link href={`/products/${selected.friendlyId}`} className="text-blue-700 hover:underline">
                     {selected.productTitle}
                   </Link>
                 </dd>
