@@ -11,18 +11,16 @@ export default async function Home({
 }) {
   const layout = await getHomeLayout();
 
-  if (layout === 'mobile') {
-    return <MobileHomePage searchParams={searchParams} />;
-  }
-
-  if (layout === 'tablet') {
-    return <TabletHomePage searchParams={searchParams} />;
-  }
-
   return (
     <>
-      {layout == null ? <HomeLayoutPrompt /> : null}
-      <HomeCatalog searchParams={searchParams} />
+      <HomeLayoutPrompt saved={layout} />
+      {layout === 'mobile' ? (
+        <MobileHomePage searchParams={searchParams} />
+      ) : layout === 'tablet' ? (
+        <TabletHomePage searchParams={searchParams} />
+      ) : (
+        <HomeCatalog searchParams={searchParams} />
+      )}
     </>
   );
 }
