@@ -1,4 +1,4 @@
-import { getHomeLayout } from '@/app/actions/home-layout';
+import { getHomeLayout } from '@/app/home/home-layout';
 import { HomeCatalog } from '@/app/components/HomeCatalog';
 import { HomeLayoutPrompt } from '@/app/components/HomeLayoutPrompt';
 import MobileHomePage from '@/app/responsive/home/mobile/page';

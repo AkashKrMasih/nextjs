@@ -2,15 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-
-export const HOME_LAYOUT_COOKIE = 'home_layout';
-export type HomeLayout = 'desktop' | 'mobile' | 'tablet';
-
-export async function getHomeLayout(): Promise<HomeLayout | null> {
-  const value = (await cookies()).get(HOME_LAYOUT_COOKIE)?.value;
-  if (value === 'desktop' || value === 'mobile' || value === 'tablet') return value;
-  return null;
-}
+import { HOME_LAYOUT_COOKIE, type HomeLayout } from './home-layout.constants';
 
 export async function setHomeLayout(layout: HomeLayout) {
   const store = await cookies();
