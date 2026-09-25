@@ -3,7 +3,7 @@ import { formatPrice } from '@/lib/money';
 import Link from 'next/link';
 import { getWishlistedProductIds } from '@/app/actions/wishlist';
 import { WishlistButton } from '@/app/components/WishlistButton';
-import { chooseDesktopHome } from '@/app/home/home-layout';
+import { chooseDesktopHome } from '@/app/home/home-layout.actions';
 
 function numberParam(value: string | undefined) {
   if (value == null || value.trim() === '') return null;
