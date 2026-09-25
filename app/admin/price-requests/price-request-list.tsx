@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export type PriceRequestRow = {
   id: string;
@@ -14,7 +15,11 @@ export type PriceRequestRow = {
 };
 
 export function PriceRequestList({ requests }: { requests: PriceRequestRow[] }) {
+  const router = useRouter();
+  const [items, setItems] = useState(requests);
   const [selected, setSelected] = useState<PriceRequestRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!selected) return;
@@ -25,7 +30,28 @@ export function PriceRequestList({ requests }: { requests: PriceRequestRow[] }) 
     return () => window.removeEventListener('keydown', onKey);
   }, [selected]);
 
-  if (requests.length === 0) {
+  async function handleDelete() {
+    if (!selected || deleting) return;
+    const confirmed = window.confirm('Delete this price request?');
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError('');
+    const response = await fetch(`/api/price-requests/${selected.id}`, { method: 'DELETE' });
+    const payload = await response.json().catch(() => ({}));
+    setDeleting(false);
+
+    if (!response.ok) {
+      setError(payload.error ?? 'Could not delete this request');
+      return;
+    }
+
+    setItems((current) => current.filter((request) => request.id !== selected.id));
+    setSelected(null);
+    router.refresh();
+  }
+
+  if (items.length === 0) {
     return (
       <div className="mt-10 flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 py-16 text-center">
         <p className="text-sm text-gray-500">No price requests yet.</p>
@@ -46,7 +72,7 @@ export function PriceRequestList({ requests }: { requests: PriceRequestRow[] }) 
               </tr>
             </thead>
             <tbody>
-              {requests.map((request) => (
+              {items.map((request) => (
                 <tr
                   key={request.id}
                   className="cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
@@ -113,6 +139,16 @@ export function PriceRequestList({ requests }: { requests: PriceRequestRow[] }) 
                 <dd className="mt-1 whitespace-pre-wrap text-gray-900">{selected.message}</dd>
               </div>
             </dl>
+
+            {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="mt-6 rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+            >
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
           </div>
         </div>
       ) : null}

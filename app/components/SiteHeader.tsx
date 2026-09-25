@@ -91,6 +91,13 @@ export async function SiteHeader() {
                       </svg>
                       Addresses
                     </Link>
+                    <Link
+                      href="/price-requests"
+                      className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-green-800 transition-colors hover:bg-stone-200 hover:text-stone-900"
+                      role="menuitem"
+                    >
+                      Price requests
+                    </Link>
                   </div>
                   <div className="mt-2 border-t border-stone-300 pt-2">
                     <LogoutButton className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-green-800 transition-colors hover:bg-stone-200 hover:text-stone-900">
