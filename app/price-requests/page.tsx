@@ -13,6 +13,7 @@ export default async function MyPriceRequestsPage() {
   const requests = await prisma.priceRequest.findMany({
     where: { userId: session.userId },
     orderBy: { createdAt: 'desc' },
+    include: { product: { select: { friendlyId: true } } },
   });
 
   return (
@@ -28,7 +29,7 @@ export default async function MyPriceRequestsPage() {
             <li key={request.id} className="rounded-lg border border-stone-300 bg-white p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <Link
-                  href={`/products/${request.productId}`}
+                  href={`/products/${request.product.friendlyId}`}
                   className="font-medium text-stone-900 hover:text-green-800"
                 >
                   {request.productTitle}

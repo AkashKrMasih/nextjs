@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
+import { slugify } from '@/lib/categories';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads/products');
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -25,6 +26,8 @@ export type ParsedProductForm = {
   description: string;
   price: string;
   priceOnRequest: boolean;
+  friendlyId: string;
+  friendlyIdExplicit: boolean;
   categoryId: number | null;
   attributes: AttributeInput[];
   variants: VariantInput[];
@@ -76,6 +79,9 @@ export async function parseProductFormData(
     return { error: 'Price must be a number greater than or equal to 0' };
   }
   const priceOnRequest = formData.get('priceOnRequest') === 'true';
+  const friendlyInput = String(formData.get('friendlyId') ?? '').trim();
+  const friendlyId = slugify(friendlyInput || name);
+  if (!friendlyId) return { error: 'Could not derive a friendly id from that title.' };
 
   const categoryRaw = String(formData.get('categoryId') ?? '').trim();
   const categoryId = categoryRaw ? Number(categoryRaw) : null;
@@ -148,12 +154,27 @@ export async function parseProductFormData(
     description,
     price: priceNumber.toFixed(2),
     priceOnRequest,
+    friendlyId,
+    friendlyIdExplicit: friendlyInput.length > 0,
     categoryId,
     attributes,
     variants,
     existingImages: images.slice(0, images.length - savedCount),
     savedImages: images.slice(images.length - savedCount),
   };
+}
+
+async function resolveFriendlyId(base: string, explicit: boolean, exceptId?: number) {
+  const existing = await prisma.product.findUnique({ where: { friendlyId: base } });
+  if (!existing || existing.id === exceptId) return { friendlyId: base };
+  if (explicit) return { error: `Friendly id "${base}" is already in use.` };
+
+  for (let n = 2; n < 1000; n += 1) {
+    const candidate = `${base}-${n}`;
+    const taken = await prisma.product.findUnique({ where: { friendlyId: candidate } });
+    if (!taken || taken.id === exceptId) return { friendlyId: candidate };
+  }
+  return { error: 'Could not create a unique friendly id.' };
 }
 
 function variantData(variant: VariantInput) {
@@ -167,9 +188,13 @@ function variantData(variant: VariantInput) {
 }
 
 export async function createProductFromForm(parsed: ParsedProductForm) {
+  const friendly = await resolveFriendlyId(parsed.friendlyId, parsed.friendlyIdExplicit);
+  if ('error' in friendly) return friendly;
+
   return prisma.product.create({
     data: {
       name: parsed.name,
+      friendlyId: friendly.friendlyId,
       description: parsed.description,
       price: parsed.price,
       priceOnRequest: parsed.priceOnRequest,
@@ -202,11 +227,19 @@ export async function updateProductFromForm(productId: number, parsed: ParsedPro
   );
   const removedIds = currentVariants.map((variant) => variant.id).filter((id) => !keptIds.has(id));
 
+  const friendly = await resolveFriendlyId(
+    parsed.friendlyId,
+    parsed.friendlyIdExplicit,
+    productId
+  );
+  if ('error' in friendly) return friendly;
+
   const product = await prisma.$transaction(async (tx) => {
     await tx.product.update({
       where: { id: productId },
       data: {
         name: parsed.name,
+        friendlyId: friendly.friendlyId,
         description: parsed.description,
         price: parsed.price,
         priceOnRequest: parsed.priceOnRequest,

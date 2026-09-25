@@ -44,6 +44,7 @@ export type VariantField = {
 
 export type ProductFormValues = {
   name: string;
+  friendlyId: string;
   description: string;
   price: string;
   priceOnRequest: boolean;

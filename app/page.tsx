@@ -141,7 +141,7 @@ export default async function Home({
             );
             return (
               <li key={product.id} className="overflow-hidden rounded-lg border border-stone-300 bg-white hover:border-green-800">
-                <Link href={`/products/${product.id}`} className="block">
+                <Link href={`/products/${product.friendlyId}`} className="block">
                   <div className="aspect-[4/3] bg-stone-100">
                     {product.images[0]?.url ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -166,7 +166,7 @@ export default async function Home({
                 <div className="flex flex-wrap items-center justify-between gap-2 px-4 pb-4">
                   {product.priceOnRequest ? (
                     <Link
-                      href={`/products/${product.id}/price-request`}
+                      href={`/products/${product.friendlyId}/price-request`}
                       className="mt-2 inline-block rounded-md bg-green-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-900"
                     >
                       Price Request

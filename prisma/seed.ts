@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import { mkdir, writeFile, unlink } from "fs/promises";
 
 import { prisma } from "@/lib/prisma";
+import { slugify } from "@/lib/categories";
 
 const NUM_USERS      = 20;
 const NUM_CATEGORIES = 8;
@@ -298,6 +299,7 @@ async function main() {
     )
   );
 
+  const usedFriendlyIds = new Set<string>();
   const productDrafts = Array.from({length: NUM_PRODUCTS}).map(() => {
     const imageCount = faker.number.int({min: MIN_IMAGES_PER_PRODUCT, max: MAX_IMAGES_PER_PRODUCT});
     const variantCount = faker.number.int({min: MIN_VARIANTS_PER_PRODUCT, max: MAX_VARIANTS_PER_PRODUCT});
@@ -305,9 +307,19 @@ async function main() {
 
     const productType = faker.helpers.arrayElement(ELECTRONICS_PRODUCT_TYPES);
     const imageColors = faker.helpers.arrayElement(PLACEHOLDER_COLOR_PAIRS);
+    const name = `${faker.commerce.productAdjective()} ${productType}`;
+    const baseFriendlyId = slugify(name) || "product";
+    let friendlyId = baseFriendlyId;
+    let suffix = 2;
+    while (usedFriendlyIds.has(friendlyId)) {
+      friendlyId = `${baseFriendlyId}-${suffix}`;
+      suffix += 1;
+    }
+    usedFriendlyIds.add(friendlyId);
 
     return {
-      name:            `${faker.commerce.productAdjective()} ${productType}`,
+      name,
+      friendlyId,
       description:     faker.commerce.productDescription(),
       price:           basePrice,
       // ~85% of products get a category; the rest exercise the nullable FK.
@@ -393,6 +405,7 @@ async function main() {
     prisma.product.create({
       data: {
         name:        draft.name,
+        friendlyId:  draft.friendlyId,
         description: draft.description,
         price:       draft.price,
         categoryId:  draft.categoryId,

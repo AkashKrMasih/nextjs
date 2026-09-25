@@ -26,6 +26,7 @@ type ProductImage = {
 
 type Product = {
   id: number;
+  friendlyId: string;
   name: string;
   price: number | string;
   priceOnRequest: boolean;
@@ -154,7 +155,7 @@ export function ProductDetail({
       if (!result.ok) {
         setWishlisted(!next); // revert on failure
         if (result.error === 'UNAUTHENTICATED') {
-          router.push(`/login?next=/products/${product.id}`);
+          router.push(`/login?next=/products/${product.friendlyId}`);
         }
         return;
       }
@@ -191,7 +192,7 @@ export function ProductDetail({
 
           {product.priceOnRequest ? (
             <Link
-              href={`/products/${product.id}/price-request`}
+              href={`/products/${product.friendlyId}/price-request`}
               className="inline-block rounded-md bg-green-800 px-4 py-2 text-sm font-medium text-white hover:bg-green-900"
             >
               Price Request
@@ -291,7 +292,7 @@ export function ProductDetail({
                   key={item.id}
                   className="group overflow-hidden rounded-2xl border border-stone-200 bg-white transition-all hover:shadow-md"
                 >
-                  <Link href={`/products/${item.id}`}>
+                  <Link href={`/products/${item.friendlyId}`}>
                     <div className="aspect-square overflow-hidden bg-stone-100">
                       {thumb ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -313,7 +314,7 @@ export function ProductDetail({
                   <div className="px-4 pb-4 pt-1">
                     {item.priceOnRequest ? (
                       <Link
-                        href={`/products/${item.id}/price-request`}
+                        href={`/products/${item.friendlyId}/price-request`}
                         className="text-sm font-medium text-green-800 underline"
                       >
                         Price Request

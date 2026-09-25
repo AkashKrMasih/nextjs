@@ -8,24 +8,23 @@ export default async function ProductPage({
                                           }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const productId = Number(id);
+  const { id: friendlyId } = await params;
 
-  const [product, related, initialWishlisted] = await Promise.all([
-    prisma.product.findUnique({
-      where: { id: productId },
-      include: { images: true },
-    }),
+  const product = await prisma.product.findUnique({
+    where: { friendlyId },
+    include: { images: true },
+  });
+  if (!product) return notFound();
+
+  const [related, initialWishlisted] = await Promise.all([
     prisma.product.findMany({
-      where: { id: { not: productId } },
+      where: { id: { not: product.id } },
       orderBy: { id: 'desc' },
       take: 4,
       include: { images: true },
     }),
-    isProductWishlisted(productId),
+    isProductWishlisted(product.id),
   ]);
-
-  if (!product) return notFound();
 
   // Prisma's Decimal type isn't a plain object, so it can't cross the
   // server -> client boundary as-is. Serialize price to a string here;
