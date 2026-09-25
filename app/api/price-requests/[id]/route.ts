@@ -7,7 +7,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
-  if (!session || session.role !== 'ADMIN') {
+  if (!session) {
     return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
   }
 
@@ -15,6 +15,11 @@ export async function DELETE(
   const existing = await prisma.priceRequest.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  const isOwner = existing.userId === session.userId;
+  if (session.role !== 'ADMIN' && !isOwner) {
+    return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
   }
 
   await prisma.priceRequest.delete({ where: { id } });

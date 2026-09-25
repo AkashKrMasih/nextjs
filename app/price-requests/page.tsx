@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { DeletePriceRequestButton } from './delete-price-request-button';
 
 export default async function MyPriceRequestsPage() {
   const session = await getSession();
@@ -44,6 +45,7 @@ export default async function MyPriceRequestsPage() {
               </div>
               <p className="mt-1 text-sm text-stone-500">{request.email}</p>
               <p className="mt-3 whitespace-pre-wrap text-sm text-stone-700">{request.message}</p>
+              <DeletePriceRequestButton id={request.id} />
             </li>
           ))}
         </ul>
