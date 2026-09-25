@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { formatPrice } from '@/lib/money';
 import Link from 'next/link';
+import { getWishlistedProductIds } from '@/app/actions/wishlist';
+import { WishlistButton } from '@/app/components/WishlistButton';
 
 function numberParam(value: string | undefined) {
   if (value == null || value.trim() === '') return null;
@@ -20,7 +22,7 @@ export default async function Home({
   const maxPrice = numberParam(max);
   const hasFilters = Boolean(query || categoryId || minPrice != null || maxPrice != null);
 
-  const [categories, products] = await Promise.all([
+  const [categories, products, wishlistedIds] = await Promise.all([
     prisma.category.findMany({
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
@@ -51,6 +53,7 @@ export default async function Home({
         variants: { include: { inventory: true } },
       },
     }),
+    getWishlistedProductIds(),
   ]);
 
   return (
@@ -160,7 +163,7 @@ export default async function Home({
                     </p>
                   </div>
                 </Link>
-                <div className="px-4 pb-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-4 pb-4">
                   {product.priceOnRequest ? (
                     <Link
                       href={`/products/${product.id}/price-request`}
@@ -171,6 +174,10 @@ export default async function Home({
                   ) : (
                     <p className="mt-1 text-sm text-green-800">{formatPrice(product.price)}</p>
                   )}
+                  <WishlistButton
+                    productId={product.id}
+                    initialWishlisted={wishlistedIds.has(product.id)}
+                  />
                 </div>
               </li>
             );
