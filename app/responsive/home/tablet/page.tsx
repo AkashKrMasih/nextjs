@@ -1,15 +1,9 @@
-import { HomeCatalog } from '@/app/components/HomeCatalog';
+import { TabletCatalog } from '@/app/components/TabletCatalog';
 
 export default function TabletHomePage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; category?: string; min?: string; max?: string }>;
 }) {
-  return (
-    <HomeCatalog
-      searchParams={searchParams}
-      formAction="/"
-      showDesktopLink
-    />
-  );
+  return <TabletCatalog searchParams={searchParams} />;
 }
