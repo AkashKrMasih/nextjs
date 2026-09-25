@@ -1,76 +1,27 @@
-import { prisma } from '@/lib/prisma';
 import { formatPrice } from '@/lib/money';
 import Link from 'next/link';
-import { getWishlistedProductIds } from '@/app/actions/wishlist';
 import { WishlistButton } from '@/app/components/WishlistButton';
-import { chooseDesktopHome } from '@/app/home/home-layout.actions';
-
-function numberParam(value: string | undefined) {
-  if (value == null || value.trim() === '') return null;
-  const number = Number(value);
-  return Number.isFinite(number) && number >= 0 ? number : null;
-}
+import { loadHomeCatalog, productStock } from '@/app/home/load-home-catalog';
 
 export async function HomeCatalog({
   searchParams,
-  formAction = '/',
-  showDesktopLink = false,
 }: {
   searchParams: Promise<{ q?: string; category?: string; min?: string; max?: string }>;
-  formAction?: string;
-  showDesktopLink?: boolean;
 }) {
-  const { q: rawQuery, category, min, max } = await searchParams;
-  const query = rawQuery?.trim() ?? '';
-  const categoryId = numberParam(category);
-  const minPrice = numberParam(min);
-  const maxPrice = numberParam(max);
-  const hasFilters = Boolean(query || categoryId || minPrice != null || maxPrice != null);
-
-  const [categories, products, wishlistedIds] = await Promise.all([
-    prisma.category.findMany({
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true },
-    }),
-    prisma.product.findMany({
-      where: {
-        ...(categoryId ? { categoryId } : {}),
-        ...(minPrice != null || maxPrice != null
-          ? {
-              price: {
-                ...(minPrice != null ? { gte: minPrice } : {}),
-                ...(maxPrice != null ? { lte: maxPrice } : {}),
-              },
-            }
-          : {}),
-        ...(query
-          ? {
-              OR: [
-                { name: { contains: query, mode: 'insensitive' } },
-                { description: { contains: query, mode: 'insensitive' } },
-              ],
-            }
-          : {}),
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        images: { orderBy: { isPrimary: 'desc' } },
-        variants: { include: { inventory: true } },
-      },
-    }),
-    getWishlistedProductIds(),
-  ]);
+  const {
+    query,
+    categoryId,
+    minPrice,
+    maxPrice,
+    hasFilters,
+    categories,
+    products,
+    wishlistedIds,
+  } = await loadHomeCatalog(searchParams);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
-      {showDesktopLink ? (
-        <form action={chooseDesktopHome} className="mb-4">
-          <button type="submit" className="text-sm text-green-800 hover:text-stone-900">
-            Desktop version
-          </button>
-        </form>
-      ) : null}
-      <form action={formAction} className="mb-8 space-y-3">
+      <form action="/" className="mb-8 space-y-3">
         <input
           type="search"
           name="q"
@@ -123,7 +74,7 @@ export async function HomeCatalog({
             Search
           </button>
           {hasFilters ? (
-            <Link href={formAction} className="py-2 text-sm text-stone-500 hover:text-stone-900">
+            <Link href="/" className="py-2 text-sm text-stone-500 hover:text-stone-900">
               Clear
             </Link>
           ) : null}
@@ -147,10 +98,7 @@ export async function HomeCatalog({
       ) : (
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => {
-            const stock = product.variants.reduce(
-              (sum, variant) => sum + (variant.inventory?.quantity ?? 0),
-              0
-            );
+            const stock = productStock(product);
             return (
               <li key={product.id} className="overflow-hidden rounded-lg border border-stone-300 bg-white hover:border-green-800">
                 <Link href={`/products/${product.friendlyId}`} className="block">

@@ -1,15 +1,9 @@
-import { HomeCatalog } from '@/app/components/HomeCatalog';
+import { MobileCatalog } from '@/app/components/MobileCatalog';
 
 export default function MobileHomePage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; category?: string; min?: string; max?: string }>;
 }) {
-  return (
-    <HomeCatalog
-      searchParams={searchParams}
-      formAction="/"
-      showDesktopLink
-    />
-  );
+  return <MobileCatalog searchParams={searchParams} />;
 }
