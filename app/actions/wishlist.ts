@@ -4,6 +4,7 @@ import {prisma} from '@/lib/prisma';
 import {getCurrentUser} from '@/lib/auth';
 import {revalidatePath} from 'next/cache';
 import {log} from "@/lib/utils"
+import chalk from "chalk";
 
 type ToggleResult =
   | { ok: true; wishlisted: boolean }
@@ -76,7 +77,7 @@ export async function getWishlistedProductIds(): Promise<Set<number>> {
   const user = await getCurrentUser();
   if (!user) return new Set();
 
-  //log("green", 'firing query........................');
+  console.log(chalk.green.bold('firing query........................'));
   const wishlist = await prisma.wishlist.findUnique({
     where:   {userId: user.id},
     include: {items: {select: {productId: true}}},
