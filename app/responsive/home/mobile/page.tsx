@@ -8,7 +8,7 @@ export default function MobileHomePage({
   return (
     <HomeCatalog
       searchParams={searchParams}
-      formAction="/responsive/home/mobile"
+      formAction="/"
       showDesktopLink
     />
   );

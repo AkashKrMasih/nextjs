@@ -1,7 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
 export const HOME_LAYOUT_COOKIE = 'home_layout';
 export type HomeLayout = 'desktop' | 'mobile' | 'tablet';
@@ -24,5 +24,5 @@ export async function setHomeLayout(layout: HomeLayout) {
 
 export async function chooseDesktopHome() {
   await setHomeLayout('desktop');
-  redirect('/');
+  revalidatePath('/');
 }
