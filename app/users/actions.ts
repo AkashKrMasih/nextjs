@@ -2,14 +2,17 @@
 
 'use server'
 
-import { createUser, getUserByEmail, verifyPassword } from '@/lib/auth'
+import { createUser, getUserByEmail, hashPassword, verifyPassword } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { createSession, destroySession } from '@/lib/session'
+import { sendVerificationEmail } from '@/lib/email'
+import { prisma } from '@/lib/prisma'
 import bcrypt from "bcryptjs";
 
 // Shape returned to useActionState/useFormState on the client.
 export type AuthState = {
   error?: string
+  success?: string
 } | undefined
 
 export async function signup(
@@ -23,19 +26,32 @@ export async function signup(
     return { error: 'Email and password are required' }
   }
 
-  try {
-    const user = await createUser(email, password)
-    await createSession({
-      userId: user.id,
-      email: user.email,
-      name: user.name, // TODO: signup doesn't collect a name yet — add a `name` field to the form if you want this populated
-      role: user.role,
-    })
-  } catch (err) {
+  const existing = await getUserByEmail(email)
+  if (existing?.emailVerified) {
     return { error: 'Could not create account. Try a different email.' }
   }
 
-  redirect('/')
+  try {
+    const user = existing
+      ? await prisma.user.update({
+          where: { id: existing.id },
+          data: await hashPassword(password),
+        })
+      : await createUser(email, password, { emailVerified: false })
+
+    const sent = await sendVerificationEmail(user.id, user.email)
+    if ('error' in sent) {
+      if (!existing) {
+        await prisma.user.delete({ where: { id: user.id } })
+      }
+      return { error: sent.error }
+    }
+  } catch (err) {
+    console.error('Signup failed:', err)
+    return { error: 'Could not create account. Try a different email.' }
+  }
+
+  return { success: `Check ${email} for a verification link before you log in.` }
 }
 
 export async function login(
@@ -64,10 +80,14 @@ export async function login(
       return { error: 'Invalid email or password' }
     }
 
+    if (!user.emailVerified) {
+      return { error: 'Verify your email before logging in. Check your inbox for the link.' }
+    }
+
     await createSession({
       userId: user.id,
       email: user.email,
-      name: user.name,
+      name: user.name ?? '',
       role: user.role
     })
   } catch (err) {

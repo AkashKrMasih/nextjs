@@ -31,7 +31,7 @@ export async function hashPassword(plainPassword: string) {
 export async function createUser(
   email: string,
   plainPassword: string,
-  options?: { name?: string | null; role?: 'CUSTOMER' | 'ADMIN' }
+  options?: { name?: string | null; role?: 'CUSTOMER' | 'ADMIN'; emailVerified?: boolean }
 ) {
   const hashed = await hashPassword(plainPassword)
 
@@ -40,6 +40,7 @@ export async function createUser(
       email,
       name: options?.name ?? null,
       role: options?.role ?? 'CUSTOMER',
+      emailVerified: options?.emailVerified ?? true,
       password: hashed.password,
       password_salt: hashed.password_salt,
     },

@@ -1,8 +1,19 @@
 // app/login/page.tsx
 'use client';
 
-import { useActionState, useState } from 'react';
+import { Suspense, useActionState, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { login } from '@/app/users/actions';
+
+function VerifiedBanner() {
+  const verified = useSearchParams().get('verified') === '1';
+  if (!verified) return null;
+  return (
+    <p className="mb-4 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
+      Email verified. You can log in now.
+    </p>
+  );
+}
 
 export default function LoginPage() {
   const [emailError, setEmailError] = useState('');
@@ -21,6 +32,9 @@ export default function LoginPage() {
         <p className="mt-1 mb-6 text-sm text-gray-500">
           Log in to pick up right where you left off.
         </p>
+        <Suspense fallback={null}>
+          <VerifiedBanner />
+        </Suspense>
 
         <form action={formAction} noValidate className="flex flex-col gap-4">
           <div>
