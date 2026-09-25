@@ -8,7 +8,7 @@ export default function TabletHomePage({
   return (
     <HomeCatalog
       searchParams={searchParams}
-      formAction="/responsive/home/tablet"
+      formAction="/"
       showDesktopLink
     />
   );

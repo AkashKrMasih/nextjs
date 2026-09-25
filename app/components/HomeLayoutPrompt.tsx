@@ -26,12 +26,7 @@ export function HomeLayoutPrompt() {
   async function choose(next: HomeLayout) {
     setSaving(true);
     await setHomeLayout(next);
-    if (next === 'desktop') {
-      setLayout(null);
-      setSaving(false);
-      return;
-    }
-    router.push(`/responsive/home/${next}`);
+    setLayout(null);
     router.refresh();
   }
 
