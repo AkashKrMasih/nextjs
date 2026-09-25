@@ -37,10 +37,11 @@ export async function POST(req: NextRequest) {
     const userId = pi.metadata.userId || null;
     const guestEmail = pi.metadata.guestEmail || null;
     const items = JSON.parse(pi.metadata.items || '[]') as {
-      productId: string;
+      variantId: string;
       name: string;
       unitPrice: number;
       quantity: number;
+      discountCode?: string | null;
     }[];
 
     await prisma.order.create({
@@ -53,10 +54,11 @@ export async function POST(req: NextRequest) {
         stripePaymentIntentId: pi.id,
         items: {
           create: items.map((item) => ({
-            productId: item.productId,
+            variantId: item.variantId,
             name: item.name,
             unitPrice: item.unitPrice,
             quantity: item.quantity,
+            discountCode: item.discountCode || null,
           })),
         },
       },

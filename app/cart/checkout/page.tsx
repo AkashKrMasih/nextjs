@@ -9,6 +9,13 @@ import CheckoutForm from '@/app/components/checkout/CheckoutForm';
 type SessionUser = { id: string; email: string; name: string | null };
 type AuthState = 'loading' | 'authed' | 'anonymous';
 type FlowState = 'choice' | 'guest-form' | 'paying';
+type AppliedDiscount = {
+  code: string;
+  discountCents: number;
+  amountTotalCents: number;
+  subtotalCents: number;
+  lines: { productId: number; unitPriceCents: number; quantity: number }[];
+};
 
 export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -22,6 +29,9 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret]     = useState<string | null>(null);
   const [error, setError]                   = useState<string | null>(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
+  const [discountInput, setDiscountInput]   = useState('');
+  const [applied, setApplied]               = useState<AppliedDiscount | null>(null);
+  const [applying, setApplying]             = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -52,8 +62,9 @@ export default function CheckoutPage() {
         method:  'POST',
         headers: {'Content-Type': 'application/json'},
         body:    JSON.stringify({
-          items:      items.map((i) => ({id: i.id, quantity: i.quantity})),
-          guestEmail: guestEmailValue,
+          items:        items.map((i) => ({id: i.id, quantity: i.quantity})),
+          guestEmail:   guestEmailValue,
+          discountCode: applied?.code,
         }),
       });
       const data = await res.json();
@@ -67,12 +78,28 @@ export default function CheckoutPage() {
     }
   }
 
-  useEffect(() => {
-    if (ready && authState === 'authed' && flow === 'choice') {
-      startPayment();
+  async function applyDiscount() {
+    setError(null);
+    setApplying(true);
+    try {
+      const res = await fetch('/api/discounts/preview', {
+        method:  'POST',
+        headers: {'Content-Type': 'application/json'},
+        body:    JSON.stringify({
+          code:  discountInput,
+          items: items.map((item) => ({id: item.id, quantity: item.quantity})),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not apply that code');
+      setApplied(data);
+    } catch (e) {
+      setApplied(null);
+      setError((e as Error).message);
+    } finally {
+      setApplying(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, authState]);
+  }
 
   if (!ready || authState === 'loading') {
     return (
@@ -96,7 +123,8 @@ export default function CheckoutPage() {
     );
   }
 
-  const total = items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+  const total = applied ? applied.amountTotalCents / 100 : subtotal;
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
@@ -108,14 +136,64 @@ export default function CheckoutPage() {
             <span>
               {item.name} × {item.quantity}
             </span>
-            <span className="text-stone-500">{formatPrice(item.price * item.quantity)}</span>
+            <span className="text-stone-500">
+              {formatPrice(
+                ((applied?.lines.find((line) => line.productId === item.id)?.unitPriceCents
+                  ?? Math.round(Number(item.price) * 100)) * item.quantity) / 100
+              )}
+            </span>
           </div>
         ))}
+        {applied ? (
+          <div className="flex justify-between pt-2 text-sm text-green-800">
+            <span>Discount {applied.code}</span>
+            <span>−{formatPrice(applied.discountCents / 100)}</span>
+          </div>
+        ) : null}
         <div className="flex justify-between pt-2 text-base">
           <span>Total</span>
           <span>{formatPrice(total)}</span>
         </div>
       </div>
+
+      {flow !== 'paying' && (
+        <form
+          className="mt-6 flex flex-wrap items-end gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            applyDiscount();
+          }}
+        >
+          <label className="text-sm text-stone-500">
+            Discount code
+            <input
+              value={discountInput}
+              onChange={(event) => setDiscountInput(event.target.value.toUpperCase())}
+              className="mt-1 block w-48 rounded border border-stone-300 p-2 text-sm uppercase text-stone-900"
+              placeholder="CODE"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={applying || !discountInput.trim()}
+            className="rounded border border-green-800 px-4 py-2 text-sm text-green-800 disabled:opacity-50"
+          >
+            {applying ? 'Applying…' : 'Apply'}
+          </button>
+          {applied ? (
+            <button
+              type="button"
+              onClick={() => {
+                setApplied(null);
+                setDiscountInput('');
+              }}
+              className="text-sm text-stone-500 underline"
+            >
+              Remove
+            </button>
+          ) : null}
+        </form>
+      )}
 
       <div className="mt-8">
         {authState === 'anonymous' && flow === 'choice' && (
@@ -187,8 +265,15 @@ export default function CheckoutPage() {
           />
         )}
 
-        {authState === 'authed' && flow === 'choice' && creatingIntent && (
-          <p className="text-sm text-stone-500">Preparing checkout…</p>
+        {authState === 'authed' && flow === 'choice' && (
+          <button
+            type="button"
+            onClick={() => startPayment()}
+            disabled={creatingIntent}
+            className="rounded bg-green-800 px-4 py-2 text-sm text-white disabled:opacity-50"
+          >
+            {creatingIntent ? 'Loading…' : 'Continue to payment'}
+          </button>
         )}
 
         {error && flow !== 'guest-form' && <p className="mt-4 text-sm text-red-800">{error}</p>}

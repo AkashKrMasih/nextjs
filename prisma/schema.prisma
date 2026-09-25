@@ -36,6 +36,7 @@ model Product {
 
   wishlistItems WishlistItem[]
   priceRequests PriceRequest[]
+  discounts     Discount[]
 
   @@index([categoryId])
 }
@@ -347,15 +348,37 @@ model OrderItem {
   order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   variantId String
   variant   ProductVariant @relation(fields: [variantId], references: [id])
-  name      String // snapshot at purchase time
-  unitPrice Int // cents, snapshot at purchase time
-  quantity  Int
+  name         String // snapshot at purchase time
+  unitPrice    Int // cents, snapshot at purchase time (after any discount)
+  quantity     Int
+  discountCode String? // code applied to this line, if any
 }
 
 enum OrderStatus {
   PENDING
   PAID
   FAILED
+}
+
+enum DiscountKind {
+  PERCENT
+  AMOUNT
+}
+
+// A checkout code. productId null means it applies to every product.
+// expiresAt is the last moment the code can be used.
+model Discount {
+  id        String       @id @default(cuid())
+  code      String       @unique
+  kind      DiscountKind
+  value     Decimal      @db.Decimal(10, 2)
+  productId Int?
+  product   Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([productId])
 }
 
 model OrderAddress {

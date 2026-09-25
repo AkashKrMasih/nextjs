@@ -87,6 +87,7 @@ export default async function MyOrdersPage() {
                         <span className="text-stone-500">
                           {' '}
                           · {formatPrice(item.unitPrice / 100, currency)} each
+                          {item.discountCode ? ` · code ${item.discountCode}` : ''}
                         </span>
                       </li>
                     );
