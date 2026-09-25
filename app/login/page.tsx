@@ -4,6 +4,7 @@
 import { Suspense, useActionState, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { login } from '@/app/users/actions';
+import {validateEmail} from "@/lib/utils";
 
 function VerifiedBanner() {
   const verified = useSearchParams().get('verified') === '1';
@@ -18,12 +19,6 @@ function VerifiedBanner() {
 export default function LoginPage() {
   const [emailError, setEmailError] = useState('');
   const [state, formAction, pending] = useActionState(login, undefined);
-
-  function validateEmail(value: string) {
-    if (value.length === 0) return '';
-    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-    return valid ? '' : 'Enter a valid email address';
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
