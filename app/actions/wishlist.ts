@@ -1,8 +1,9 @@
 'use server';
 
-import { prisma } from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
-import { revalidatePath } from 'next/cache';
+import {prisma} from '@/lib/prisma';
+import {getCurrentUser} from '@/lib/auth';
+import {revalidatePath} from 'next/cache';
+import {log} from "@/lib/utils"
 
 type ToggleResult =
   | { ok: true; wishlisted: boolean }
@@ -16,42 +17,42 @@ type ToggleResult =
 export async function toggleWishlist(productId: number): Promise<ToggleResult> {
   const user = await getCurrentUser();
   if (!user) {
-    return { ok: false, error: 'UNAUTHENTICATED' };
+    return {ok: false, error: 'UNAUTHENTICATED'};
   }
 
   const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { id: true },
+    where:  {id: productId},
+    select: {id: true},
   });
   if (!product) {
-    return { ok: false, error: 'NOT_FOUND' };
+    return {ok: false, error: 'NOT_FOUND'};
   }
 
   const wishlist = await prisma.wishlist.upsert({
-    where: { userId: user.id },
-    create: { userId: user.id },
+    where:  {userId: user.id},
+    create: {userId: user.id},
     update: {},
   });
 
   const existing = await prisma.wishlistItem.findUnique({
-    where: { wishlistId_productId: { wishlistId: wishlist.id, productId } },
+    where: {wishlistId_productId: {wishlistId: wishlist.id, productId}},
   });
 
   if (existing) {
-    await prisma.wishlistItem.delete({ where: { id: existing.id } });
+    await prisma.wishlistItem.delete({where: {id: existing.id}});
     revalidatePath(`/products/${productId}`);
     revalidatePath('/wishlist');
     revalidatePath('/');
-    return { ok: true, wishlisted: false };
+    return {ok: true, wishlisted: false};
   }
 
   await prisma.wishlistItem.create({
-    data: { wishlistId: wishlist.id, productId },
+    data: {wishlistId: wishlist.id, productId},
   });
   revalidatePath(`/products/${productId}`);
   revalidatePath('/wishlist');
   revalidatePath('/');
-  return { ok: true, wishlisted: true };
+  return {ok: true, wishlisted: true};
 }
 
 /** Whether the current user (if any) has this product wishlisted. */
@@ -60,8 +61,8 @@ export async function isProductWishlisted(productId: number): Promise<boolean> {
   if (!user) return false;
 
   const item = await prisma.wishlistItem.findFirst({
-    where: { productId, wishlist: { userId: user.id } },
-    select: { id: true },
+    where:  {productId, wishlist: {userId: user.id}},
+    select: {id: true},
   });
   return Boolean(item);
 }
@@ -75,10 +76,12 @@ export async function getWishlistedProductIds(): Promise<Set<number>> {
   const user = await getCurrentUser();
   if (!user) return new Set();
 
+  //log("green", 'firing query........................');
   const wishlist = await prisma.wishlist.findUnique({
-    where: { userId: user.id },
-    include: { items: { select: { productId: true } } },
+    where:   {userId: user.id},
+    include: {items: {select: {productId: true}}},
   });
+
   if (!wishlist) return new Set();
 
   return new Set(wishlist.items.map((i) => i.productId));
