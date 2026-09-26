@@ -17,7 +17,7 @@ import {
 import { formatPrice } from '@/lib/money';
 import { AddToCartButton } from '@/app/components/AddToCartButton';
 import { DeleteProductButton } from '@/app/components/DeleteProductButton';
-import { toggleWishlist } from '@/app/actions/wishlist';
+import { toggleWishlist } from '@/app/wishlist/actions';
 import { ProductReportDialog } from '@/app/components/ProductReportDialog';
 
 type ProductImage = {

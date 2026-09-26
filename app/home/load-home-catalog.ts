@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { getWishlistedProductIds } from '@/app/actions/wishlist';
+import { getWishlistedProductIds } from '@/app/wishlist/actions';
 
 function numberParam(value: string | undefined) {
   if (value == null || value.trim() === '') return null;
