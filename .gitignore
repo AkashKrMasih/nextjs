@@ -60,3 +60,4 @@ next-env.d.ts
 /nestjs/node_modules/**
 /nestjs/.idea/**
 /public/uploads/products/**
+/public/uploads/**
