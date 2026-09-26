@@ -3,7 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {ArrowLeft, Package, Users, Settings, ChevronDown, CreditCard, Coins, FolderTree, Warehouse, Mail, TicketPercent} from 'lucide-react';
+import {
+  ArrowLeft, Package, Users, Settings, ChevronDown, CreditCard, Coins, FolderTree, Warehouse, Mail, TicketPercent,
+  Flag
+} from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Back', icon: ArrowLeft },
@@ -13,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/price-requests', label: 'Price requests', icon: Mail },
   { href: '/admin/discounts', label: 'Discounts', icon: TicketPercent },
+  { href: '/admin/product-reports', label: 'Product reports', icon: Flag },
 ];
 
 const SETTINGS_ITEMS = [
