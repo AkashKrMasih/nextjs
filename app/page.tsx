@@ -1,4 +1,4 @@
-import { getHomeLayout } from '@/app/home/home-layout';
+import { getSavedHomeLayout } from '@/app/home/home-layout';
 import { HomeCatalog } from '@/app/components/HomeCatalog';
 import { HomeLayoutPrompt } from '@/app/components/HomeLayoutPrompt';
 import MobileHomePage from '@/app/responsive/home/mobile/page';
@@ -9,14 +9,14 @@ export default async function Home({
 }: {
   searchParams: Promise<{ q?: string; category?: string; min?: string; max?: string }>;
 }) {
-  const layout = await getHomeLayout();
+  const saved_layout = await getSavedHomeLayout();
 
   return (
     <>
-      <HomeLayoutPrompt saved={layout} />
-      {layout === 'mobile' ? (
+      <HomeLayoutPrompt saved={saved_layout} />
+      {saved_layout === 'mobile' ? (
         <MobileHomePage searchParams={searchParams} />
-      ) : layout === 'tablet' ? (
+      ) : saved_layout === 'tablet' ? (
         <TabletHomePage searchParams={searchParams} />
       ) : (
         <HomeCatalog searchParams={searchParams} />
