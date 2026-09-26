@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { ProductDetail } from '@/app/components/ProductDetail';
 import { isProductWishlisted } from '@/app/actions/wishlist';
+import { getSession } from '@/lib/session';
 
 export default async function ProductPage({
                                             params,
@@ -19,7 +20,7 @@ export default async function ProductPage({
   });
   if (!product) return notFound();
 
-  const [related, initialWishlisted] = await Promise.all([
+  const [related, initialWishlisted, session] = await Promise.all([
     prisma.product.findMany({
       where: { id: { not: product.id } },
       orderBy: { id: 'desc' },
@@ -27,6 +28,7 @@ export default async function ProductPage({
       include: { images: true },
     }),
     isProductWishlisted(product.id),
+    getSession(),
   ]);
 
   // Prisma's Decimal type isn't a plain object, so it can't cross the
@@ -51,6 +53,7 @@ export default async function ProductPage({
       product={serializedProduct}
       related={serializedRelated}
       initialWishlisted={initialWishlisted}
+      isLoggedIn={Boolean(session)}
     />
   );
 }
