@@ -1,27 +1,6 @@
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 
-// ---------------------------------------------------------------------------
-// This assumes a ProductReport model on this shape exists in schema.prisma:
-//
-//   model ProductReport {
-//     id            String       @id @default(cuid())
-//     reason        String
-//     status        ReportStatus @default(PENDING)
-//     reporterName  String?
-//     reporterEmail String?
-//     product       Product      @relation(fields: [productId], references: [id])
-//     productId     String
-//     createdAt     DateTime     @default(now())
-//   }
-//   enum ReportStatus { PENDING RESOLVED DISMISSED }
-//
-// If you haven't added it yet, add the model + enum above, then run:
-//   npx prisma migrate dev --name add_product_reports
-// ---------------------------------------------------------------------------
-
-type ReportStatus = "PENDING" | "RESOLVED" | "DISMISSED";
-
 interface ReportedProduct {
   id: string;
   name: string;
@@ -32,7 +11,6 @@ interface ReportedProduct {
 interface ProductReport {
   id: string;
   reason: string;
-  status: ReportStatus;
   reporterEmail: string | null;
   createdAt: string; // ISO date
   product: ReportedProduct;
@@ -61,7 +39,6 @@ async function getProductReports(): Promise<ProductReport[]> {
     return {
       id: report.id,
       reason: report.reason,
-      status: report.status as ReportStatus,
       reporterEmail: report.reporterEmail,
       createdAt: report.createdAt.toISOString(),
       product: {
@@ -88,22 +65,6 @@ function formatDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-const STATUS_STYLES: Record<ReportStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 ring-amber-600/20",
-  RESOLVED: "bg-green-50 text-green-700 ring-green-600/20",
-  DISMISSED: "bg-gray-100 text-gray-600 ring-gray-500/20",
-};
-
-function StatusBadge({ status }: { status: ReportStatus }) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${STATUS_STYLES[status]}`}
-    >
-      {status.charAt(0) + status.slice(1).toLowerCase()}
-    </span>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -120,10 +81,6 @@ export default async function ProductReportsPage() {
             <h1 className="text-xl font-semibold text-gray-900">
               Product reports
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              {pendingCount} pending report{pendingCount === 1 ? "" : "s"} to
-              review
-            </p>
           </div>
         </div>
 
@@ -147,9 +104,6 @@ export default async function ProductReportsPage() {
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
                   Date
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                  Status
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">
                   Actions
@@ -192,9 +146,6 @@ export default async function ProductReportsPage() {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">
                     {formatDate(report.createdAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={report.status} />
                   </td>
                   <td className="px-4 py-3 text-right text-sm">
                     {report.status === "PENDING" ? (
