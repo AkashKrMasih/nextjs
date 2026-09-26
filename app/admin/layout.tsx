@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   ArrowLeft, Package, Users, Settings, ChevronDown, CreditCard, Coins, FolderTree, Warehouse, Mail, TicketPercent,
-  Flag, Images
+  Flag, Images, LifeBuoy
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/admin/inventory', label: 'Inventories', icon: Warehouse },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/price-requests', label: 'Price requests', icon: Mail },
+  { href: '/admin/support-tickets', label: 'Support tickets', icon: LifeBuoy },
   { href: '/admin/discounts', label: 'Discounts', icon: TicketPercent },
   { href: '/admin/home-page-promotions', label: 'Home promotions', icon: Images },
   { href: '/admin/product-reports', label: 'Product reports', icon: Flag },

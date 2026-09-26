@@ -96,6 +96,14 @@ export default async function MyOrdersPage() {
                 {addressLine ? (
                   <p className="mt-3 text-sm text-stone-500">{addressLine}</p>
                 ) : null}
+                <p className="mt-3">
+                  <Link
+                    href={`/support/new?orderId=${order.id}`}
+                    className="text-sm text-green-800 hover:text-stone-900"
+                  >
+                    Get help with this order
+                  </Link>
+                </p>
               </li>
             );
           })}
