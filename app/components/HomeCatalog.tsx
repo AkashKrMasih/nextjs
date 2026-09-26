@@ -110,7 +110,7 @@ export async function HomeCatalog({
               )}
             </p>
           ) : (
-            <ul className="grid gap-6 sm:grid-cols-2">
+            <ul className="grid gap-6 sm:grid-cols-3">
               {products.map((product) => {
                 const stock = productStock(product);
                 return (
