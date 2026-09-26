@@ -24,6 +24,12 @@ type ProductImage = {
   url: string;
 };
 
+type ProductAttribute = {
+  id: string;
+  title: string;
+  value: string | null;
+};
+
 type Product = {
   id: number;
   friendlyId: string;
@@ -33,6 +39,7 @@ type Product = {
   stock: number;
   description: string | null;
   images: ProductImage[];
+  attributes?: ProductAttribute[];
 };
 
 function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: string }) {
@@ -205,6 +212,17 @@ export function ProductDetail({
             <p className="whitespace-pre-wrap leading-relaxed text-stone-500">
               {product.description}
             </p>
+          )}
+
+          {product.attributes && product.attributes.length > 0 && (
+            <dl className="divide-y divide-stone-200 border-y border-stone-200">
+              {product.attributes.map((attribute) => (
+                <div key={attribute.id} className="grid grid-cols-[8rem_1fr] gap-3 py-2.5 text-sm">
+                  <dt className="text-stone-500">{attribute.title}</dt>
+                  <dd className="text-stone-900">{attribute.value}</dd>
+                </div>
+              ))}
+            </dl>
           )}
 
           {/* Quantity */}
