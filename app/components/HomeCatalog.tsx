@@ -52,8 +52,8 @@ export async function HomeCatalog({
                   ))}
                 </select>
               </label>
-              <div className="flex gap-3">
-                <label className="flex flex-1 flex-col gap-1 text-sm text-stone-600">
+              <div className="grid grid-cols-1 gap-3">
+                <label className="flex w-full flex-col gap-1 text-sm text-stone-600">
                   Min price
                   <input
                     type="number"
@@ -61,10 +61,10 @@ export async function HomeCatalog({
                     min="0"
                     step="0.01"
                     defaultValue={minPrice ?? ''}
-                    className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
+                    className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
                   />
                 </label>
-                <label className="flex flex-1 flex-col gap-1 text-sm text-stone-600">
+                <label className="flex w-full flex-col gap-1 text-sm text-stone-600">
                   Max price
                   <input
                     type="number"
@@ -72,7 +72,7 @@ export async function HomeCatalog({
                     min="0"
                     step="0.01"
                     defaultValue={maxPrice ?? ''}
-                    className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
+                    className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
                   />
                 </label>
               </div>
