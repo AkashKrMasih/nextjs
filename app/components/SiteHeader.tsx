@@ -132,6 +132,27 @@ export async function SiteHeader() {
                       Wishlists
                     </Link>
                     <Link
+                      href="/support"
+                      className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-green-800 transition-colors hover:bg-stone-200 hover:text-stone-900"
+                      role="menuitem"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <path d="M12 17h.01" />
+                      </svg>
+                      Customer support
+                    </Link>
+                    <Link
                       href="/price-requests"
                       className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-green-800 transition-colors hover:bg-stone-200 hover:text-stone-900"
                       role="menuitem"

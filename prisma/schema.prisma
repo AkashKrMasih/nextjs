@@ -180,6 +180,7 @@ model User {
   wishlist       Wishlist?
   priceRequests  PriceRequest[]
   productReports ProductReport[]
+  supportTickets SupportTicket[]
 }
 
 model EmailVerificationToken {
@@ -395,7 +396,8 @@ model Order {
 
   // OrderAddress owns the FK (orderId @unique on that side), so this side
   // is just the reverse lookup — no fields/references here.
-  address OrderAddress?
+  address        OrderAddress?
+  supportTickets SupportTicket[]
 }
 
 model OrderItem {
@@ -414,6 +416,42 @@ enum OrderStatus {
   PENDING
   PAID
   FAILED
+}
+
+enum SupportTicketCategory {
+  DELIVERY
+  ITEM_ISSUE
+  REFUND
+  ORDER_STATUS
+  OTHER
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model SupportTicket {
+  id       String                @id @default(cuid())
+  subject  String
+  message  String                @db.Text
+  category SupportTicketCategory
+  status   SupportTicketStatus   @default(OPEN)
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
 }
 
 enum DiscountKind {
