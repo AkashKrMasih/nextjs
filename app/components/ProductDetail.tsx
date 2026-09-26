@@ -18,6 +18,7 @@ import { formatPrice } from '@/lib/money';
 import { AddToCartButton } from '@/app/components/AddToCartButton';
 import { DeleteProductButton } from '@/app/components/DeleteProductButton';
 import { toggleWishlist } from '@/app/actions/wishlist';
+import { ProductReportDialog } from '@/app/components/ProductReportDialog';
 
 type ProductImage = {
   id: string;
@@ -133,10 +134,12 @@ export function ProductDetail({
                                 product,
                                 related,
                                 initialWishlisted = false,
+                                isLoggedIn = false,
                               }: {
   product: Product;
   related: Product[];
   initialWishlisted?: boolean;
+  isLoggedIn?: boolean;
 }) {
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
@@ -279,6 +282,8 @@ export function ProductDetail({
             >
               <Share2 className="size-5" />
             </button>
+
+            <ProductReportDialog productId={product.id} isLoggedIn={isLoggedIn} />
           </div>
 
           {/* Trust badges */}

@@ -37,6 +37,7 @@ model Product {
   wishlistItems WishlistItem[]
   priceRequests PriceRequest[]
   discounts     Discount[]
+  reports       ProductReport[]
 
   @@index([categoryId])
 }
@@ -163,6 +164,7 @@ model User {
   addresses      UserAddress[]
   wishlist       Wishlist?
   priceRequests  PriceRequest[]
+  productReports ProductReport[]
 }
 
 model EmailVerificationToken {
@@ -184,6 +186,20 @@ model PasswordResetToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  @@index([userId])
+}
+
+model ProductReport {
+  id        String  @id @default(cuid())
+  reason    String
+  message   String  @db.Text
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
   @@index([userId])
 }
 
