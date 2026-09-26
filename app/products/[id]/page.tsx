@@ -12,7 +12,10 @@ export default async function ProductPage({
 
   const product = await prisma.product.findUnique({
     where: { friendlyId },
-    include: { images: true },
+    include: {
+      images: true,
+      attributes: { orderBy: { title: 'asc' } },
+    },
   });
   if (!product) return notFound();
 
@@ -29,7 +32,15 @@ export default async function ProductPage({
   // Prisma's Decimal type isn't a plain object, so it can't cross the
   // server -> client boundary as-is. Serialize price to a string here;
   // formatPrice() already accepts number | string.
-  const serializedProduct = { ...product, price: product.price.toString() };
+  const serializedProduct = {
+    ...product,
+    price: product.price.toString(),
+    attributes: product.attributes.map((attribute) => ({
+      id: attribute.id,
+      title: attribute.title,
+      value: attribute.value,
+    })),
+  };
   const serializedRelated = related.map((item) => ({
     ...item,
     price: item.price.toString(),
