@@ -10,7 +10,7 @@ import { slugify } from "@/lib/categories";
 
 const NUM_USERS      = 20;
 const NUM_CATEGORIES = 8;
-const NUM_PRODUCTS   = 150;
+const NUM_PRODUCTS   = 25;
 
 const SALT_ROUNDS = 10;
 
@@ -53,41 +53,21 @@ const ELECTRONICS_CATEGORIES = [
   "TV & Home Theater",
 ];
 
-// Product "type" nouns, paired with a faker commerce adjective to build
-// realistic-sounding electronics product names, e.g. "Ergonomic Bluetooth
-// Speaker" or "Sleek 4K Monitor".
-const ELECTRONICS_PRODUCT_TYPES = [
-  "Smartphone",
-  "Laptop",
-  "Tablet",
-  "Bluetooth Speaker",
-  "Wireless Headphones",
-  "Earbuds",
-  "Smartwatch",
-  "Fitness Tracker",
-  "4K Monitor",
-  "Mechanical Keyboard",
-  "Wireless Mouse",
-  "Webcam",
-  "Digital Camera",
-  "Drone",
-  "Action Camera",
-  "VR Headset",
-  "Gaming Console",
-  "Gaming Controller",
-  "Power Bank",
-  "Wireless Charger",
-  "Smart Speaker",
-  "Smart Thermostat",
-  "Smart Light Bulb",
-  "Security Camera",
-  "Router",
-  "External SSD",
-  "Graphics Card",
-  "Soundbar",
-  "Projector",
-  "Streaming Media Player",
-];
+// Product "type" nouns, grouped by ELECTRONICS_CATEGORIES so a product's
+// name (and therefore its description and images, both derived from the
+// same type below) always fits the category it's assigned to — e.g. a
+// product filed under "Gaming" always gets a gaming-appropriate name like
+// "Ergonomic Gaming Controller", never a "Smart Thermostat".
+const PRODUCT_TYPES_BY_CATEGORY: Record<string, string[]> = {
+  "Smartphones":          ["Smartphone", "Foldable Phone", "5G Smartphone", "Rugged Phone"],
+  "Laptops & Computers":  ["Laptop", "Ultrabook", "2-in-1 Laptop", "Mini PC", "Desktop Tower", "Mechanical Keyboard", "Wireless Mouse", "4K Monitor"],
+  "Audio & Headphones":   ["Bluetooth Speaker", "Wireless Headphones", "Earbuds", "Wired Headphones", "Soundbar"],
+  "Cameras & Drones":     ["Digital Camera", "Action Camera", "Drone", "Mirrorless Camera", "Camera Gimbal"],
+  "Wearable Tech":        ["Smartwatch", "Fitness Tracker", "VR Headset", "Smart Ring"],
+  "Smart Home":           ["Smart Speaker", "Smart Thermostat", "Smart Light Bulb", "Security Camera", "Router", "Wireless Charger"],
+  "Gaming":                ["Gaming Console", "Gaming Controller", "Gaming Headset", "Gaming Keyboard", "Graphics Card"],
+  "TV & Home Theater":    ["Streaming Media Player", "Projector", "Soundbar", "4K Monitor"],
+};
 
 // placehold.co background/text colour pairs (hex, no "#") used for the
 // fallback placeholder photos below — a small curated palette reads a lot
@@ -102,7 +82,7 @@ const PLACEHOLDER_COLOR_PAIRS = [
   { bg: "18181b", fg: "34d399" }, // near-black / emerald
 ];
 
-// Fallback used only if fetchDummyJsonImagePool() below returns nothing —
+// Fallback used whenever a category has no DummyJSON image pool —
 // generates a placehold.co image labelled with the product's own type, e.g.
 // "Digital Camera" or "VR Headset". Not a real photo, but unambiguously the
 // right image for that product, needs no API key, and keeps the seed
@@ -112,42 +92,56 @@ function buildPlaceholderImageUrl(text: string, colors: { bg: string; fg: string
   return `https://placehold.co/640x480/${colors.bg}/${colors.fg}.png?text=${encodedText}`;
 }
 
-// DummyJSON's catalog only breaks electronics into these four categories —
-// it has no dedicated category for cameras, drones, gaming gear, smart
-// home, etc. — so instead of trying to match each ELECTRONICS_PRODUCT_TYPES
-// entry 1:1 (most wouldn't have a match), every seeded product draws a few
-// images from one shared pool built out of these categories' real photos.
-const DUMMYJSON_IMAGE_CATEGORIES = ["smartphones", "laptops", "tablets", "mobile-accessories"];
+// DummyJSON's catalog only has real electronics photos for these two of our
+// eight ELECTRONICS_CATEGORIES — it has no dedicated category for audio
+// gear, cameras/drones, wearables, smart home, gaming, or TVs. Rather than
+// pool every category's images together (which used to hand a "Smartphone"
+// photo to a seeded "Drone"), each mapped category gets its OWN pool built
+// only from the matching DummyJSON categories, and every other category
+// always falls back to a labelled placehold.co image (see
+// buildPlaceholderImageUrl) so its photo can never mismatch its type.
+const CATEGORY_TO_DUMMYJSON_SLUGS: Record<string, string[]> = {
+  "Smartphones":          ["smartphones"],
+  "Laptops & Computers":  ["laptops", "tablets"],
+};
 
 type DummyJsonCategoryResponse = { products: { images: string[] }[] };
 
-// Fetches every product image URL from DUMMYJSON_IMAGE_CATEGORIES and
-// flattens them into one pool, so seeded products can get real electronics
-// photos with no API key required. Returns [] (never throws) if the fetch
-// fails entirely, letting the caller fall back to placehold.co instead.
-async function fetchDummyJsonImagePool(): Promise<string[]> {
-  const urls: string[] = [];
+// Fetches every product image URL for one DummyJSON category slug.
+// Returns [] (never throws) if the fetch fails, letting the caller fall
+// back to placehold.co instead.
+async function fetchDummyJsonCategoryImages(slug: string): Promise<string[]> {
+  try {
+    const res = await fetch(`https://dummyjson.com/products/category/${slug}?limit=0&select=images`);
+    if (!res.ok) {
+      console.warn(`  ! DummyJSON category "${slug}" returned ${res.status}`);
+      return [];
+    }
+
+    const data = (await res.json()) as DummyJsonCategoryResponse;
+    return data.products.flatMap((product) => product.images);
+  } catch (err) {
+    console.warn(`  ! failed to fetch DummyJSON category "${slug}":`, (err as Error).message);
+    return [];
+  }
+}
+
+// Builds one real-photo image pool per ELECTRONICS_CATEGORIES entry that
+// has a CATEGORY_TO_DUMMYJSON_SLUGS mapping. Categories with no mapping
+// simply aren't keys in the returned object, so callers know to use
+// placeholders for them instead.
+async function fetchDummyJsonImagePoolsByCategory(): Promise<Record<string, string[]>> {
+  const entries = Object.entries(CATEGORY_TO_DUMMYJSON_SLUGS);
+  const pools: Record<string, string[]> = {};
 
   await Promise.all(
-    DUMMYJSON_IMAGE_CATEGORIES.map(async (category) => {
-      try {
-        const res = await fetch(`https://dummyjson.com/products/category/${category}?limit=0&select=images`);
-        if (!res.ok) {
-          console.warn(`  ! DummyJSON category "${category}" returned ${res.status}`);
-          return;
-        }
-
-        const data = (await res.json()) as DummyJsonCategoryResponse;
-        for (const product of data.products) {
-          urls.push(...product.images);
-        }
-      } catch (err) {
-        console.warn(`  ! failed to fetch DummyJSON category "${category}":`, (err as Error).message);
-      }
+    entries.map(async ([categoryName, slugs]) => {
+      const perSlug = await Promise.all(slugs.map(fetchDummyJsonCategoryImages));
+      pools[categoryName] = perSlug.flat();
     })
   );
 
-  return urls;
+  return pools;
 }
 
 // Odds that a non-default variant overrides the product's base price
@@ -186,6 +180,28 @@ function buildProductAttributeDrafts(count: number): { title: string; value: str
     title,
     value: faker.helpers.arrayElement(values),
   }));
+}
+
+// Phrases used to close out a product description with something that
+// reads like a real selling point, without inventing category-specific
+// claims (e.g. never says "long battery life" for a desktop tower).
+const DESCRIPTION_SELLING_POINTS = [
+  "built for everyday reliability",
+  "designed with everyday performance in mind",
+  "backed by a manufacturer warranty",
+  "a favorite among reviewers this year",
+  "engineered for long-lasting durability",
+  "crafted with both style and function in mind",
+];
+
+// Builds a description that always names the product's own type and
+// category, so — unlike a fully random faker.commerce.productDescription()
+// — it reads as obviously about the same product as the title and image.
+function buildProductDescription(productType: string, categoryName: string): string {
+  const material     = faker.helpers.arrayElement(["aluminum", "premium plastic", "brushed metal", "reinforced polycarbonate", "matte-finish composite"]);
+  const sellingPoint  = faker.helpers.arrayElement(DESCRIPTION_SELLING_POINTS);
+
+  return `This ${productType.toLowerCase()} is part of our ${categoryName} lineup, featuring a durable ${material} build and ${sellingPoint}. A great pick for anyone shopping for a new ${productType.toLowerCase()}.`;
 }
 
 async function hashPassword(plainPassword: string) {
@@ -339,11 +355,37 @@ async function main() {
   );
 
   console.log("Fetching electronics product images from DummyJSON...");
-  const imagePool = await fetchDummyJsonImagePool();
-  if (imagePool.length === 0) {
-    console.warn("  DummyJSON image pool came back empty; falling back to placehold.co labels.");
-  } else {
-    console.log(`  Pooled ${imagePool.length} real product images across ${DUMMYJSON_IMAGE_CATEGORIES.length} categories.`);
+  const imagePoolsByCategory = await fetchDummyJsonImagePoolsByCategory();
+  for (const [categoryName, slugs] of Object.entries(CATEGORY_TO_DUMMYJSON_SLUGS)) {
+    const count = imagePoolsByCategory[categoryName]?.length ?? 0;
+    if (count === 0) {
+      console.warn(`  DummyJSON pool for "${categoryName}" came back empty; falling back to placehold.co labels.`);
+    } else {
+      console.log(`  Pooled ${count} real product images for "${categoryName}" (${slugs.join(", ")}).`);
+    }
+  }
+
+  // Builds the images for one product, always sourced from its OWN
+  // category: a real DummyJSON photo pool when CATEGORY_TO_DUMMYJSON_SLUGS
+  // has one for that category (and it came back non-empty), otherwise a
+  // placehold.co image labelled with the product's own type — either way
+  // the image can never belong to a different product type than the title.
+  function buildProductImageUrls(categoryName: string, productType: string, imageCount: number): string[] {
+    const pool = imagePoolsByCategory[categoryName] ?? [];
+
+    if (pool.length > 0) {
+      // arrayElements never repeats a URL within one call, so a product
+      // never gets the same photo twice; capped at the pool size in the
+      // (unlikely) case imageCount exceeds it.
+      return faker.helpers.arrayElements(pool, Math.min(imageCount, pool.length));
+    }
+
+    return Array.from({length: imageCount}, (_, imageIndex) =>
+      buildPlaceholderImageUrl(
+        imageCount > 1 ? `${productType} ${imageIndex + 1}` : productType,
+        faker.helpers.arrayElement(PLACEHOLDER_COLOR_PAIRS)
+      )
+    );
   }
 
   const usedFriendlyIds = new Set<string>();
@@ -352,7 +394,16 @@ async function main() {
     const variantCount = faker.number.int({min: MIN_VARIANTS_PER_PRODUCT, max: MAX_VARIANTS_PER_PRODUCT});
     const basePrice = Number(faker.commerce.price({min: 5, max: 500}));
 
-    const productType = faker.helpers.arrayElement(ELECTRONICS_PRODUCT_TYPES);
+    // Category is picked FIRST (~85% of products get one, the rest
+    // exercise the nullable FK) so the product type — and therefore the
+    // name, description, and images derived from it below — always fits
+    // whichever category (or lack of one) the product ends up with.
+    const category = faker.datatype.boolean({probability: 0.85})
+      ? faker.helpers.arrayElement(categories)
+      : null;
+    const categoryName = category?.name ?? faker.helpers.arrayElement(Object.keys(PRODUCT_TYPES_BY_CATEGORY));
+    const productType  = faker.helpers.arrayElement(PRODUCT_TYPES_BY_CATEGORY[categoryName]);
+
     const name = `${faker.commerce.productAdjective()} ${productType}`;
     const baseFriendlyId = slugify(name) || "product";
     let friendlyId = baseFriendlyId;
@@ -366,26 +417,10 @@ async function main() {
     return {
       name,
       friendlyId,
-      description:     faker.commerce.productDescription(),
+      description:     buildProductDescription(productType, categoryName),
       price:           basePrice,
-      // ~85% of products get a category; the rest exercise the nullable FK.
-      categoryId:      faker.datatype.boolean({probability: 0.85})
-                         ? faker.helpers.arrayElement(categories).id
-                         : null,
-      // Real electronics photos drawn from the shared DummyJSON pool (see
-      // fetchDummyJsonImagePool). arrayElements never repeats a URL within
-      // one call, so a product never gets the same photo twice; capped at
-      // the pool size in the (unlikely) case imageCount exceeds it. Falls
-      // back to labelled placehold.co images, per product type, only if the
-      // pool came back empty.
-      remoteImageUrls: imagePool.length > 0
-                         ? faker.helpers.arrayElements(imagePool, Math.min(imageCount, imagePool.length))
-                         : Array.from({length: imageCount}, (_, imageIndex) =>
-          buildPlaceholderImageUrl(
-            imageCount > 1 ? `${productType} ${imageIndex + 1}` : productType,
-            faker.helpers.arrayElement(PLACEHOLDER_COLOR_PAIRS)
-          )
-        ),
+      categoryId:      category?.id ?? null,
+      remoteImageUrls: buildProductImageUrls(categoryName, productType, imageCount),
       variants:        buildProductVariantDrafts(variantCount, basePrice),
       attributes:      buildProductAttributeDrafts(
         faker.number.int({min: MIN_ATTRIBUTES_PER_PRODUCT, max: MAX_ATTRIBUTES_PER_PRODUCT})
