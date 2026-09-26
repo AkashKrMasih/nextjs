@@ -10,7 +10,7 @@ export async function SiteHeader() {
     <header className="border-b border-stone-300 bg-stone-50">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <Link href="/" className="text-xl tracking-tight">
-          Shop
+          <img src="/logo.svg" width={120} />
         </Link>
 
         <nav className="flex items-center gap-5 text-sm text-green-800">
