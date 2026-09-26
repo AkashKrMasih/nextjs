@@ -1,6 +1,7 @@
 import { getSavedHomeLayout } from '@/app/home/home-layout';
 import { HomeCatalog } from '@/app/components/HomeCatalog';
 import { HomeLayoutPrompt } from '@/app/components/HomeLayoutPrompt';
+import { HomePagePromotions } from '@/app/components/HomePagePromotions';
 import MobileHomePage from '@/app/responsive/home/mobile/page';
 import TabletHomePage from '@/app/responsive/home/tablet/page';
 
@@ -13,6 +14,7 @@ export default async function Home({
 
   return (
     <>
+      <HomePagePromotions />
       <HomeLayoutPrompt saved={saved_layout} />
       {saved_layout === 'mobile' ? (
         <MobileHomePage searchParams={searchParams} />
