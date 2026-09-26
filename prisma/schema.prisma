@@ -38,8 +38,23 @@ model Product {
   priceRequests PriceRequest[]
   discounts     Discount[]
   reports       ProductReport[]
+  homePagePromotions HomePagePromotion[]
 
   @@index([categoryId])
+}
+
+model HomePagePromotion {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  linkUrl   String?
+  productId Int?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([sortOrder])
 }
 
 model Category {
