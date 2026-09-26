@@ -69,10 +69,9 @@ const PRODUCT_TYPES_BY_CATEGORY: Record<string, string[]> = {
   "TV & Home Theater":    ["Streaming Media Player", "Projector", "Soundbar", "4K Monitor"],
 };
 
-// placehold.co background/text colour pairs (hex, no "#") used for the
-// fallback placeholder photos below — a small curated palette reads a lot
-// better than fully random hex codes on every image. Only used if the
-// DummyJSON image pool (below) comes back empty, e.g. no network access.
+// placehold.co background/text colour pairs (hex, no "#") used for every
+// product's placeholder photos below — a small curated palette reads a lot
+// better than fully random hex codes on every image.
 const PLACEHOLDER_COLOR_PAIRS = [
   { bg: "1f2937", fg: "f9fafb" }, // slate
   { bg: "111827", fg: "38bdf8" }, // near-black / sky
@@ -82,66 +81,14 @@ const PLACEHOLDER_COLOR_PAIRS = [
   { bg: "18181b", fg: "34d399" }, // near-black / emerald
 ];
 
-// Fallback used whenever a category has no DummyJSON image pool —
-// generates a placehold.co image labelled with the product's own type, e.g.
+// Generates a placehold.co image labelled with the product's own type, e.g.
 // "Digital Camera" or "VR Headset". Not a real photo, but unambiguously the
 // right image for that product, needs no API key, and keeps the seed
-// runnable even with no network access.
+// runnable even with no network access (aside from downloadImage() below
+// fetching the placehold.co image itself).
 function buildPlaceholderImageUrl(text: string, colors: { bg: string; fg: string }): string {
   const encodedText = text.split(" ").map(encodeURIComponent).join("+");
   return `https://placehold.co/640x480/${colors.bg}/${colors.fg}.png?text=${encodedText}`;
-}
-
-// DummyJSON's catalog only has real electronics photos for these two of our
-// eight ELECTRONICS_CATEGORIES — it has no dedicated category for audio
-// gear, cameras/drones, wearables, smart home, gaming, or TVs. Rather than
-// pool every category's images together (which used to hand a "Smartphone"
-// photo to a seeded "Drone"), each mapped category gets its OWN pool built
-// only from the matching DummyJSON categories, and every other category
-// always falls back to a labelled placehold.co image (see
-// buildPlaceholderImageUrl) so its photo can never mismatch its type.
-const CATEGORY_TO_DUMMYJSON_SLUGS: Record<string, string[]> = {
-  "Smartphones":          ["smartphones"],
-  "Laptops & Computers":  ["laptops", "tablets"],
-};
-
-type DummyJsonCategoryResponse = { products: { images: string[] }[] };
-
-// Fetches every product image URL for one DummyJSON category slug.
-// Returns [] (never throws) if the fetch fails, letting the caller fall
-// back to placehold.co instead.
-async function fetchDummyJsonCategoryImages(slug: string): Promise<string[]> {
-  try {
-    const res = await fetch(`https://dummyjson.com/products/category/${slug}?limit=0&select=images`);
-    if (!res.ok) {
-      console.warn(`  ! DummyJSON category "${slug}" returned ${res.status}`);
-      return [];
-    }
-
-    const data = (await res.json()) as DummyJsonCategoryResponse;
-    return data.products.flatMap((product) => product.images);
-  } catch (err) {
-    console.warn(`  ! failed to fetch DummyJSON category "${slug}":`, (err as Error).message);
-    return [];
-  }
-}
-
-// Builds one real-photo image pool per ELECTRONICS_CATEGORIES entry that
-// has a CATEGORY_TO_DUMMYJSON_SLUGS mapping. Categories with no mapping
-// simply aren't keys in the returned object, so callers know to use
-// placeholders for them instead.
-async function fetchDummyJsonImagePoolsByCategory(): Promise<Record<string, string[]>> {
-  const entries = Object.entries(CATEGORY_TO_DUMMYJSON_SLUGS);
-  const pools: Record<string, string[]> = {};
-
-  await Promise.all(
-    entries.map(async ([categoryName, slugs]) => {
-      const perSlug = await Promise.all(slugs.map(fetchDummyJsonCategoryImages));
-      pools[categoryName] = perSlug.flat();
-    })
-  );
-
-  return pools;
 }
 
 // Odds that a non-default variant overrides the product's base price
@@ -257,9 +204,8 @@ async function mapWithConcurrency<T, R>(
 // Prisma has no before_destroy-style callback, so this stands in for one:
 // look up every ProductImage row, delete its file off disk, THEN let the
 // caller delete the rows themselves. Only touches files under
-// /uploads/products/ — a row whose download failed and fell back to a
-// remote DummyJSON/placehold.co URL has nothing local to clean up, so it's
-// skipped.
+// /uploads/products/ — a row whose download failed and fell back to the
+// remote placehold.co URL has nothing local to clean up, so it's skipped.
 async function deleteLocalProductImageFiles() {
   const images = await prisma.productImage.findMany({ select: { url: true } });
 
@@ -354,32 +300,11 @@ async function main() {
     )
   );
 
-  console.log("Fetching electronics product images from DummyJSON...");
-  const imagePoolsByCategory = await fetchDummyJsonImagePoolsByCategory();
-  for (const [categoryName, slugs] of Object.entries(CATEGORY_TO_DUMMYJSON_SLUGS)) {
-    const count = imagePoolsByCategory[categoryName]?.length ?? 0;
-    if (count === 0) {
-      console.warn(`  DummyJSON pool for "${categoryName}" came back empty; falling back to placehold.co labels.`);
-    } else {
-      console.log(`  Pooled ${count} real product images for "${categoryName}" (${slugs.join(", ")}).`);
-    }
-  }
-
-  // Builds the images for one product, always sourced from its OWN
-  // category: a real DummyJSON photo pool when CATEGORY_TO_DUMMYJSON_SLUGS
-  // has one for that category (and it came back non-empty), otherwise a
-  // placehold.co image labelled with the product's own type — either way
-  // the image can never belong to a different product type than the title.
-  function buildProductImageUrls(categoryName: string, productType: string, imageCount: number): string[] {
-    const pool = imagePoolsByCategory[categoryName] ?? [];
-
-    if (pool.length > 0) {
-      // arrayElements never repeats a URL within one call, so a product
-      // never gets the same photo twice; capped at the pool size in the
-      // (unlikely) case imageCount exceeds it.
-      return faker.helpers.arrayElements(pool, Math.min(imageCount, pool.length));
-    }
-
+  // Builds the images for one product, always sourced from placehold.co and
+  // labelled with the product's own type — so the image can never belong to
+  // a different product type than the title, and no network calls to any
+  // third-party photo API are needed.
+  function buildProductImageUrls(_categoryName: string, productType: string, imageCount: number): string[] {
     return Array.from({length: imageCount}, (_, imageIndex) =>
       buildPlaceholderImageUrl(
         imageCount > 1 ? `${productType} ${imageIndex + 1}` : productType,
