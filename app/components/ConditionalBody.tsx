@@ -8,11 +8,7 @@ export function ConditionalBody({children}: {children: React.ReactNode}) {
 
   return (
     <body
-      className={
-        isAdmin
-          ? "flex min-h-full flex-col bg-stone-50 text-stone-900"
-          : "flex min-h-full w-full max-w-5xl mx-auto flex-col bg-stone-50 text-stone-900"
-      }
+      className={"flex min-h-full flex-col bg-stone-50 text-stone-900"}
     >
     {children}
     </body>
