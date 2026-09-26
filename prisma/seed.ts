@@ -7,10 +7,13 @@ import { mkdir, writeFile, unlink } from "fs/promises";
 
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/categories";
+import { PRODUCT_REPORT_REASONS } from "@/lib/product-report-reasons";
 
 const NUM_USERS      = 20;
 const NUM_CATEGORIES = 8;
 const NUM_PRODUCTS   = 25;
+const NUM_PRODUCT_REPORTS      = 15;
+const NUM_HOME_PAGE_PROMOTIONS = 5;
 
 const SALT_ROUNDS = 10;
 
@@ -21,6 +24,7 @@ const DEFAULT_PASSWORD = "password";
 // Same target directory the upload route writes to, so seeded images are
 // served the same way real uploads are.
 const UPLOAD_DIR = path.join(process.cwd(), "public/uploads/products");
+const HOME_PROMOTION_UPLOAD_DIR = path.join(process.cwd(), "public/uploads/home-promotions");
 
 // How many images to download in parallel. The image provider will start
 // returning errors/timeouts if you fire too many requests at once.
@@ -86,9 +90,13 @@ const PLACEHOLDER_COLOR_PAIRS = [
 // right image for that product, needs no API key, and keeps the seed
 // runnable even with no network access (aside from downloadImage() below
 // fetching the placehold.co image itself).
-function buildPlaceholderImageUrl(text: string, colors: { bg: string; fg: string }): string {
+function buildPlaceholderImageUrl(
+  text: string,
+  colors: { bg: string; fg: string },
+  size: { width: number; height: number } = { width: 640, height: 480 }
+): string {
   const encodedText = text.split(" ").map(encodeURIComponent).join("+");
-  return `https://placehold.co/640x480/${colors.bg}/${colors.fg}.png?text=${encodedText}`;
+  return `https://placehold.co/${size.width}x${size.height}/${colors.bg}/${colors.fg}.png?text=${encodedText}`;
 }
 
 // Odds that a non-default variant overrides the product's base price
@@ -161,7 +169,13 @@ async function hashPassword(plainPassword: string) {
 // Downloads a remote image and saves it under UPLOAD_DIR, returning the
 // local /uploads/... URL to store on the product. Returns null on failure
 // so the caller can fall back to the remote URL instead of failing the seed.
-async function downloadImage(remoteUrl: string): Promise<string | null> {
+async function downloadImage(
+  remoteUrl: string,
+  options: { uploadDir?: string; publicPathPrefix?: string } = {}
+): Promise<string | null> {
+  const uploadDir = options.uploadDir ?? UPLOAD_DIR;
+  const publicPathPrefix = options.publicPathPrefix ?? "/uploads/products";
+
   try {
     const res = await fetch(remoteUrl);
     if (!res.ok) return null;
@@ -173,8 +187,8 @@ async function downloadImage(remoteUrl: string): Promise<string | null> {
     const ext = contentType.split("/")[1]?.split(";")[0] || "jpg";
     const filename = `${randomUUID()}.${ext}`;
 
-    await writeFile(path.join(UPLOAD_DIR, filename), buffer);
-    return `/uploads/products/${filename}`;
+    await writeFile(path.join(uploadDir, filename), buffer);
+    return `${publicPathPrefix}/${filename}`;
   } catch (err) {
     console.warn(`  ! failed to download ${remoteUrl}:`, (err as Error).message);
     return null;
@@ -276,8 +290,11 @@ async function main() {
   console.log("Deleting local image files for existing products...");
   await deleteLocalProductImageFiles();
 
-  // Cascades handle ProductImage / ProductVariant / Inventory automatically
-  // (all declared onDelete: Cascade off Product / ProductVariant).
+  // Home promotions keep rows when products are deleted (productId -> SetNull).
+  await prisma.homePagePromotion.deleteMany();
+
+  // Cascades handle ProductImage / ProductVariant / Inventory / ProductReport
+  // automatically (all declared onDelete: Cascade off Product / ProductVariant).
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
 
@@ -457,7 +474,66 @@ async function main() {
   const totalVariants   = productDrafts.reduce((sum, d) => sum + d.variants.length, 0);
   const totalAttributes = productDrafts.reduce((sum, d) => sum + d.attributes.length, 0);
 
-  console.log(`Seeded ${NUM_USERS} users, ${categories.length} categories, ${NUM_PRODUCTS} products, ${totalVariants} variants, and ${totalAttributes} product attributes.`);
+  const seededProducts = await prisma.product.findMany({ select: { id: true } });
+  const customerUsers  = await prisma.user.findMany({
+    where:  { role: "CUSTOMER" },
+    select: { id: true },
+  });
+
+  await prisma.productReport.createMany({
+    data: Array.from({ length: NUM_PRODUCT_REPORTS }, () => ({
+      reason:    faker.helpers.arrayElement(PRODUCT_REPORT_REASONS),
+      message:   faker.lorem.paragraph(),
+      productId: faker.helpers.arrayElement(seededProducts).id,
+      userId:    faker.helpers.arrayElement(customerUsers).id,
+    })),
+  });
+
+  await mkdir(HOME_PROMOTION_UPLOAD_DIR, { recursive: true });
+
+  const HOME_PROMOTION_LABELS = [
+    "Summer Sale",
+    "New Arrivals",
+    "Free Shipping",
+    "Top Picks",
+    "Limited Offer",
+  ];
+
+  const promotionDrafts = HOME_PROMOTION_LABELS.slice(0, NUM_HOME_PAGE_PROMOTIONS).map((label, index) => ({
+    label,
+    sortOrder: index,
+    productId: faker.datatype.boolean({ probability: 0.8 })
+      ? faker.helpers.arrayElement(seededProducts).id
+      : null,
+  }));
+
+  console.log(`Downloading ${promotionDrafts.length} home promotion images...`);
+
+  await mapWithConcurrency(promotionDrafts, IMAGE_CONCURRENCY, async (draft) => {
+    const remoteUrl = buildPlaceholderImageUrl(
+      draft.label,
+      faker.helpers.arrayElement(PLACEHOLDER_COLOR_PAIRS),
+      { width: 1920, height: 640 }
+    );
+    const imageUrl =
+      (await downloadImage(remoteUrl, {
+        uploadDir:        HOME_PROMOTION_UPLOAD_DIR,
+        publicPathPrefix: "/uploads/home-promotions",
+      })) ?? remoteUrl;
+
+    await prisma.homePagePromotion.create({
+      data: {
+        imageUrl,
+        linkUrl:   null,
+        productId: draft.productId,
+        sortOrder: draft.sortOrder,
+      },
+    });
+  });
+
+  console.log(
+    `Seeded ${NUM_USERS} users, ${categories.length} categories, ${NUM_PRODUCTS} products, ${totalVariants} variants, ${totalAttributes} product attributes, ${NUM_PRODUCT_REPORTS} product reports, and ${NUM_HOME_PAGE_PROMOTIONS} home page promotions.`
+  );
   console.log(`Admin login: admin@admin.us / ${DEFAULT_PASSWORD}`);
   console.log(`All other users: <their email> / ${DEFAULT_PASSWORD}`);
 }
