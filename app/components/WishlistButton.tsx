@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart } from 'lucide-react';
-import { toggleWishlist } from '@/app/actions/wishlist';
+import { toggleWishlist } from '@/app/wishlist/actions';
 
 export function WishlistButton({
   productId,

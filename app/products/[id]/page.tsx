@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { ProductDetail } from '@/app/components/ProductDetail';
-import { isProductWishlisted } from '@/app/actions/wishlist';
+import { isProductWishlisted } from '@/app/wishlist/actions';
 import { getSession } from '@/lib/session';
 
 export default async function ProductPage({
