@@ -13,14 +13,14 @@ datasource db {
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  friendlyId  String   @unique @map("friendly_id")
-  description String   @default("")
-  price          Decimal @db.Decimal(10, 2) // default price; a variant may override this
-  priceOnRequest Boolean @default(false)
+  id             Int      @id @default(autoincrement())
+  name           String
+  friendlyId     String   @unique @map("friendly_id")
+  description    String   @default("")
+  price          Decimal  @db.Decimal(10, 2) // default price; a variant may override this
+  priceOnRequest Boolean  @default(false)
   createdAt      DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt      DateTime @updatedAt
 
   categoryId Int?
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -34,26 +34,26 @@ model Product {
 
   attributes ProductAttribute[]
 
-  wishlistItems WishlistItem[]
-  priceRequests PriceRequest[]
-  discounts     Discount[]
-  reports       ProductReport[]
+  wishlistItems      WishlistItem[]
+  priceRequests      PriceRequest[]
+  discounts          Discount[]
+  reports            ProductReport[]
   homePagePromotions HomePagePromotion[]
-  pincodeTemplateId String?
-  pincodeTemplate   PincodeTemplate? @relation(fields: [pincodeTemplateId], references: [id], onDelete: SetNull)
-  deliveryPincodes  ProductDeliveryPincode[]
+  pincodeTemplateId  String?
+  pincodeTemplate    PincodeTemplate?         @relation(fields: [pincodeTemplateId], references: [id], onDelete: SetNull)
+  deliveryPincodes   ProductDeliveryPincode[]
 
   @@index([categoryId])
   @@index([pincodeTemplateId])
 }
 
 model PincodeTemplate {
-  id        String   @id @default(cuid())
+  id        String                 @id @default(cuid())
   title     String
   entries   PincodeTemplateEntry[]
   products  Product[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
 }
 
 model PincodeTemplateEntry {
@@ -197,25 +197,25 @@ enum Role {
 }
 
 model User {
-  id             String         @id @default(cuid())
-  email          String         @unique
-  name           String?
-  password       String
-  password_salt  String
-  role           Role           @default(CUSTOMER)
-  emailVerified  Boolean        @default(true)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  name                    String?
+  password                String
+  password_salt           String
+  role                    Role                     @default(CUSTOMER)
+  emailVerified           Boolean                  @default(true)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
-  reviews        Review[]
-  orders         Order[]
-  orderAddresses OrderAddress[]
-  addresses      UserAddress[]
-  wishlist       Wishlist?
-  priceRequests  PriceRequest[]
-  productReports ProductReport[]
-  supportTickets SupportTicket[]
+  reviews                 Review[]
+  orders                  Order[]
+  orderAddresses          OrderAddress[]
+  addresses               UserAddress[]
+  wishlist                Wishlist?
+  priceRequests           PriceRequest[]
+  productReports          ProductReport[]
+  supportTickets          SupportTicket[]
 }
 
 model EmailVerificationToken {
@@ -241,13 +241,13 @@ model PasswordResetToken {
 }
 
 model ProductReport {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   reason    String
-  message   String  @db.Text
+  message   String   @db.Text
   productId Int
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@index([productId])
@@ -255,10 +255,10 @@ model ProductReport {
 }
 
 model PriceRequest {
-  id           String  @id @default(cuid())
+  id           String @id @default(cuid())
   email        String
   productTitle String
-  message      String  @db.Text
+  message      String @db.Text
 
   productId Int
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -280,9 +280,9 @@ model UserAddress {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  label   String? // e.g. "Home", "Work" — optional, user-facing only
-  name    String // recipient name
-  phone   String?
+  label String? // e.g. "Home", "Work" — optional, user-facing only
+  name  String // recipient name
+  phone String?
 
   address1   String
   address2   String?
@@ -417,17 +417,17 @@ model AdminSettings {
 }
 
 model Order {
-  id                    String       @id @default(cuid())
+  id                    String      @id @default(cuid())
   userId                String? // null for guest checkout
-  user                  User?        @relation(fields: [userId], references: [id])
+  user                  User?       @relation(fields: [userId], references: [id])
   guestEmail            String? // set when userId is null
-  status                OrderStatus  @default(PENDING)
+  status                OrderStatus @default(PENDING)
   amountTotal           Int // cents, matches Stripe's PaymentIntent.amount
-  currency              String       @default("usd")
-  stripePaymentIntentId String       @unique
+  currency              String      @default("usd")
+  stripePaymentIntentId String      @unique
   items                 OrderItem[]
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
 
   // OrderAddress owns the FK (orderId @unique on that side), so this side
   // is just the reverse lookup — no fields/references here.
@@ -436,11 +436,11 @@ model Order {
 }
 
 model OrderItem {
-  id        String         @id @default(cuid())
-  orderId   String
-  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  variantId String
-  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  id           String         @id @default(cuid())
+  orderId      String
+  order        Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId    String
+  variant      ProductVariant @relation(fields: [variantId], references: [id])
   name         String // snapshot at purchase time
   unitPrice    Int // cents, snapshot at purchase time (after any discount)
   quantity     Int
