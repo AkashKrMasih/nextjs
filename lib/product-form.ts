@@ -3,6 +3,7 @@ import path from 'path';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/categories';
+import { parsePincodeList } from '@/lib/delivery-pincodes';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads/products');
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -33,6 +34,8 @@ export type ParsedProductForm = {
   variants: VariantInput[];
   existingImages: ImageInput[];
   savedImages: ImageInput[];
+  pincodeTemplateId: string | null;
+  customPincodes: string[];
 };
 
 function readJson<T>(value: FormDataEntryValue | null, fallback: T): T | { error: string } {
@@ -149,6 +152,22 @@ export async function parseProductFormData(
   const images = onePrimary([...existingImages, ...uploaded]);
   const savedCount = uploaded.length;
 
+  const pincodeTemplateRaw = String(formData.get('pincodeTemplateId') ?? '').trim();
+  let pincodeTemplateId: string | null = pincodeTemplateRaw || null;
+  const customPincodes = parsePincodeList(String(formData.get('customPincodes') ?? ''));
+
+  if (pincodeTemplateId && customPincodes.length > 0) {
+    return { error: 'Choose either a pincode template or custom pincodes, not both.' };
+  }
+
+  if (pincodeTemplateId) {
+    const template = await prisma.pincodeTemplate.findUnique({
+      where: { id: pincodeTemplateId },
+      select: { id: true },
+    });
+    if (!template) return { error: 'Invalid pincode template' };
+  }
+
   return {
     name,
     description,
@@ -161,7 +180,27 @@ export async function parseProductFormData(
     variants,
     existingImages: images.slice(0, images.length - savedCount),
     savedImages: images.slice(images.length - savedCount),
+    pincodeTemplateId,
+    customPincodes,
   };
+}
+
+async function syncProductDeliveryRules(
+  tx: Pick<typeof prisma, 'product' | 'productDeliveryPincode'>,
+  productId: number,
+  pincodeTemplateId: string | null,
+  customPincodes: string[]
+) {
+  await tx.product.update({
+    where: { id: productId },
+    data: { pincodeTemplateId },
+  });
+  await tx.productDeliveryPincode.deleteMany({ where: { productId } });
+  if (!pincodeTemplateId && customPincodes.length > 0) {
+    await tx.productDeliveryPincode.createMany({
+      data: customPincodes.map((code) => ({ productId, code })),
+    });
+  }
 }
 
 async function resolveFriendlyId(base: string, explicit: boolean, exceptId?: number) {
@@ -191,7 +230,7 @@ export async function createProductFromForm(parsed: ParsedProductForm) {
   const friendly = await resolveFriendlyId(parsed.friendlyId, parsed.friendlyIdExplicit);
   if ('error' in friendly) return friendly;
 
-  return prisma.product.create({
+  const product = await prisma.product.create({
     data: {
       name: parsed.name,
       friendlyId: friendly.friendlyId,
@@ -199,6 +238,7 @@ export async function createProductFromForm(parsed: ParsedProductForm) {
       price: parsed.price,
       priceOnRequest: parsed.priceOnRequest,
       categoryId: parsed.categoryId,
+      pincodeTemplateId: parsed.pincodeTemplateId,
       images: { create: parsed.savedImages },
       attributes: { create: parsed.attributes },
       variants: {
@@ -210,6 +250,14 @@ export async function createProductFromForm(parsed: ParsedProductForm) {
     },
     include: { images: true, variants: true, attributes: true },
   });
+
+  if (!parsed.pincodeTemplateId && parsed.customPincodes.length > 0) {
+    await prisma.productDeliveryPincode.createMany({
+      data: parsed.customPincodes.map((code) => ({ productId: product.id, code })),
+    });
+  }
+
+  return product;
 }
 
 export async function updateProductFromForm(productId: number, parsed: ParsedProductForm) {
@@ -244,8 +292,16 @@ export async function updateProductFromForm(productId: number, parsed: ParsedPro
         price: parsed.price,
         priceOnRequest: parsed.priceOnRequest,
         categoryId: parsed.categoryId,
+        pincodeTemplateId: parsed.pincodeTemplateId,
       },
     });
+
+    await syncProductDeliveryRules(
+      tx,
+      productId,
+      parsed.pincodeTemplateId,
+      parsed.customPincodes
+    );
 
     await tx.productAttribute.deleteMany({ where: { productId } });
     if (parsed.attributes.length) {

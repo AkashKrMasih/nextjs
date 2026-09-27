@@ -39,8 +39,43 @@ model Product {
   discounts     Discount[]
   reports       ProductReport[]
   homePagePromotions HomePagePromotion[]
+  pincodeTemplateId String?
+  pincodeTemplate   PincodeTemplate? @relation(fields: [pincodeTemplateId], references: [id], onDelete: SetNull)
+  deliveryPincodes  ProductDeliveryPincode[]
 
   @@index([categoryId])
+  @@index([pincodeTemplateId])
+}
+
+model PincodeTemplate {
+  id        String   @id @default(cuid())
+  title     String
+  entries   PincodeTemplateEntry[]
+  products  Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PincodeTemplateEntry {
+  id         String          @id @default(cuid())
+  templateId String
+  template   PincodeTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  code       String
+
+  @@unique([templateId, code])
+  @@index([templateId])
+  @@index([code])
+}
+
+model ProductDeliveryPincode {
+  id        String  @id @default(cuid())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  code      String
+
+  @@unique([productId, code])
+  @@index([productId])
+  @@index([code])
 }
 
 model HomePagePromotion {
