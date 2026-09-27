@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { PageHeader } from "@/app/components/PageHeader";
 import { getProduct } from "../actions";
 import { VariantForm } from "../variant-form";
 
@@ -16,9 +17,14 @@ export default async function NewVariantPage({
 
   return (
     <div className="p-6">
-      <h1 className="mb-6 text-xl font-semibold">
-        New variant — {product.name}
-      </h1>
+      <PageHeader
+        title={`New variant — ${product.name}`}
+        description="Add a purchasable SKU for this product."
+        backHref={`/admin/products/${productId}/variants`}
+        backLabel="Back to variants"
+        variant="admin"
+        className="mb-6"
+      />
       <VariantForm productId={productId} />
     </div>
   );

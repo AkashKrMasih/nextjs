@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { DeletePriceRequestButton } from './delete-price-request-button';
@@ -18,8 +19,11 @@ export default async function MyPriceRequestsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <h1 className="text-2xl tracking-tight text-stone-900">Your price requests</h1>
-      <p className="mt-1 text-sm text-stone-500">Newest first</p>
+      <PageHeader
+        title="Your price requests"
+        description="Quotes you have requested for products priced on request. Newest first."
+        variant="store"
+      />
 
       {requests.length === 0 ? (
         <p className="mt-8 text-sm text-stone-500">You have not sent any price requests.</p>

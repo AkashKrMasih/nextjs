@@ -1,6 +1,5 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { PageHeader } from '@/app/components/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { DiscountForm } from '../discount-form';
 
@@ -26,14 +25,14 @@ export default async function EditDiscountPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 md:px-6 py-10">
-      <Link
-        href="/admin/discounts"
-        className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-900"
-      >
-        <ChevronLeft className="size-4" />
-        Back to discounts
-      </Link>
-      <h1 className="mt-4 mb-6 text-2xl tracking-tight text-stone-900">Edit discount</h1>
+      <PageHeader
+        title="Edit discount"
+        description={`Code ${discount.code}`}
+        backHref="/admin/discounts"
+        backLabel="Back to discounts"
+        variant="admin"
+        className="mb-6"
+      />
       <DiscountForm
         discountId={discount.id}
         products={products}

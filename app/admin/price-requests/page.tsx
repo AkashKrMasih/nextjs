@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { PageHeader } from '@/app/components/PageHeader';
 import { PriceRequestList } from './price-request-list';
 
 export default async function PriceRequestsPage() {
@@ -12,10 +13,12 @@ export default async function PriceRequestsPage() {
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      <h1 className="text-xl font-semibold text-gray-900">Price requests</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        {requests.length} {requests.length === 1 ? 'request' : 'requests'}, newest first
-      </p>
+      <PageHeader
+        title="Price requests"
+        description={`${requests.length} ${requests.length === 1 ? 'request' : 'requests'}, newest first`}
+        variant="admin"
+        overline="Inbox"
+      />
       <PriceRequestList
         requests={requests.map((request) => ({
           id: request.id,

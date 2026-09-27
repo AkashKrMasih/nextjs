@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { PageHeader } from "@/app/components/PageHeader";
 import { prisma } from "@/lib/prisma";
 
 interface ReportedProduct {
@@ -71,18 +72,15 @@ function formatDate(iso: string): string {
 
 export default async function ProductReportsPage() {
   const reports = await getProductReports();
-  const pendingCount = reports.filter((r) => r.status === "PENDING").length;
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">
-              Product reports
-            </h1>
-          </div>
-        </div>
+        <PageHeader
+          title="Product reports"
+          description="Customer reports about listing content or policy issues."
+          variant="admin"
+          overline="Moderation"
+        />
 
         <div className="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           {reports.length === 0 ? (

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Pencil } from "lucide-react";
+import { PageHeader } from "@/app/components/PageHeader";
 import { prisma } from "@/lib/prisma";
 import { DeleteCategoryButton } from "./delete-button";
 
@@ -14,15 +15,20 @@ export default async function CategoriesPage() {
 
   return (
     <div className="mx-auto max-w-4xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Categories</h1>
-        <Link
-          href="/admin/categories/new"
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
-        >
-          New Category
-        </Link>
-      </div>
+      <PageHeader
+        title="Categories"
+        description="Organize products into categories and subcategories."
+        variant="admin"
+        overline="Catalog"
+        actions={
+          <Link
+            href="/admin/categories/new"
+            className="inline-flex rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+          >
+            New category
+          </Link>
+        }
+      />
 
       {categories.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 py-16 text-center">

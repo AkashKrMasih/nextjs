@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageHeader } from '@/app/components/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { promotionHref } from '@/lib/home-page-promotions';
 import { DeletePromotionButton } from './delete-promotion-button';
@@ -11,20 +12,20 @@ export default async function AdminHomePagePromotionsPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 md:px-6 py-10">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl leading-tight tracking-tight text-stone-900">Home promotions</h1>
-          <p className="mt-1 text-sm text-stone-500">
-            {promotions.length} {promotions.length === 1 ? 'slide' : 'slides'} on the home page carousel
-          </p>
-        </div>
-        <Link
-          href="/admin/home-page-promotions/new"
-          className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
-        >
-          New promotion
-        </Link>
-      </div>
+      <PageHeader
+        title="Home promotions"
+        description={`${promotions.length} ${promotions.length === 1 ? 'slide' : 'slides'} on the home page carousel`}
+        variant="admin"
+        overline="Marketing"
+        actions={
+          <Link
+            href="/admin/home-page-promotions/new"
+            className="inline-flex rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+          >
+            New promotion
+          </Link>
+        }
+      />
 
       {promotions.length === 0 ? (
         <p className="mt-10 text-sm text-stone-500">No promotions yet.</p>

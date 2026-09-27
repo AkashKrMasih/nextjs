@@ -1,3 +1,4 @@
+import { PageHeader } from "@/app/components/PageHeader";
 import {StripeSettingsForm} from "./StripeSettingsForm";
 
 // Show only the last 4 characters of a secret; never send the full value
@@ -23,7 +24,13 @@ export default async function StripeSettingsPage() {
 
   return (
     <div className="max-w-xl mx-auto py-10">
-      <h1 className="text-2xl font-semibold mb-6">Stripe API Keys</h1>
+      <PageHeader
+        title="Stripe API keys"
+        description="Configure payment processing credentials."
+        variant="admin"
+        overline="Settings"
+        className="mb-6"
+      />
       <StripeSettingsForm initialValues={settings}/>
     </div>
   );

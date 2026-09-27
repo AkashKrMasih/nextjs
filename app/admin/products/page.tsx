@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import { PageHeader } from '@/app/components/PageHeader';
 import { Pencil, Plus } from 'lucide-react';
 import { formatPrice } from '@/lib/money';
 import { DeleteProductButton } from './delete-product-button';
@@ -11,24 +12,21 @@ export default async function AdminProductsPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 md:px-6 py-10">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl leading-tight tracking-tight text-gray-900">
-            Products
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            {products.length} {products.length === 1 ? 'product' : 'products'} in your catalog
-          </p>
-        </div>
-
-        <Link
-          href="/admin/products/new"
-          className="flex items-center gap-2 rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-        >
-          <Plus className="size-4" />
-          Add product
-        </Link>
-      </div>
+      <PageHeader
+        title="Products"
+        description={`${products.length} ${products.length === 1 ? 'product' : 'products'} in your catalog`}
+        variant="admin"
+        overline="Catalog"
+        actions={
+          <Link
+            href="/admin/products/new"
+            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+          >
+            <Plus className="size-4" />
+            Add product
+          </Link>
+        }
+      />
 
       {products.length === 0 ? (
         <div className="mt-10 flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 py-20 text-center">

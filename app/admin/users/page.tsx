@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { UserRound } from 'lucide-react';
 import Link from 'next/link';
+import { PageHeader } from '@/app/components/PageHeader';
 import { DeleteUserButton } from './delete-user-button';
 
 export default async function AdminUsersPage() {
@@ -10,22 +11,20 @@ export default async function AdminUsersPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 md:px-6 py-10">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl leading-tight tracking-tight text-stone-900">
-            Users
-          </h1>
-          <p className="mt-1 text-sm text-stone-500">
-            {users.length} {users.length === 1 ? 'user' : 'users'} registered
-          </p>
-        </div>
-        <Link
-          href="/admin/users/new"
-          className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
-        >
-          New user
-        </Link>
-      </div>
+      <PageHeader
+        title="Users"
+        description={`${users.length} ${users.length === 1 ? 'user' : 'users'} registered`}
+        variant="admin"
+        overline="Accounts"
+        actions={
+          <Link
+            href="/admin/users/new"
+            className="inline-flex rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+          >
+            New user
+          </Link>
+        }
+      />
 
       {users.length === 0 ? (
         <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-stone-100/40 py-20 text-center">

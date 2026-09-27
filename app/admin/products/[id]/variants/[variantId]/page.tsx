@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { PageHeader } from "@/app/components/PageHeader";
 import { getProduct, getVariant } from "../actions";
 import { VariantForm } from "../variant-form";
 
@@ -20,9 +21,14 @@ export default async function EditVariantPage({
 
   return (
     <div className="p-6">
-      <h1 className="mb-6 text-xl font-semibold">
-        Edit variant — {product.name}
-      </h1>
+      <PageHeader
+        title={`Edit variant — ${product.name}`}
+        description={variant.sku}
+        backHref={`/admin/products/${productId}/variants`}
+        backLabel="Back to variants"
+        variant="admin"
+        className="mb-6"
+      />
       <VariantForm
         productId={productId}
         variant={{
