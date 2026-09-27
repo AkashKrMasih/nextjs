@@ -64,8 +64,6 @@ export function PageHeader({
       className={cn(
         embedded ? 'mb-6' : 'mb-8 rounded-sm border-b pb-6',
         !embedded && styles.divider,
-        !embedded && styles.surface,
-        !embedded && 'shadow-[0_1px_2px_rgba(0,0,0,0.06)]',
         className
       )}
     >
