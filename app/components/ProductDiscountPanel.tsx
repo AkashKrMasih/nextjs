@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { formatPrice } from '@/lib/money';
-import { CHECKOUT_DISCOUNT_STORAGE_KEY, formatDiscountOfferLabel, type ProductDiscountOffer } from '@/lib/discounts';
+import {
+  CHECKOUT_DISCOUNT_STORAGE_KEY,
+  formatDiscountOfferLabel,
+  type ProductDiscountOffer,
+} from '@/lib/discounts';
 
 type PreviewResult = {
   code: string;
@@ -15,17 +19,36 @@ export function ProductDiscountPanel({
   productId,
   basePrice,
   quantity,
-  offers,
 }: {
   productId: number;
   basePrice: string;
   quantity: number;
-  offers: ProductDiscountOffer[];
 }) {
+  const [offers, setOffers] = useState<ProductDiscountOffer[]>([]);
+  const [offersLoading, setOffersLoading] = useState(true);
   const [codeInput, setCodeInput] = useState('');
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [error, setError] = useState('');
   const [applying, setApplying] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setOffersLoading(true);
+      try {
+        const response = await fetch(`/api/discounts/offers?productId=${productId}`);
+        const data = await response.json().catch(() => ({}));
+        if (!cancelled && response.ok && Array.isArray(data.offers)) {
+          setOffers(data.offers);
+        }
+      } finally {
+        if (!cancelled) setOffersLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
 
   useEffect(() => {
     if (preview?.code) {
@@ -86,7 +109,9 @@ export function ProductDiscountPanel({
         </p>
       </div>
 
-      {offers.length > 0 ? (
+      {offersLoading ? (
+        <p className="text-xs text-stone-500">Loading offers…</p>
+      ) : offers.length > 0 ? (
         <ul className="flex flex-wrap gap-2">
           {offers.map((offer) => (
             <li key={offer.code}>

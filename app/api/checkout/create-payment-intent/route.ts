@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { auth } from '@/lib/auth';
-import { priceCart } from '@/lib/discounts';
 import {
   INVALID_PINCODE_MESSAGE,
   normalizePincode,
@@ -36,13 +35,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Re-price everything from the DB. Never trust price/quantity sent by the client.
-  const priced = await priceCart(
-    items.map((item) => ({ id: Number(item.id), quantity: Number(item.quantity) })),
-    discountCode
-  );
-  if ('error' in priced) {
-    return NextResponse.json({ error: priced.error }, { status: 400 });
+  // Re-price via the discounts preview API (single source of truth; never trust client prices).
+  const origin = new URL(req.url).origin;
+  const previewRes = await fetch(`${origin}/api/discounts/preview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      items: items.map((item) => ({ id: Number(item.id), quantity: Number(item.quantity) })),
+      code: discountCode,
+    }),
+  });
+  const priced = await previewRes.json();
+  if (!previewRes.ok) {
+    return NextResponse.json(
+      { error: priced.error ?? 'Could not price cart' },
+      { status: previewRes.status }
+    );
   }
 
   const pincodeCheck = await validateCartDeliveryPincode(
