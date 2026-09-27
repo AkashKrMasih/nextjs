@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { priceCart } from '@/lib/discounts';
+import { priceCart } from '@/app/api/discounts/service';
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as {
