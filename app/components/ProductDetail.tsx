@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PageHeader } from '@/app/components/PageHeader';
 import {
   Heart,
   Share2,
@@ -176,11 +177,14 @@ export function ProductDetail({
 
   return (
     <main className="mx-auto max-w-6xl px-4 md:px-6 py-10">
-      <Link href="/" className="text-sm text-stone-500 hover:text-green-800 transition-colors">
-        ← Catalog
-      </Link>
+      <PageHeader
+        title={product.name}
+        backHref="/"
+        backLabel="Catalog"
+        variant="store"
+      />
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-16">
+      <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
         {/* Image carousel */}
         <div className="relative">
           <ProductImageCarousel images={product.images} name={product.name} />
@@ -196,10 +200,6 @@ export function ProductDetail({
 
         {/* Info */}
         <div className="space-y-6 lg:pt-2">
-          <h1 className="text-3xl md:text-4xl leading-tight tracking-tight text-stone-900">
-            {product.name}
-          </h1>
-
           {product.priceOnRequest ? (
             <Link
               href={`/products/${product.friendlyId}/price-request`}

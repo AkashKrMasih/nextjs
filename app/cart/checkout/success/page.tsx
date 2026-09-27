@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { PageHeader } from '@/app/components/PageHeader';
 import { useSearchParams } from 'next/navigation';
 import { getStripe } from '@/lib/stripe-client';
 import { clearCart } from '@/lib/cart';
@@ -40,34 +41,43 @@ export default function CheckoutSuccessPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      {status === 'checking' && <p className="text-sm text-stone-500">Confirming payment…</p>}
+      {status === 'checking' && (
+        <PageHeader
+          title="Confirming payment"
+          description="Please wait while we verify your payment…"
+          variant="store"
+        />
+      )}
 
       {status === 'succeeded' && (
-        <>
-          <h1 className="text-3xl tracking-tight">Thank you</h1>
-          <p className="mt-2 text-sm text-stone-500">Your order is confirmed.</p>
-        </>
+        <PageHeader
+          title="Thank you"
+          description="Your order is confirmed."
+          variant="store"
+        />
       )}
 
       {status === 'processing' && (
-        <>
-          <h1 className="text-3xl tracking-tight">Payment processing</h1>
-          <p className="mt-2 text-sm text-stone-500">
-            We'll email you once it clears — no need to try again.
-          </p>
-        </>
+        <PageHeader
+          title="Payment processing"
+          description="We'll email you once it clears — no need to try again."
+          variant="store"
+        />
       )}
 
       {status === 'failed' && (
-        <>
-          <h1 className="text-3xl tracking-tight">Payment didn't go through</h1>
-          <p className="mt-2 text-sm text-stone-500">
-            <Link href="/cart/checkout" className="text-green-800 underline">
-              Return to checkout
-            </Link>{' '}
-            to try again.
-          </p>
-        </>
+        <PageHeader
+          title="Payment didn't go through"
+          description={
+            <>
+              <Link href="/cart/checkout" className="font-medium text-green-800 underline">
+                Return to checkout
+              </Link>{' '}
+              to try again.
+            </>
+          }
+          variant="store"
+        />
       )}
     </main>
   );

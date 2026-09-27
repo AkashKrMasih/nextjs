@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { PriceRequestForm } from './price-request-form';
@@ -25,10 +25,14 @@ export default async function PriceRequestPage({
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <Link href={`/products/${product.friendlyId}`} className="text-sm text-stone-500 hover:text-green-800">
-        ← {product.name}
-      </Link>
-      <h1 className="mt-6 mb-6 text-2xl tracking-tight text-stone-900">Price request</h1>
+      <PageHeader
+        title="Price request"
+        description={`Request a quote for ${product.name}.`}
+        backHref={`/products/${product.friendlyId}`}
+        backLabel={product.name}
+        variant="store"
+        className="mb-6"
+      />
       <PriceRequestForm
         productId={product.id}
         productTitle={product.name}

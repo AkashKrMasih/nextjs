@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PageHeader } from "@/app/components/PageHeader";
 import { InventoryTable } from "./inventory-table";
 
 export const dynamic = "force-dynamic";
@@ -57,14 +58,18 @@ export default async function InventoryPage({
 
   return (
     <div className="mx-auto max-w-6xl p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Inventory</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          {rows.length} variant{rows.length === 1 ? "" : "s"} tracked
-          {outCount > 0 && <span className="text-red-600"> · {outCount} out of stock</span>}
-          {lowCount > 0 && <span className="text-amber-600"> · {lowCount} low stock</span>}
-        </p>
-      </div>
+      <PageHeader
+        title="Inventory"
+        description={
+          <>
+            {rows.length} variant{rows.length === 1 ? "" : "s"} tracked
+            {outCount > 0 && <span className="text-red-600"> · {outCount} out of stock</span>}
+            {lowCount > 0 && <span className="text-amber-600"> · {lowCount} low stock</span>}
+          </>
+        }
+        variant="admin"
+        overline="Warehouse"
+      />
 
       <form className="mb-4 flex flex-wrap gap-2" action="/admin/inventory">
         <input

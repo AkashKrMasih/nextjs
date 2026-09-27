@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { formatPrice } from '@/lib/money';
@@ -37,8 +38,11 @@ export default async function MyOrdersPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <h1 className="text-2xl tracking-tight text-stone-900">My Orders</h1>
-      <p className="mt-1 text-sm text-stone-500">Newest first</p>
+      <PageHeader
+        title="My orders"
+        description="Track purchases and order status. Newest first."
+        variant="store"
+      />
 
       {orders.length === 0 ? (
         <p className="mt-8 text-sm text-stone-500">You have not placed any orders.</p>

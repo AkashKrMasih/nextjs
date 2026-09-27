@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PageHeader } from "@/app/components/PageHeader";
 import { getProduct, getProductVariants } from "./actions";
 import { DeleteVariantButton } from "./delete-variant-button";
 
@@ -19,20 +20,22 @@ export default async function ProductVariantsPage({
 
   return (
     <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Variants — {product.name}</h1>
-          <p className="text-sm text-gray-500">
-            Base price: ${product.price.toString()}
-          </p>
-        </div>
-        <Link
-          href={`/admin/products/${productId}/variants/new`}
-          className="rounded bg-black px-4 py-2 text-sm font-medium text-white"
-        >
-          New variant
-        </Link>
-      </div>
+      <PageHeader
+        title={`Variants — ${product.name}`}
+        description={`Base price: $${product.price.toString()}`}
+        backHref={`/admin/products/${productId}/edit`}
+        backLabel="Back to product"
+        variant="admin"
+        actions={
+          <Link
+            href={`/admin/products/${productId}/variants/new`}
+            className="inline-flex rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+          >
+            New variant
+          </Link>
+        }
+        className="mb-6"
+      />
 
       {variants.length === 0 ? (
         <p className="text-sm text-gray-500">

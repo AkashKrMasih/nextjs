@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { formatPrice } from '@/lib/money';
@@ -28,8 +29,11 @@ export default async function WishlistPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <h1 className="text-2xl tracking-tight text-stone-900">Wishlists</h1>
-      <p className="mt-1 text-sm text-stone-500">Products you saved, newest first</p>
+      <PageHeader
+        title="Wishlist"
+        description="Products you saved for later. Newest first."
+        variant="store"
+      />
 
       {items.length === 0 ? (
         <p className="mt-8 text-sm text-stone-500">Your wishlist is empty.</p>

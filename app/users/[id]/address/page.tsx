@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
 import { getSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { AddressManager } from './AddressManager';
@@ -27,10 +28,11 @@ export default async function AddressPage({
 
   return (
     <main className="max-w-6xl px-6 py-10">
-      <h1 className="text-2xl tracking-tight text-stone-900">Saved addresses</h1>
-      <p className="mt-1 text-sm text-green-800">
-        Manage the addresses you ship to at checkout.
-      </p>
+      <PageHeader
+        title="Saved addresses"
+        description="Manage the addresses you ship to at checkout."
+        variant="store"
+      />
 
       <AddressManager userId={id} initialAddresses={addresses} />
     </main>

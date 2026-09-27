@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { PageHeader } from '@/app/components/PageHeader';
 import { SupportTicketList } from './support-ticket-list';
 
 export default async function AdminSupportTicketsPage() {
@@ -12,10 +13,12 @@ export default async function AdminSupportTicketsPage() {
 
   return (
     <main className="mx-auto max-w-6xl p-6">
-      <h1 className="text-xl font-semibold text-gray-900">Support tickets</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        {tickets.length} {tickets.length === 1 ? 'ticket' : 'tickets'}, newest first
-      </p>
+      <PageHeader
+        title="Support tickets"
+        description={`${tickets.length} ${tickets.length === 1 ? 'ticket' : 'tickets'}, newest first`}
+        variant="admin"
+        overline="Customer support"
+      />
       <SupportTicketList
         tickets={tickets.map((ticket) => ({
           id: ticket.id,

@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { formatPrice } from '@/lib/money';
@@ -50,13 +50,13 @@ export default async function NewSupportTicketPage({
 
   return (
     <main className="mx-auto max-w-xl px-6 py-12">
-      <Link href="/support" className="text-sm text-green-800 hover:text-stone-900">
-        ← Back to support
-      </Link>
-      <h1 className="mt-4 text-2xl tracking-tight text-stone-900">New support ticket</h1>
-      <p className="mt-1 text-sm text-stone-500">
-        Tell us about an issue with one of your orders. We will follow up by email.
-      </p>
+      <PageHeader
+        title="New support ticket"
+        description="Tell us about an issue with one of your orders. We will follow up by email."
+        backHref="/support"
+        backLabel="Back to support"
+        variant="store"
+      />
       <SupportTicketForm orders={orderOptions} initialOrderId={initialOrderId} />
     </main>
   );

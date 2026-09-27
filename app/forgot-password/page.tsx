@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageHeader } from '@/app/components/PageHeader';
 import { missingEmailCredentials } from '@/lib/email';
 import { ForgotPasswordForm } from './forgot-password-form';
 
@@ -8,10 +9,12 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm p-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Forgot password</h1>
-        <p className="mt-1 mb-6 text-sm text-gray-500">
-          Enter your email and we will send a link to choose a new password.
-        </p>
+        <PageHeader
+          title="Forgot password"
+          description="Enter your email and we will send a link to choose a new password."
+          variant="auth"
+          embedded
+        />
 
         {missing.length > 0 && (
           <p className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">

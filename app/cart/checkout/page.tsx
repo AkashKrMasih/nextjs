@@ -5,6 +5,7 @@ import {useEffect, useState} from 'react';
 import {readCart, type CartItem} from '@/lib/cart';
 import {formatPrice} from '@/lib/money';
 import CheckoutForm from '@/app/components/checkout/CheckoutForm';
+import { PageHeader } from '@/app/components/PageHeader';
 
 type SessionUser = { id: string; email: string; name: string | null };
 type AuthState = 'loading' | 'authed' | 'anonymous';
@@ -128,7 +129,11 @@ export default function CheckoutPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <h1 className="text-3xl tracking-tight">Checkout</h1>
+      <PageHeader
+        title="Checkout"
+        description="Review your cart and complete payment."
+        variant="store"
+      />
 
       <div className="mt-6 space-y-2 border-b border-stone-300 pb-6">
         {items.map((item) => (

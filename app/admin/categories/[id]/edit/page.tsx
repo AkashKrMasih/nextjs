@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { PageHeader } from "@/app/components/PageHeader";
 import { prisma } from "@/lib/prisma";
 import { CategoryForm } from "../../category-form";
 
@@ -28,7 +29,14 @@ export default async function EditCategoryPage({
 
   return (
     <div className="mx-auto max-w-lg p-6">
-      <h1 className="mb-6 text-xl font-semibold">Edit Category</h1>
+      <PageHeader
+        title="Edit category"
+        description={category.name}
+        backHref="/admin/categories"
+        backLabel="Back to categories"
+        variant="admin"
+        className="mb-6"
+      />
       <CategoryForm
         categoryId={category.id}
         parentOptions={parentOptions}

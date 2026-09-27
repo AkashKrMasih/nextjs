@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageHeader } from '@/app/components/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { formatPrice } from '@/lib/money';
 import { DeleteDiscountButton } from './delete-discount-button';
@@ -11,20 +12,20 @@ export default async function AdminDiscountsPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 md:px-6 py-10">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl leading-tight tracking-tight text-stone-900">Discounts</h1>
-          <p className="mt-1 text-sm text-stone-500">
-            {discounts.length} {discounts.length === 1 ? 'code' : 'codes'}
-          </p>
-        </div>
-        <Link
-          href="/admin/discounts/new"
-          className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
-        >
-          New discount
-        </Link>
-      </div>
+      <PageHeader
+        title="Discounts"
+        description={`${discounts.length} ${discounts.length === 1 ? 'code' : 'codes'}`}
+        variant="admin"
+        overline="Checkout"
+        actions={
+          <Link
+            href="/admin/discounts/new"
+            className="inline-flex rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+          >
+            New discount
+          </Link>
+        }
+      />
 
       {discounts.length === 0 ? (
         <p className="mt-10 text-sm text-stone-500">No discount codes yet.</p>

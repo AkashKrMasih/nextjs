@@ -3,6 +3,7 @@
 
 import { Suspense, useActionState, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
 import { login } from '@/app/users/actions';
 import {validateEmail} from "@/lib/utils";
 
@@ -25,10 +26,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm p-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
-        <p className="mt-1 mb-6 text-sm text-gray-500">
-          Log in to pick up right where you left off.
-        </p>
+        <PageHeader
+          title="Welcome back"
+          description="Log in to pick up right where you left off."
+          variant="auth"
+          embedded
+        />
         <Suspense fallback={null}>
           <VerifiedBanner />
         </Suspense>

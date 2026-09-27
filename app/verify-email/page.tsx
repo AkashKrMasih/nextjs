@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
 import { consumeVerificationToken } from '@/lib/email';
 
 export default async function VerifyEmailPage({
@@ -16,8 +17,12 @@ export default async function VerifyEmailPage({
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm p-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Email not verified</h1>
-        <p className="mt-2 text-sm text-red-600">{result.error}</p>
+        <PageHeader
+          title="Email not verified"
+          description={<span className="text-red-600">{result.error}</span>}
+          variant="auth"
+          embedded
+        />
         <p className="mt-4 text-sm text-gray-600">
           <Link href="/signup" className="font-medium text-blue-600 hover:underline">
             Create your account

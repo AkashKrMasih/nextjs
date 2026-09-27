@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import {
@@ -32,18 +33,19 @@ export default async function SupportPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <div>
-          <h1 className="text-2xl tracking-tight text-stone-900">Customer support</h1>
-          <p className="mt-1 text-sm text-stone-500">Your tickets, newest first</p>
-        </div>
-        <Link
-          href="/support/new"
-          className="rounded border border-green-800 px-4 py-2 text-sm text-green-800 hover:bg-green-50"
-        >
-          New ticket
-        </Link>
-      </div>
+      <PageHeader
+        title="Customer support"
+        description="Open a ticket about an order. Your requests, newest first."
+        variant="store"
+        actions={
+          <Link
+            href="/support/new"
+            className="inline-flex items-center rounded-md border border-green-800 bg-white px-4 py-2 text-sm font-medium text-green-800 shadow-sm transition-colors hover:bg-green-50"
+          >
+            New ticket
+          </Link>
+        }
+      />
 
       {tickets.length === 0 ? (
         <p className="mt-8 text-sm text-stone-500">
