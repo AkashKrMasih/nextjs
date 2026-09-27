@@ -90,7 +90,7 @@ export default async function EditProductPage({
   };
 
   return (
-    <main className="mx-auto max-w-2xl px-4 md:px-6 py-10">
+    <main className="mx-auto max-w-4xl px-4 md:px-6 py-10">
       <PageHeader
         title="Edit product"
         description={`Update the details for ${product.name}.`}

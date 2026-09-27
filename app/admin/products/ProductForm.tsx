@@ -11,6 +11,13 @@ import {
   VariantField,
   ProductFormValues
 } from "@/app/admin/products/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import { cn } from '@/app/components/ui/utils';
+
+const TAB_LIST_CLASS =
+  'h-auto w-full shrink-0 flex-col items-stretch gap-0.5 rounded-lg border border-stone-200 bg-stone-50 p-1 sm:w-44';
+const TAB_TRIGGER_CLASS =
+  'w-full flex-none justify-start rounded-md px-3 py-2 text-left text-sm data-[state=active]:bg-white data-[state=active]:text-stone-900 data-[state=active]:shadow-sm';
 
 let uid = 0;
 
@@ -272,116 +279,142 @@ export function ProductForm({
     router.refresh();
   }
 
+  const showVariantsTab = !productId;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Basic info */}
-      <section className="space-y-4">
-        <input
-          className="w-full rounded border border-stone-300 bg-white p-2"
-          placeholder="Product name"
-          required
-          value={values.name}
-          onChange={(e) => update('name', e.target.value)}
-        />
-        <input
-          className="w-full rounded border border-stone-300 bg-white p-2"
-          placeholder="Friendly id (optional — derived from the title if blank)"
-          value={values.friendlyId}
-          onChange={(e) => update('friendlyId', e.target.value)}
-        />
-        <textarea
-          className="h-32 w-full rounded border border-stone-300 bg-white p-2"
-          placeholder="Description"
-          value={values.description}
-          onChange={(e) => update('description', e.target.value)}
-        />
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            className="w-full rounded border border-stone-300 bg-white p-2"
-            placeholder="Base price"
-            type="number"
-            min="0"
-            step="0.01"
-            required
-            value={values.price}
-            onChange={(e) => update('price', e.target.value)}
-          />
-          <select
-            className="w-full rounded border border-stone-300 bg-white p-2"
-            value={values.categoryId}
-            onChange={(e) => update('categoryId', e.target.value)}
-          >
-            <option value="">No category</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <label className="flex items-center gap-2 text-sm text-stone-700">
-          <input
-            type="checkbox"
-            checked={values.priceOnRequest}
-            onChange={(e) => update('priceOnRequest', e.target.checked)}
-          />
-          Price on request
-        </label>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <Tabs
+        defaultValue="general"
+        orientation="vertical"
+        className="flex flex-col gap-6 sm:flex-row sm:items-start"
+      >
+        <TabsList className={TAB_LIST_CLASS}>
+          <TabsTrigger value="general" className={TAB_TRIGGER_CLASS}>
+            General
+          </TabsTrigger>
+          <TabsTrigger value="delivery" className={TAB_TRIGGER_CLASS}>
+            Delivery
+          </TabsTrigger>
+          <TabsTrigger value="images" className={TAB_TRIGGER_CLASS}>
+            Images{values.images.length > 0 ? ` (${values.images.length})` : ''}
+          </TabsTrigger>
+          <TabsTrigger value="attributes" className={TAB_TRIGGER_CLASS}>
+            Attributes{values.attributes.length > 0 ? ` (${values.attributes.length})` : ''}
+          </TabsTrigger>
+          {showVariantsTab ? (
+            <TabsTrigger value="variants" className={TAB_TRIGGER_CLASS}>
+              Variants ({values.variants.length})
+            </TabsTrigger>
+          ) : null}
+        </TabsList>
 
-        <div className="rounded border border-stone-200 bg-stone-50/80 p-4 space-y-3">
-          <h2 className="text-sm font-medium text-stone-900">Delivery pincodes</h2>
-          <p className="text-xs text-stone-500">
-            Optional. If set, customers can only checkout when their delivery postal code matches.
-          </p>
-          <div>
-            <label htmlFor="pincodeTemplateId" className="block text-xs font-medium text-stone-600">
-              Pincode template
-            </label>
-            <select
-              id="pincodeTemplateId"
-              className="mt-1 w-full rounded border border-stone-300 bg-white p-2 text-sm"
-              value={values.pincodeTemplateId}
-              onChange={(e) => {
-                update('pincodeTemplateId', e.target.value);
-                if (e.target.value) update('customPincodes', '');
-              }}
-              disabled={Boolean(values.customPincodes.trim())}
-            >
-              <option value="">No template</option>
-              {pincodeTemplates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.title}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="customPincodes" className="block text-xs font-medium text-stone-600">
-              Or custom pincodes (comma-separated)
-            </label>
+        <div className="min-w-0 flex-1">
+          <TabsContent value="general" className="mt-0 space-y-4">
+            <p className="text-sm text-stone-500">Name, pricing, and catalog details.</p>
             <input
-              id="customPincodes"
-              className="mt-1 w-full rounded border border-stone-300 bg-white p-2 text-sm"
-              placeholder="110001, 110002, 400001"
-              value={values.customPincodes}
-              onChange={(e) => {
-                update('customPincodes', e.target.value);
-                if (e.target.value.trim()) update('pincodeTemplateId', '');
-              }}
-              disabled={Boolean(values.pincodeTemplateId)}
+              className="w-full rounded border border-stone-300 bg-white p-2"
+              placeholder="Product name"
+              required
+              value={values.name}
+              onChange={(e) => update('name', e.target.value)}
             />
-          </div>
-        </div>
-      </section>
+            <input
+              className="w-full rounded border border-stone-300 bg-white p-2"
+              placeholder="Friendly id (optional — derived from the title if blank)"
+              value={values.friendlyId}
+              onChange={(e) => update('friendlyId', e.target.value)}
+            />
+            <textarea
+              className="h-32 w-full rounded border border-stone-300 bg-white p-2"
+              placeholder="Description"
+              value={values.description}
+              onChange={(e) => update('description', e.target.value)}
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <input
+                className="w-full rounded border border-stone-300 bg-white p-2"
+                placeholder="Base price"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                value={values.price}
+                onChange={(e) => update('price', e.target.value)}
+              />
+              <select
+                className="w-full rounded border border-stone-300 bg-white p-2"
+                value={values.categoryId}
+                onChange={(e) => update('categoryId', e.target.value)}
+              >
+                <option value="">No category</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-stone-700">
+              <input
+                type="checkbox"
+                checked={values.priceOnRequest}
+                onChange={(e) => update('priceOnRequest', e.target.checked)}
+              />
+              Price on request
+            </label>
+          </TabsContent>
 
-      {/* Images */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-green-800">Images</h2>
-          <button type="button" onClick={addImage} className="text-sm text-green-800 underline">
-            + Add image
-          </button>
-        </div>
+          <TabsContent value="delivery" className="mt-0 space-y-3">
+            <p className="text-sm text-stone-500">
+              Optional. If set, customers can only checkout when their delivery postal code matches.
+            </p>
+            <div>
+              <label htmlFor="pincodeTemplateId" className="block text-sm font-medium text-stone-700">
+                Pincode template
+              </label>
+              <select
+                id="pincodeTemplateId"
+                className="mt-1 w-full rounded border border-stone-300 bg-white p-2 text-sm"
+                value={values.pincodeTemplateId}
+                onChange={(e) => {
+                  update('pincodeTemplateId', e.target.value);
+                  if (e.target.value) update('customPincodes', '');
+                }}
+                disabled={Boolean(values.customPincodes.trim())}
+              >
+                <option value="">No template</option>
+                {pincodeTemplates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="customPincodes" className="block text-sm font-medium text-stone-700">
+                Or custom pincodes (comma-separated)
+              </label>
+              <input
+                id="customPincodes"
+                className="mt-1 w-full rounded border border-stone-300 bg-white p-2 text-sm"
+                placeholder="110001, 110002, 400001"
+                value={values.customPincodes}
+                onChange={(e) => {
+                  update('customPincodes', e.target.value);
+                  if (e.target.value.trim()) update('pincodeTemplateId', '');
+                }}
+                disabled={Boolean(values.pincodeTemplateId)}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="images" className="mt-0 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-stone-500">Product photos. Mark one as primary.</p>
+              <button type="button" onClick={addImage} className="text-sm text-green-800 underline">
+                + Add image
+              </button>
+            </div>
         {values.images.length === 0 ? (
           <p className="text-sm text-stone-500">No images yet.</p>
         ) : (
@@ -418,21 +451,22 @@ export function ProductForm({
             </div>
           ))
         )}
-      </section>
+          </TabsContent>
 
-      {/* Product attributes */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-green-800">Attributes</h2>
-          <button
-            type="button"
-            onClick={addAttributeRow}
-            className="text-sm text-green-800 underline"
-          >
-            + Add attribute
-          </button>
-        </div>
-        <p className="text-xs text-stone-500">
+          <TabsContent value="attributes" className="mt-0 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-stone-500">
+                Specs like Material or Weight.
+              </p>
+              <button
+                type="button"
+                onClick={addAttributeRow}
+                className="shrink-0 text-sm text-green-800 underline"
+              >
+                + Add attribute
+              </button>
+            </div>
+            <p className="text-xs text-stone-500">
           Specs like Material or Weight. Start typing a name to reuse one already in your
           catalog — anything new is created automatically when you save.
         </p>
@@ -487,17 +521,16 @@ export function ProductForm({
             );
           })
         )}
-      </section>
+          </TabsContent>
 
-      {/* Variants */}
-      {!productId && (
-        <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-green-800">Variants</h2>
-          <button type="button" onClick={addVariant} className="text-sm text-green-800 underline">
-            + Add variant
-          </button>
-        </div>
+          {showVariantsTab ? (
+            <TabsContent value="variants" className="mt-0 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-stone-500">SKUs, stock, and variant options.</p>
+                <button type="button" onClick={addVariant} className="text-sm text-green-800 underline">
+                  + Add variant
+                </button>
+              </div>
 
         {values.variants.map((v, i) => (
           <div key={v.key} className="space-y-3 rounded border border-stone-300 p-4">
@@ -597,16 +630,24 @@ export function ProductForm({
             </div>
           </div>
         ))}
-      </section>
-      )}
+            </TabsContent>
+          ) : null}
+        </div>
+      </Tabs>
 
-      {error ? <p className="text-sm text-red-700">{error}</p> : null}
-      <button
-        className="rounded bg-green-800 px-4 py-2 text-white disabled:opacity-60"
-        disabled={saving}
-      >
-        {saving ? 'Saving…' : productId ? 'Save changes' : 'Create product'}
-      </button>
+      <div className="flex flex-wrap items-center gap-4 border-t border-stone-200 pt-6">
+        {error ? <p className="text-sm text-red-700">{error}</p> : null}
+        <button
+          type="submit"
+          className={cn(
+            'rounded bg-green-800 px-4 py-2 text-white disabled:opacity-60',
+            error ? '' : 'ml-auto'
+          )}
+          disabled={saving}
+        >
+          {saving ? 'Saving…' : productId ? 'Save changes' : 'Create product'}
+        </button>
+      </div>
     </form>
   );
 }
