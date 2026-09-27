@@ -14,6 +14,9 @@ const NUM_CATEGORIES = 8;
 const NUM_PRODUCTS   = 25;
 const NUM_PRODUCT_REPORTS      = 15;
 const NUM_HOME_PAGE_PROMOTIONS = 5;
+const NUM_DISCOUNTS            = 10;
+const NUM_PRICE_REQUESTS       = 10;
+const NUM_SUPPORT_TICKETS      = 10;
 
 const SALT_ROUNDS = 10;
 
@@ -293,6 +296,9 @@ async function main() {
   // Home promotions keep rows when products are deleted (productId -> SetNull).
   await prisma.homePagePromotion.deleteMany();
 
+  // Orders reference users and variants; clear before users/products are removed.
+  await prisma.order.deleteMany();
+
   // Cascades handle ProductImage / ProductVariant / Inventory / ProductReport
   // automatically (all declared onDelete: Cascade off Product / ProductVariant).
   await prisma.product.deleteMany();
@@ -474,10 +480,114 @@ async function main() {
   const totalVariants   = productDrafts.reduce((sum, d) => sum + d.variants.length, 0);
   const totalAttributes = productDrafts.reduce((sum, d) => sum + d.attributes.length, 0);
 
-  const seededProducts = await prisma.product.findMany({ select: { id: true } });
+  const seededProducts = await prisma.product.findMany({ select: { id: true, name: true } });
   const customerUsers  = await prisma.user.findMany({
     where:  { role: "CUSTOMER" },
-    select: { id: true },
+    select: { id: true, email: true },
+  });
+
+  const usedDiscountCodes = new Set<string>();
+  const discountRows = Array.from({ length: NUM_DISCOUNTS }, () => {
+    let code = faker.string.alphanumeric({ length: 8, casing: "upper" });
+    while (usedDiscountCodes.has(code)) {
+      code = faker.string.alphanumeric({ length: 8, casing: "upper" });
+    }
+    usedDiscountCodes.add(code);
+
+    const kind = faker.helpers.arrayElement<"PERCENT" | "AMOUNT">(["PERCENT", "AMOUNT"]);
+    const value =
+      kind === "PERCENT"
+        ? faker.number.int({ min: 5, max: 40 })
+        : faker.number.int({ min: 5, max: 75 });
+
+    return {
+      code,
+      kind,
+      value,
+      productId:
+        faker.datatype.boolean({ probability: 0.35 })
+          ? faker.helpers.arrayElement(seededProducts).id
+          : null,
+      expiresAt: faker.date.future({ years: 1 }),
+    };
+  });
+
+  await prisma.discount.createMany({ data: discountRows });
+
+  await prisma.priceRequest.createMany({
+    data: Array.from({ length: NUM_PRICE_REQUESTS }, () => {
+      const product = faker.helpers.arrayElement(seededProducts);
+      const user = faker.datatype.boolean({ probability: 0.75 })
+        ? faker.helpers.arrayElement(customerUsers)
+        : null;
+
+      return {
+        email: user?.email ?? faker.internet.email().toLowerCase(),
+        productTitle: product.name,
+        message: faker.lorem.paragraph(),
+        productId: product.id,
+        userId: user?.id ?? null,
+      };
+    }),
+  });
+
+  const variants = await prisma.productVariant.findMany({
+    select: { id: true, product: { select: { name: true } } },
+  });
+
+  const supportTicketCategories = [
+    "DELIVERY",
+    "ITEM_ISSUE",
+    "REFUND",
+    "ORDER_STATUS",
+    "OTHER",
+  ] as const;
+  const supportTicketStatuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
+
+  const seededOrders = await Promise.all(
+    Array.from({ length: NUM_SUPPORT_TICKETS }, () => {
+      const user = faker.helpers.arrayElement(customerUsers);
+      const variant = faker.helpers.arrayElement(variants);
+      const quantity = faker.number.int({ min: 1, max: 3 });
+      const unitPriceCents = faker.number.int({ min: 999, max: 499_99 });
+
+      return prisma.order.create({
+        data: {
+          userId: user.id,
+          status: faker.helpers.arrayElement<"PAID" | "PENDING" | "FAILED">([
+            "PAID",
+            "PENDING",
+            "FAILED",
+          ]),
+          amountTotal: unitPriceCents * quantity,
+          currency: "usd",
+          stripePaymentIntentId: `pi_seed_${randomUUID().replace(/-/g, "")}`,
+          items: {
+            create: {
+              variantId: variant.id,
+              name: variant.product.name,
+              unitPrice: unitPriceCents,
+              quantity,
+              discountCode:
+                faker.datatype.boolean({ probability: 0.25 })
+                  ? faker.helpers.arrayElement(discountRows).code
+                  : null,
+            },
+          },
+        },
+      });
+    })
+  );
+
+  await prisma.supportTicket.createMany({
+    data: seededOrders.map((order) => ({
+      orderId: order.id,
+      userId: order.userId!,
+      subject: faker.lorem.sentence({ min: 4, max: 8 }).slice(0, 200),
+      message: faker.lorem.paragraphs({ min: 1, max: 2 }),
+      category: faker.helpers.arrayElement(supportTicketCategories),
+      status: faker.helpers.arrayElement(supportTicketStatuses),
+    })),
   });
 
   await prisma.productReport.createMany({
@@ -532,7 +642,7 @@ async function main() {
   });
 
   console.log(
-    `Seeded ${NUM_USERS} users, ${categories.length} categories, ${NUM_PRODUCTS} products, ${totalVariants} variants, ${totalAttributes} product attributes, ${NUM_PRODUCT_REPORTS} product reports, and ${NUM_HOME_PAGE_PROMOTIONS} home page promotions.`
+    `Seeded ${NUM_USERS} users, ${categories.length} categories, ${NUM_PRODUCTS} products, ${totalVariants} variants, ${totalAttributes} product attributes, ${NUM_DISCOUNTS} discounts, ${NUM_PRICE_REQUESTS} price requests, ${NUM_SUPPORT_TICKETS} support tickets, ${NUM_PRODUCT_REPORTS} product reports, and ${NUM_HOME_PAGE_PROMOTIONS} home page promotions.`
   );
   console.log(`Admin login: admin@admin.us / ${DEFAULT_PASSWORD}`);
   console.log(`All other users: <their email> / ${DEFAULT_PASSWORD}`);
