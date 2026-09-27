@@ -47,6 +47,8 @@ function emptyValues(): ProductFormValues {
     price:           '',
     priceOnRequest:  false,
     categoryId:      '',
+    pincodeTemplateId: '',
+    customPincodes: '',
     images:      [],
     variants:    [emptyVariant(true)],
     attributes:  [],
@@ -64,6 +66,7 @@ export function ProductForm({
   const [values, setValues]                     = useState<ProductFormValues>(initial ?? emptyValues());
   const [categories, setCategories]             = useState<Category[]>([]);
   const [attributeOptions, setAttributeOptions] = useState<AttributeOption[]>([]);
+  const [pincodeTemplates, setPincodeTemplates] = useState<{ id: string; title: string }[]>([]);
   const [error, setError]                       = useState('');
   const [saving, setSaving]                     = useState(false);
 
@@ -72,6 +75,13 @@ export function ProductForm({
     .then((res) => (res.ok ? res.json() : []))
     .then((data) => setCategories(Array.isArray(data) ? data : []))
     .catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/pincode-templates')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setPincodeTemplates(Array.isArray(data) ? data : []))
+      .catch(() => setPincodeTemplates([]));
   }, []);
 
   useEffect(() => {
@@ -233,6 +243,8 @@ export function ProductForm({
     formData.set('price', values.price);
     formData.set('priceOnRequest', values.priceOnRequest ? 'true' : 'false');
     formData.set('categoryId', values.categoryId);
+    formData.set('pincodeTemplateId', values.pincodeTemplateId);
+    formData.set('customPincodes', values.customPincodes);
     formData.set('attributes', JSON.stringify(attributes));
     formData.set('variants', JSON.stringify(variants));
     formData.set('existingImages', JSON.stringify(existingImages));
@@ -315,6 +327,51 @@ export function ProductForm({
           />
           Price on request
         </label>
+
+        <div className="rounded border border-stone-200 bg-stone-50/80 p-4 space-y-3">
+          <h2 className="text-sm font-medium text-stone-900">Delivery pincodes</h2>
+          <p className="text-xs text-stone-500">
+            Optional. If set, customers can only checkout when their delivery postal code matches.
+          </p>
+          <div>
+            <label htmlFor="pincodeTemplateId" className="block text-xs font-medium text-stone-600">
+              Pincode template
+            </label>
+            <select
+              id="pincodeTemplateId"
+              className="mt-1 w-full rounded border border-stone-300 bg-white p-2 text-sm"
+              value={values.pincodeTemplateId}
+              onChange={(e) => {
+                update('pincodeTemplateId', e.target.value);
+                if (e.target.value) update('customPincodes', '');
+              }}
+              disabled={Boolean(values.customPincodes.trim())}
+            >
+              <option value="">No template</option>
+              {pincodeTemplates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="customPincodes" className="block text-xs font-medium text-stone-600">
+              Or custom pincodes (comma-separated)
+            </label>
+            <input
+              id="customPincodes"
+              className="mt-1 w-full rounded border border-stone-300 bg-white p-2 text-sm"
+              placeholder="110001, 110002, 400001"
+              value={values.customPincodes}
+              onChange={(e) => {
+                update('customPincodes', e.target.value);
+                if (e.target.value.trim()) update('pincodeTemplateId', '');
+              }}
+              disabled={Boolean(values.pincodeTemplateId)}
+            />
+          </div>
+        </div>
       </section>
 
       {/* Images */}

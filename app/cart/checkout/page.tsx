@@ -10,6 +10,15 @@ import { PageHeader } from '@/app/components/PageHeader';
 type SessionUser = { id: string; email: string; name: string | null };
 type AuthState = 'loading' | 'authed' | 'anonymous';
 type FlowState = 'choice' | 'guest-form' | 'paying';
+type SavedAddress = {
+  id: string;
+  label: string | null;
+  name: string;
+  postalCode: string;
+  city: string;
+  isDefault: boolean;
+};
+
 type AppliedDiscount = {
   code: string;
   discountCents: number;
@@ -33,6 +42,9 @@ export default function CheckoutPage() {
   const [discountInput, setDiscountInput]   = useState('');
   const [applied, setApplied]               = useState<AppliedDiscount | null>(null);
   const [applying, setApplying]             = useState(false);
+  const [postalCode, setPostalCode]         = useState('');
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -47,6 +59,18 @@ export default function CheckoutPage() {
       if (data.user) {
         setUser(data.user);
         setAuthState('authed');
+
+        const addressRes = await fetch('/api/checkout/addresses');
+        const addressData = await addressRes.json().catch(() => ({ addresses: [] }));
+        const addresses: SavedAddress[] = Array.isArray(addressData.addresses)
+          ? addressData.addresses
+          : [];
+        setSavedAddresses(addresses);
+        const defaultAddress = addresses.find((entry) => entry.isDefault) ?? addresses[0];
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress.id);
+          setPostalCode(defaultAddress.postalCode);
+        }
       } else {
         setAuthState('anonymous');
       }
@@ -55,8 +79,22 @@ export default function CheckoutPage() {
 
   // Once we know who's paying (logged-in user, or guest who entered an email),
   // create the PaymentIntent and move into the card-form step.
+  function resolvePostalCode(): string {
+    if (selectedAddressId) {
+      const address = savedAddresses.find((entry) => entry.id === selectedAddressId);
+      if (address) return address.postalCode;
+    }
+    return postalCode.trim();
+  }
+
   async function startPayment(guestEmailValue?: string) {
     setError(null);
+    const deliveryPostalCode = resolvePostalCode();
+    if (!deliveryPostalCode) {
+      setError('Enter your delivery postal code to continue.');
+      return;
+    }
+
     setCreatingIntent(true);
     try {
       const res  = await fetch('/api/checkout/create-payment-intent', {
@@ -66,6 +104,7 @@ export default function CheckoutPage() {
           items:        items.map((i) => ({id: i.id, quantity: i.quantity})),
           guestEmail:   guestEmailValue,
           discountCode: applied?.code,
+          postalCode:   deliveryPostalCode,
         }),
       });
       const data = await res.json();
@@ -245,6 +284,20 @@ export default function CheckoutPage() {
                 className="mt-1 w-full rounded border border-stone-300 p-2 text-sm"
               />
             </div>
+            <div>
+              <label htmlFor="guestPostalCode" className="block text-sm text-stone-500">
+                Delivery postal code
+              </label>
+              <input
+                id="guestPostalCode"
+                type="text"
+                required
+                value={postalCode}
+                onChange={(e) => setPostalCode(e.target.value)}
+                className="mt-1 w-full rounded border border-stone-300 p-2 text-sm"
+                autoComplete="postal-code"
+              />
+            </div>
             {error && <p className="text-sm text-red-800">{error}</p>}
             <button
               type="submit"
@@ -271,14 +324,61 @@ export default function CheckoutPage() {
         )}
 
         {authState === 'authed' && flow === 'choice' && (
-          <button
-            type="button"
-            onClick={() => startPayment()}
-            disabled={creatingIntent}
-            className="rounded bg-green-800 px-4 py-2 text-sm text-white disabled:opacity-50"
-          >
-            {creatingIntent ? 'Loading…' : 'Continue to payment'}
-          </button>
+          <div className="space-y-4">
+            {savedAddresses.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-stone-900">Delivery address</p>
+                {savedAddresses.map((address) => (
+                  <label
+                    key={address.id}
+                    className="flex cursor-pointer items-start gap-2 rounded border border-stone-300 p-3 text-sm"
+                  >
+                    <input
+                      type="radio"
+                      name="checkoutAddress"
+                      checked={selectedAddressId === address.id}
+                      onChange={() => {
+                        setSelectedAddressId(address.id);
+                        setPostalCode(address.postalCode);
+                      }}
+                    />
+                    <span>
+                      <span className="font-medium text-stone-900">
+                        {address.label ?? address.name}
+                      </span>
+                      <span className="block text-stone-500">
+                        {address.name} · {address.city} · {address.postalCode}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : null}
+            <div>
+              <label htmlFor="checkoutPostalCode" className="block text-sm text-stone-500">
+                {savedAddresses.length > 0 ? 'Or enter delivery postal code' : 'Delivery postal code'}
+              </label>
+              <input
+                id="checkoutPostalCode"
+                type="text"
+                value={postalCode}
+                onChange={(e) => {
+                  setPostalCode(e.target.value);
+                  setSelectedAddressId('');
+                }}
+                className="mt-1 w-full rounded border border-stone-300 p-2 text-sm"
+                autoComplete="postal-code"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => startPayment()}
+              disabled={creatingIntent}
+              className="rounded bg-green-800 px-4 py-2 text-sm text-white disabled:opacity-50"
+            >
+              {creatingIntent ? 'Loading…' : 'Continue to payment'}
+            </button>
+          </div>
         )}
 
         {error && flow !== 'guest-form' && <p className="mt-4 text-sm text-red-800">{error}</p>}

@@ -136,11 +136,13 @@ export function ProductDetail({
                                 related,
                                 initialWishlisted = false,
                                 isLoggedIn = false,
+                                hasPincodeRestriction = false,
                               }: {
   product: Product;
   related: Product[];
   initialWishlisted?: boolean;
   isLoggedIn?: boolean;
+  hasPincodeRestriction?: boolean;
 }) {
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
@@ -248,6 +250,13 @@ export function ProductDetail({
               <Plus className="size-4" />
             </button>
           </div>
+
+          {hasPincodeRestriction ? (
+            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              Delivery is limited to selected pincodes. You can only checkout if your delivery
+              postal code is eligible for this product.
+            </p>
+          ) : null}
 
           {/* CTAs */}
           <div className="flex flex-wrap items-center gap-3">

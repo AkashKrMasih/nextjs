@@ -42,6 +42,11 @@ export type VariantField = {
 };
 
 
+export type PincodeTemplateOption = {
+  id: string;
+  title: string;
+};
+
 export type ProductFormValues = {
   name: string;
   friendlyId: string;
@@ -49,6 +54,8 @@ export type ProductFormValues = {
   price: string;
   priceOnRequest: boolean;
   categoryId: string; // '' = no category
+  pincodeTemplateId: string;
+  customPincodes: string;
   images: ImageField[];
   variants: VariantField[];
   attributes: AttributeField[];

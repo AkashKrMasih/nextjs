@@ -2,19 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { auth } from '@/lib/auth';
 import { priceCart } from '@/lib/discounts';
+import {
+  INVALID_PINCODE_MESSAGE,
+  normalizePincode,
+  validateCartDeliveryPincode,
+} from '@/lib/delivery-pincodes';
 
 type RequestBody = {
   items: { id: number; quantity: number }[];
   guestEmail?: string;
   discountCode?: string;
+  postalCode?: string;
 };
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as RequestBody;
-  const { items, guestEmail, discountCode } = body;
+  const { items, guestEmail, discountCode, postalCode } = body;
 
   if (!items?.length) {
     return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
+  }
+
+  if (!normalizePincode(String(postalCode ?? ''))) {
+    return NextResponse.json({ error: 'Delivery postal code is required.' }, { status: 400 });
   }
 
   const user = await auth();
@@ -34,6 +44,18 @@ export async function POST(req: NextRequest) {
   if ('error' in priced) {
     return NextResponse.json({ error: priced.error }, { status: 400 });
   }
+
+  const pincodeCheck = await validateCartDeliveryPincode(
+    priced.lines.map((line) => line.productId),
+    String(postalCode)
+  );
+  if (!pincodeCheck.ok) {
+    const message = pincodeCheck.productName
+      ? `${INVALID_PINCODE_MESSAGE} (${pincodeCheck.productName})`
+      : INVALID_PINCODE_MESSAGE;
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+
   if (priced.amountTotalCents <= 0) {
     return NextResponse.json({ error: 'Invalid order total' }, { status: 400 });
   }

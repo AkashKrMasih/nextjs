@@ -35,6 +35,7 @@ export default async function EditProductPage({
       images: { orderBy: { isPrimary: 'desc' } },
       attributes: { orderBy: { title: 'asc' } },
       variants: { include: { inventory: true }, orderBy: { createdAt: 'asc' } },
+      deliveryPincodes: { orderBy: { code: 'asc' } },
     },
   });
 
@@ -49,6 +50,10 @@ export default async function EditProductPage({
     price: product.price.toString(),
     priceOnRequest: product.priceOnRequest,
     categoryId: product.categoryId ? String(product.categoryId) : '',
+    pincodeTemplateId: product.pincodeTemplateId ?? '',
+    customPincodes: product.pincodeTemplateId
+      ? ''
+      : product.deliveryPincodes.map((entry) => entry.code).join(', '),
     images: product.images.map((image) => ({
       key: image.id,
       file: null,
