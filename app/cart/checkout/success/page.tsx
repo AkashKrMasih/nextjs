@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '@/app/components/PageHeader';
+import { CHECKOUT_DISCOUNT_STORAGE_KEY } from '@/lib/discounts';
 import { useSearchParams } from 'next/navigation';
 import { getStripe } from '@/lib/stripe-client';
 import { clearCart } from '@/lib/cart';
@@ -28,6 +29,7 @@ export default function CheckoutSuccessPage() {
       switch (paymentIntent?.status) {
         case 'succeeded':
           clearCart();
+          sessionStorage.removeItem(CHECKOUT_DISCOUNT_STORAGE_KEY);
           setStatus('succeeded');
           break;
         case 'processing':
