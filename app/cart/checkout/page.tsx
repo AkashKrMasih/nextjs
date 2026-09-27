@@ -6,6 +6,7 @@ import {readCart, type CartItem} from '@/lib/cart';
 import {formatPrice} from '@/lib/money';
 import CheckoutForm from '@/app/components/checkout/CheckoutForm';
 import { PageHeader } from '@/app/components/PageHeader';
+import { CHECKOUT_DISCOUNT_STORAGE_KEY } from '@/lib/discounts';
 
 type SessionUser = { id: string; email: string; name: string | null };
 type AuthState = 'loading' | 'authed' | 'anonymous';
@@ -48,8 +49,28 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     (async () => {
-      setItems(await readCart());
+      const cartItems = await readCart();
+      setItems(cartItems);
       setReady(true);
+
+      const savedCode = sessionStorage.getItem(CHECKOUT_DISCOUNT_STORAGE_KEY);
+      if (savedCode && cartItems.length > 0) {
+        setDiscountInput(savedCode);
+        try {
+          const res = await fetch('/api/discounts/preview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              code: savedCode,
+              items: cartItems.map((item) => ({ id: item.id, quantity: item.quantity })),
+            }),
+          });
+          const data = await res.json();
+          if (res.ok) setApplied(data);
+        } catch {
+          // ignore — user can re-apply manually
+        }
+      }
 
       // ADAPT: if you already have a session-check call elsewhere in the app,
       // reuse it instead of this fetch.
@@ -133,8 +154,10 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Could not apply that code');
       setApplied(data);
+      sessionStorage.setItem(CHECKOUT_DISCOUNT_STORAGE_KEY, data.code);
     } catch (e) {
       setApplied(null);
+      sessionStorage.removeItem(CHECKOUT_DISCOUNT_STORAGE_KEY);
       setError((e as Error).message);
     } finally {
       setApplying(false);

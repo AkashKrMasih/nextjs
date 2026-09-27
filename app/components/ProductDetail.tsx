@@ -20,6 +20,8 @@ import { AddToCartButton } from '@/app/components/AddToCartButton';
 import { DeleteProductButton } from '@/app/components/DeleteProductButton';
 import { toggleWishlist } from '@/app/wishlist/actions';
 import { ProductReportDialog } from '@/app/components/ProductReportDialog';
+import { ProductDiscountPanel } from '@/app/components/ProductDiscountPanel';
+import type { ProductDiscountOffer } from '@/lib/discounts';
 
 type ProductImage = {
   id: string;
@@ -137,12 +139,14 @@ export function ProductDetail({
                                 initialWishlisted = false,
                                 isLoggedIn = false,
                                 hasPincodeRestriction = false,
+                                discountOffers = [],
                               }: {
   product: Product;
   related: Product[];
   initialWishlisted?: boolean;
   isLoggedIn?: boolean;
   hasPincodeRestriction?: boolean;
+  discountOffers?: ProductDiscountOffer[];
 }) {
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
@@ -212,6 +216,15 @@ export function ProductDetail({
           ) : (
             <p className="text-3xl font-light text-green-800">{formatPrice(product.price)}</p>
           )}
+
+          {!product.priceOnRequest ? (
+            <ProductDiscountPanel
+              productId={product.id}
+              basePrice={product.price.toString()}
+              quantity={quantity}
+              offers={discountOffers}
+            />
+          ) : null}
 
           {product.description && (
             <p className="whitespace-pre-wrap leading-relaxed text-stone-500">

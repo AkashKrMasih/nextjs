@@ -31,6 +31,46 @@ export function normalizeDiscountCode(code: string) {
   return code.trim().toUpperCase();
 }
 
+export const CHECKOUT_DISCOUNT_STORAGE_KEY = 'checkoutDiscountCode';
+
+export type ProductDiscountOffer = {
+  code: string;
+  kind: 'PERCENT' | 'AMOUNT';
+  value: string;
+  scope: 'all' | 'product';
+};
+
+export function formatDiscountOfferLabel(
+  offer: Pick<ProductDiscountOffer, 'kind' | 'value'>,
+  formatAmount?: (amount: number | string) => string
+) {
+  if (offer.kind === 'PERCENT') {
+    return `${Number(offer.value)}% off`;
+  }
+  const amount = formatAmount
+    ? formatAmount(offer.value)
+    : Number(offer.value).toFixed(2);
+  return `${amount} off`;
+}
+
+export async function getActiveDiscountsForProduct(productId: number): Promise<ProductDiscountOffer[]> {
+  const rows = await prisma.discount.findMany({
+    where: {
+      expiresAt: { gt: new Date() },
+      OR: [{ productId: null }, { productId }],
+    },
+    orderBy: [{ productId: 'asc' }, { expiresAt: 'asc' }],
+    select: { code: true, kind: true, value: true, productId: true },
+  });
+
+  return rows.map((row) => ({
+    code: row.code,
+    kind: row.kind,
+    value: row.value.toString(),
+    scope: row.productId == null ? 'all' : 'product',
+  }));
+}
+
 export function parseDiscountForm(formData: FormData) {
   const code = normalizeDiscountCode(String(formData.get('code') ?? ''));
   const kind = String(formData.get('kind') ?? '');

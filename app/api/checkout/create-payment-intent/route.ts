@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
     metadata: {
       userId: user?.id ?? '',
       guestEmail: user ? '' : guestEmail ?? '',
+      discountCode: priced.code ?? '',
       items: JSON.stringify(lineItems),
     },
     automatic_payment_methods: { enabled: true },
