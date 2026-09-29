@@ -2,6 +2,7 @@ import 'server-only';
 import { prisma } from '@/lib/prisma'; // existing Prisma client singleton
 import { getOrCreateGuestSessionId, getGuestSessionId } from '@/lib/cart_session';
 import { auth } from '@/lib/auth';
+import { validateOrderQuantity } from '@/lib/order-quantity';
 
 export type CartItemDTO = {
   id: number;
@@ -60,11 +61,32 @@ export async function readCart(): Promise<CartItemDTO[]> {
   return toDTO(cart.items);
 }
 
+async function assertOrderQuantity(productId: number, quantity: number) {
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { name: true, minOrderQuantity: true, maxOrderQuantity: true },
+  });
+  if (!product) {
+    throw new Error('Product not found');
+  }
+  const error = validateOrderQuantity(product, quantity);
+  if (error) {
+    throw new Error(error);
+  }
+}
+
 export async function addToCart(
   item: { id: number; name: string; price: string },
   quantity = 1
 ): Promise<CartItemDTO[]> {
   const cart = await getOrCreateCart();
+
+  const existing = await prisma.cartItem.findUnique({
+    where: { cartId_productId: { cartId: cart.id, productId: item.id } },
+    select: { quantity: true },
+  });
+  const nextQuantity = (existing?.quantity ?? 0) + quantity;
+  await assertOrderQuantity(item.id, nextQuantity);
 
   await prisma.cartItem.upsert({
     where: { cartId_productId: { cartId: cart.id, productId: item.id } },
@@ -87,6 +109,7 @@ export async function updateQuantity(productId: number, quantity: number): Promi
   if (quantity < 1) {
     await prisma.cartItem.deleteMany({ where: { cartId: cart.id, productId } });
   } else {
+    await assertOrderQuantity(productId, quantity);
     await prisma.cartItem.updateMany({
       where: { cartId: cart.id, productId },
       data: { quantity },
@@ -130,6 +153,13 @@ export async function mergeGuestCartIntoUser(): Promise<void> {
   });
 
   for (const item of guestCart.items) {
+    const existing = await prisma.cartItem.findUnique({
+      where: { cartId_productId: { cartId: userCart.id, productId: item.productId } },
+      select: { quantity: true },
+    });
+    const nextQuantity = (existing?.quantity ?? 0) + item.quantity;
+    await assertOrderQuantity(item.productId, nextQuantity);
+
     await prisma.cartItem.upsert({
       where: { cartId_productId: { cartId: userCart.id, productId: item.productId } },
       update: { quantity: { increment: item.quantity } },

@@ -21,6 +21,7 @@ import { DeleteProductButton } from '@/app/components/DeleteProductButton';
 import { toggleWishlist } from '@/app/wishlist/actions';
 import { ProductReportDialog } from '@/app/components/ProductReportDialog';
 import { ProductDiscountPanel } from '@/app/components/ProductDiscountPanel';
+import { minAllowedQuantity } from '@/lib/order-quantity';
 
 type ProductImage = {
   id: string;
@@ -38,6 +39,8 @@ type Product = {
   friendlyId: string;
   name: string;
   price: number | string;
+  minOrderQuantity: number | null;
+  maxOrderQuantity: number | null;
   stock: number;
   description: string | null;
   images: ProductImage[];
@@ -145,7 +148,9 @@ export function ProductDetail({
   hasPincodeRestriction?: boolean;
 }) {
   const router = useRouter();
-  const [quantity, setQuantity] = useState(1);
+  const minQuantity = minAllowedQuantity(product);
+  const maxQuantity = product.maxOrderQuantity;
+  const [quantity, setQuantity] = useState(minQuantity);
   const [wishlisted, setWishlisted] = useState(initialWishlisted);
   const [isWishlistPending, startWishlistTransition] = useTransition();
   const inStock = product.stock > 0;
@@ -228,24 +233,40 @@ export function ProductDetail({
           )}
 
           {/* Quantity */}
-          <div className="flex items-center overflow-hidden rounded-full border border-stone-200 w-fit">
-            <button
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="flex h-11 w-11 items-center justify-center text-stone-900 transition-colors hover:bg-stone-100"
-              aria-label="Decrease quantity"
-            >
-              <Minus className="size-4" />
-            </button>
-            <span className="w-10 select-none text-center text-sm font-medium text-stone-900">
-              {quantity}
-            </span>
-            <button
-              onClick={() => setQuantity((q) => q + 1)}
-              className="flex h-11 w-11 items-center justify-center text-stone-900 transition-colors hover:bg-stone-100"
-              aria-label="Increase quantity"
-            >
-              <Plus className="size-4" />
-            </button>
+          <div className="space-y-2">
+            <div className="flex items-center overflow-hidden rounded-full border border-stone-200 w-fit">
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.max(minQuantity, q - 1))}
+                disabled={quantity <= minQuantity}
+                className="flex h-11 w-11 items-center justify-center text-stone-900 transition-colors hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Decrease quantity"
+              >
+                <Minus className="size-4" />
+              </button>
+              <span className="w-10 select-none text-center text-sm font-medium text-stone-900">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setQuantity((q) => (maxQuantity != null ? Math.min(maxQuantity, q + 1) : q + 1))
+                }
+                disabled={maxQuantity != null && quantity >= maxQuantity}
+                className="flex h-11 w-11 items-center justify-center text-stone-900 transition-colors hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Increase quantity"
+              >
+                <Plus className="size-4" />
+              </button>
+            </div>
+            {product.minOrderQuantity != null || product.maxOrderQuantity != null ? (
+              <p className="text-sm text-stone-500">
+                {product.minOrderQuantity != null ? `Min ${product.minOrderQuantity}` : null}
+                {product.minOrderQuantity != null && product.maxOrderQuantity != null ? ' · ' : null}
+                {product.maxOrderQuantity != null ? `Max ${product.maxOrderQuantity}` : null}
+                {' per order'}
+              </p>
+            ) : null}
           </div>
 
           {hasPincodeRestriction ? (
@@ -261,6 +282,7 @@ export function ProductDetail({
               id={product.id}
               name={product.name}
               price={product.price.toString()}
+              quantity={quantity}
               disabled={!inStock}
             />
 

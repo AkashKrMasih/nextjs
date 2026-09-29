@@ -52,6 +52,8 @@ function emptyValues(): ProductFormValues {
     friendlyId:  '',
     description: '',
     price:           '',
+    minOrderQuantity: '',
+    maxOrderQuantity: '',
     categoryId:      '',
     pincodeTemplateId: '',
     customPincodes: '',
@@ -247,6 +249,8 @@ export function ProductForm({
     formData.set('friendlyId', values.friendlyId);
     formData.set('description', values.description);
     formData.set('price', values.price);
+    formData.set('minOrderQuantity', values.minOrderQuantity);
+    formData.set('maxOrderQuantity', values.maxOrderQuantity);
     formData.set('categoryId', values.categoryId);
     formData.set('pincodeTemplateId', values.pincodeTemplateId);
     formData.set('customPincodes', values.customPincodes);
@@ -352,6 +356,41 @@ export function ProductForm({
                 ))}
               </select>
             </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="minOrderQuantity" className="block text-sm font-medium text-stone-700">
+                  Min order quantity
+                </label>
+                <input
+                  id="minOrderQuantity"
+                  className="mt-1 w-full rounded border border-stone-300 bg-white p-2"
+                  placeholder="Optional"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={values.minOrderQuantity}
+                  onChange={(e) => update('minOrderQuantity', e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="maxOrderQuantity" className="block text-sm font-medium text-stone-700">
+                  Max order quantity
+                </label>
+                <input
+                  id="maxOrderQuantity"
+                  className="mt-1 w-full rounded border border-stone-300 bg-white p-2"
+                  placeholder="Optional"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={values.maxOrderQuantity}
+                  onChange={(e) => update('maxOrderQuantity', e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="text-sm text-stone-500">
+              Optional per-product limits enforced when customers add items to the cart and at checkout.
+            </p>
           </TabsContent>
 
           <TabsContent value="delivery" className="mt-0 space-y-3">

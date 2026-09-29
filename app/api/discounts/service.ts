@@ -8,6 +8,7 @@ import {
   type PricedLine,
   type ProductDiscountOffer,
 } from '@/lib/discounts';
+import { validateOrderQuantity } from '@/lib/order-quantity';
 
 function cents(value: { toString(): string } | number) {
   return Math.round(Number(value.toString()) * 100);
@@ -29,6 +30,14 @@ export async function priceCart(
   });
   if (products.length !== productIds.length) {
     return { error: 'One or more items no longer exist' };
+  }
+
+  for (const item of items) {
+    const product = products.find((entry) => entry.id === item.id)!;
+    const quantityError = validateOrderQuantity(product, item.quantity);
+    if (quantityError) {
+      return { error: quantityError };
+    }
   }
 
   const code = rawCode?.trim() ? normalizeDiscountCode(rawCode) : null;
