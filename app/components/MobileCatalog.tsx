@@ -112,22 +112,10 @@ export async function MobileCatalog({
                     <p className="mt-1 text-xs text-stone-500">
                       {stock > 0 ? `${stock} in stock` : 'Out of stock'}
                     </p>
-                    {product.priceOnRequest ? (
-                      <p className="mt-2 text-sm font-medium text-green-800">Price on request</p>
-                    ) : (
-                      <p className="mt-2 text-sm font-medium text-green-800">{formatPrice(product.price)}</p>
-                    )}
+                    <p className="mt-2 text-sm font-medium text-green-800">{formatPrice(product.price)}</p>
                   </div>
                 </Link>
                 <div className="flex items-center justify-end gap-3 border-t border-stone-200 px-3 py-2">
-                  {product.priceOnRequest ? (
-                    <Link
-                      href={`/products/${product.friendlyId}/price-request`}
-                      className="mr-auto rounded-lg bg-green-800 px-3 py-2 text-sm font-medium text-white"
-                    >
-                      Price Request
-                    </Link>
-                  ) : null}
                   <WishlistButton
                     productId={product.id}
                     initialWishlisted={catalog.wishlistedIds.has(product.id)}

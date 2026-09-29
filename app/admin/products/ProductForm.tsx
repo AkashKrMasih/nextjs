@@ -52,7 +52,6 @@ function emptyValues(): ProductFormValues {
     friendlyId:  '',
     description: '',
     price:           '',
-    priceOnRequest:  false,
     categoryId:      '',
     pincodeTemplateId: '',
     customPincodes: '',
@@ -248,7 +247,6 @@ export function ProductForm({
     formData.set('friendlyId', values.friendlyId);
     formData.set('description', values.description);
     formData.set('price', values.price);
-    formData.set('priceOnRequest', values.priceOnRequest ? 'true' : 'false');
     formData.set('categoryId', values.categoryId);
     formData.set('pincodeTemplateId', values.pincodeTemplateId);
     formData.set('customPincodes', values.customPincodes);
@@ -354,14 +352,6 @@ export function ProductForm({
                 ))}
               </select>
             </div>
-            <label className="flex items-center gap-2 text-sm text-stone-700">
-              <input
-                type="checkbox"
-                checked={values.priceOnRequest}
-                onChange={(e) => update('priceOnRequest', e.target.checked)}
-              />
-              Price on request
-            </label>
           </TabsContent>
 
           <TabsContent value="delivery" className="mt-0 space-y-3">

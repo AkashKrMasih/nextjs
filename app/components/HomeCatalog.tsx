@@ -139,16 +139,7 @@ export async function HomeCatalog({
                       </div>
                     </Link>
                     <div className="flex flex-wrap items-center justify-between gap-2 px-4 pb-4">
-                      {product.priceOnRequest ? (
-                        <Link
-                          href={`/products/${product.friendlyId}/price-request`}
-                          className="mt-2 inline-block rounded-md bg-green-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-900"
-                        >
-                          Price Request
-                        </Link>
-                      ) : (
-                        <p className="mt-1 text-sm text-green-800">{formatPrice(product.price)}</p>
-                      )}
+                      <p className="mt-1 text-sm text-green-800">{formatPrice(product.price)}</p>
                       <WishlistButton
                         productId={product.id}
                         initialWishlisted={wishlistedIds.has(product.id)}

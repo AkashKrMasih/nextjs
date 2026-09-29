@@ -18,7 +18,6 @@ model Product {
   friendlyId     String   @unique @map("friendly_id")
   description    String   @default("")
   price          Decimal  @db.Decimal(10, 2) // default price; a variant may override this
-  priceOnRequest Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -35,7 +34,6 @@ model Product {
   attributes ProductAttribute[]
 
   wishlistItems      WishlistItem[]
-  priceRequests      PriceRequest[]
   discounts          Discount[]
   reports            ProductReport[]
   homePagePromotions HomePagePromotion[]
@@ -213,7 +211,6 @@ model User {
   orderAddresses          OrderAddress[]
   addresses               UserAddress[]
   wishlist                Wishlist?
-  priceRequests           PriceRequest[]
   productReports          ProductReport[]
   supportTickets          SupportTicket[]
 }
@@ -248,24 +245,6 @@ model ProductReport {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@index([productId])
-  @@index([userId])
-}
-
-model PriceRequest {
-  id           String @id @default(cuid())
-  email        String
-  productTitle String
-  message      String @db.Text
-
-  productId Int
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-
   createdAt DateTime @default(now())
 
   @@index([productId])

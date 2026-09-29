@@ -48,7 +48,6 @@ export default async function EditProductPage({
     friendlyId: product.friendlyId,
     description: product.description,
     price: product.price.toString(),
-    priceOnRequest: product.priceOnRequest,
     categoryId: product.categoryId ? String(product.categoryId) : '',
     pincodeTemplateId: product.pincodeTemplateId ?? '',
     customPincodes: product.pincodeTemplateId

@@ -52,7 +52,6 @@ export type ProductFormValues = {
   friendlyId: string;
   description: string;
   price: string;
-  priceOnRequest: boolean;
   categoryId: string; // '' = no category
   pincodeTemplateId: string;
   customPincodes: string;

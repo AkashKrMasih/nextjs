@@ -152,26 +152,6 @@ export async function SiteHeader() {
                       </svg>
                       Customer support
                     </Link>
-                    <Link
-                      href="/price-requests"
-                      className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-green-800 transition-colors hover:bg-stone-200 hover:text-stone-900"
-                      role="menuitem"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.75"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-4 w-4"
-                      >
-                        <rect width="20" height="16" x="2" y="4" rx="2" />
-                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                      </svg>
-                      Price requests
-                    </Link>
                   </div>
                   <div className="mt-2 border-t border-stone-300 pt-2">
                     <LogoutButton className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-green-800 transition-colors hover:bg-stone-200 hover:text-stone-900">

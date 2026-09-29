@@ -52,11 +52,7 @@ export default async function WishlistPage() {
                   </div>
                   <div>
                     <p className="font-medium text-stone-900">{item.product.name}</p>
-                    {item.product.priceOnRequest ? (
-                      <p className="mt-1 text-sm text-green-800">Price on request</p>
-                    ) : (
-                      <p className="mt-1 text-sm text-green-800">{formatPrice(item.product.price)}</p>
-                    )}
+                    <p className="mt-1 text-sm text-green-800">{formatPrice(item.product.price)}</p>
                   </div>
                 </Link>
               </li>

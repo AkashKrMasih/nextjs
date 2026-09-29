@@ -15,7 +15,6 @@ const NUM_PRODUCTS   = 25;
 const NUM_PRODUCT_REPORTS      = 15;
 const NUM_HOME_PAGE_PROMOTIONS = 5;
 const NUM_DISCOUNTS            = 10;
-const NUM_PRICE_REQUESTS       = 10;
 const NUM_SUPPORT_TICKETS      = 10;
 
 const SALT_ROUNDS = 10;
@@ -514,23 +513,6 @@ async function main() {
 
   await prisma.discount.createMany({ data: discountRows });
 
-  await prisma.priceRequest.createMany({
-    data: Array.from({ length: NUM_PRICE_REQUESTS }, () => {
-      const product = faker.helpers.arrayElement(seededProducts);
-      const user = faker.datatype.boolean({ probability: 0.75 })
-        ? faker.helpers.arrayElement(customerUsers)
-        : null;
-
-      return {
-        email: user?.email ?? faker.internet.email().toLowerCase(),
-        productTitle: product.name,
-        message: faker.lorem.paragraph(),
-        productId: product.id,
-        userId: user?.id ?? null,
-      };
-    }),
-  });
-
   const variants = await prisma.productVariant.findMany({
     select: { id: true, product: { select: { name: true } } },
   });
@@ -642,7 +624,7 @@ async function main() {
   });
 
   console.log(
-    `Seeded ${NUM_USERS} users, ${categories.length} categories, ${NUM_PRODUCTS} products, ${totalVariants} variants, ${totalAttributes} product attributes, ${NUM_DISCOUNTS} discounts, ${NUM_PRICE_REQUESTS} price requests, ${NUM_SUPPORT_TICKETS} support tickets, ${NUM_PRODUCT_REPORTS} product reports, and ${NUM_HOME_PAGE_PROMOTIONS} home page promotions.`
+    `Seeded ${NUM_USERS} users, ${categories.length} categories, ${NUM_PRODUCTS} products, ${totalVariants} variants, ${totalAttributes} product attributes, ${NUM_DISCOUNTS} discounts, ${NUM_SUPPORT_TICKETS} support tickets, ${NUM_PRODUCT_REPORTS} product reports, and ${NUM_HOME_PAGE_PROMOTIONS} home page promotions.`
   );
   console.log(`Admin login: admin@admin.us / ${DEFAULT_PASSWORD}`);
   console.log(`All other users: <their email> / ${DEFAULT_PASSWORD}`);
