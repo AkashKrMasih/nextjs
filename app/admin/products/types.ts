@@ -52,6 +52,8 @@ export type ProductFormValues = {
   friendlyId: string;
   description: string;
   price: string;
+  minOrderQuantity: string;
+  maxOrderQuantity: string;
   categoryId: string; // '' = no category
   pincodeTemplateId: string;
   customPincodes: string;

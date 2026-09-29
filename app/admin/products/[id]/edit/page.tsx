@@ -48,6 +48,8 @@ export default async function EditProductPage({
     friendlyId: product.friendlyId,
     description: product.description,
     price: product.price.toString(),
+    minOrderQuantity: product.minOrderQuantity != null ? String(product.minOrderQuantity) : '',
+    maxOrderQuantity: product.maxOrderQuantity != null ? String(product.maxOrderQuantity) : '',
     categoryId: product.categoryId ? String(product.categoryId) : '',
     pincodeTemplateId: product.pincodeTemplateId ?? '',
     customPincodes: product.pincodeTemplateId

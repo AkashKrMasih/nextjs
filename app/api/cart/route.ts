@@ -12,8 +12,13 @@ export async function POST(req: NextRequest) {
   if (typeof id !== 'number' || !name || !price) {
     return NextResponse.json({ error: 'id, name, and price are required' }, { status: 400 });
   }
-  const items = await addToCart({ id, name, price }, quantity ?? 1);
-  return NextResponse.json({ items });
+  try {
+    const items = await addToCart({ id, name, price }, quantity ?? 1);
+    return NextResponse.json({ items });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not add to cart';
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 }
 
 export async function PATCH(req: NextRequest) {
@@ -22,8 +27,13 @@ export async function PATCH(req: NextRequest) {
   if (typeof id !== 'number' || typeof quantity !== 'number') {
     return NextResponse.json({ error: 'id and quantity are required' }, { status: 400 });
   }
-  const items = await updateQuantity(id, quantity);
-  return NextResponse.json({ items });
+  try {
+    const items = await updateQuantity(id, quantity);
+    return NextResponse.json({ items });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not update cart';
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 }
 
 export async function DELETE(req: NextRequest) {

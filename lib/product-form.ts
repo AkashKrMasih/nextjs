@@ -4,6 +4,10 @@ import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/categories';
 import { parsePincodeList } from '@/lib/delivery-pincodes';
+import {
+  parseOrderQuantityField,
+  validateOrderQuantityLimits,
+} from '@/lib/order-quantity';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads/products');
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -26,6 +30,8 @@ export type ParsedProductForm = {
   name: string;
   description: string;
   price: string;
+  minOrderQuantity: number | null;
+  maxOrderQuantity: number | null;
   friendlyId: string;
   friendlyIdExplicit: boolean;
   categoryId: number | null;
@@ -80,6 +86,18 @@ export async function parseProductFormData(
   if (!Number.isFinite(priceNumber) || priceNumber < 0) {
     return { error: 'Price must be a number greater than or equal to 0' };
   }
+
+  const minOrderQuantity = parseOrderQuantityField(formData.get('minOrderQuantity'));
+  if (minOrderQuantity !== null && typeof minOrderQuantity === 'object') {
+    return minOrderQuantity;
+  }
+  const maxOrderQuantity = parseOrderQuantityField(formData.get('maxOrderQuantity'));
+  if (maxOrderQuantity !== null && typeof maxOrderQuantity === 'object') {
+    return maxOrderQuantity;
+  }
+  const limitsError = validateOrderQuantityLimits(minOrderQuantity, maxOrderQuantity);
+  if (limitsError) return { error: limitsError };
+
   const friendlyInput = String(formData.get('friendlyId') ?? '').trim();
   const friendlyId = slugify(friendlyInput || name);
   if (!friendlyId) return { error: 'Could not derive a friendly id from that title.' };
@@ -170,6 +188,8 @@ export async function parseProductFormData(
     name,
     description,
     price: priceNumber.toFixed(2),
+    minOrderQuantity,
+    maxOrderQuantity,
     friendlyId,
     friendlyIdExplicit: friendlyInput.length > 0,
     categoryId,
@@ -233,6 +253,8 @@ export async function createProductFromForm(parsed: ParsedProductForm) {
       friendlyId: friendly.friendlyId,
       description: parsed.description,
       price: parsed.price,
+      minOrderQuantity: parsed.minOrderQuantity,
+      maxOrderQuantity: parsed.maxOrderQuantity,
       categoryId: parsed.categoryId,
       pincodeTemplateId: parsed.pincodeTemplateId,
       images: { create: parsed.savedImages },
@@ -286,6 +308,8 @@ export async function updateProductFromForm(productId: number, parsed: ParsedPro
         friendlyId: friendly.friendlyId,
         description: parsed.description,
         price: parsed.price,
+        minOrderQuantity: parsed.minOrderQuantity,
+        maxOrderQuantity: parsed.maxOrderQuantity,
         categoryId: parsed.categoryId,
         pincodeTemplateId: parsed.pincodeTemplateId,
       },
