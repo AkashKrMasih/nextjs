@@ -38,7 +38,6 @@ type Product = {
   friendlyId: string;
   name: string;
   price: number | string;
-  priceOnRequest: boolean;
   stock: number;
   description: string | null;
   images: ProductImage[];
@@ -203,24 +202,13 @@ export function ProductDetail({
 
         {/* Info */}
         <div className="space-y-6 lg:pt-2">
-          {product.priceOnRequest ? (
-            <Link
-              href={`/products/${product.friendlyId}/price-request`}
-              className="inline-block rounded-md bg-green-800 px-4 py-2 text-sm font-medium text-white hover:bg-green-900"
-            >
-              Price Request
-            </Link>
-          ) : (
-            <p className="text-3xl font-light text-green-800">{formatPrice(product.price)}</p>
-          )}
+          <p className="text-3xl font-light text-green-800">{formatPrice(product.price)}</p>
 
-          {!product.priceOnRequest ? (
-            <ProductDiscountPanel
-              productId={product.id}
-              basePrice={product.price.toString()}
-              quantity={quantity}
-            />
-          ) : null}
+          <ProductDiscountPanel
+            productId={product.id}
+            basePrice={product.price.toString()}
+            quantity={quantity}
+          />
 
           {product.description && (
             <p className="whitespace-pre-wrap leading-relaxed text-stone-500">
@@ -269,14 +257,12 @@ export function ProductDetail({
 
           {/* CTAs */}
           <div className="flex flex-wrap items-center gap-3">
-            {product.priceOnRequest ? null : (
-              <AddToCartButton
-                id={product.id}
-                name={product.name}
-                price={product.price.toString()}
-                disabled={!inStock}
-              />
-            )}
+            <AddToCartButton
+              id={product.id}
+              name={product.name}
+              price={product.price.toString()}
+              disabled={!inStock}
+            />
 
             <button
               onClick={handleWishlistToggle}
@@ -353,16 +339,7 @@ export function ProductDetail({
                     </p>
                   </Link>
                   <div className="px-4 pb-4 pt-1">
-                    {item.priceOnRequest ? (
-                      <Link
-                        href={`/products/${item.friendlyId}/price-request`}
-                        className="text-sm font-medium text-green-800 underline"
-                      >
-                        Price Request
-                      </Link>
-                    ) : (
-                      <p className="text-sm text-stone-900">{formatPrice(item.price)}</p>
-                    )}
+                    <p className="text-sm text-stone-900">{formatPrice(item.price)}</p>
                   </div>
                 </div>
               );

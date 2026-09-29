@@ -129,16 +129,7 @@ export async function TabletCatalog({
                   </div>
                 </Link>
                 <div className="flex items-center justify-between gap-2 px-3 pb-3">
-                  {product.priceOnRequest ? (
-                    <Link
-                      href={`/products/${product.friendlyId}/price-request`}
-                      className="rounded-md bg-green-800 px-3 py-1.5 text-sm font-medium text-white"
-                    >
-                      Price Request
-                    </Link>
-                  ) : (
-                    <p className="text-sm text-green-800">{formatPrice(product.price)}</p>
-                  )}
+                  <p className="text-sm text-green-800">{formatPrice(product.price)}</p>
                   <WishlistButton
                     productId={product.id}
                     initialWishlisted={catalog.wishlistedIds.has(product.id)}

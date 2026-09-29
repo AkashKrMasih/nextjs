@@ -26,7 +26,6 @@ export type ParsedProductForm = {
   name: string;
   description: string;
   price: string;
-  priceOnRequest: boolean;
   friendlyId: string;
   friendlyIdExplicit: boolean;
   categoryId: number | null;
@@ -81,7 +80,6 @@ export async function parseProductFormData(
   if (!Number.isFinite(priceNumber) || priceNumber < 0) {
     return { error: 'Price must be a number greater than or equal to 0' };
   }
-  const priceOnRequest = formData.get('priceOnRequest') === 'true';
   const friendlyInput = String(formData.get('friendlyId') ?? '').trim();
   const friendlyId = slugify(friendlyInput || name);
   if (!friendlyId) return { error: 'Could not derive a friendly id from that title.' };
@@ -172,7 +170,6 @@ export async function parseProductFormData(
     name,
     description,
     price: priceNumber.toFixed(2),
-    priceOnRequest,
     friendlyId,
     friendlyIdExplicit: friendlyInput.length > 0,
     categoryId,
@@ -236,7 +233,6 @@ export async function createProductFromForm(parsed: ParsedProductForm) {
       friendlyId: friendly.friendlyId,
       description: parsed.description,
       price: parsed.price,
-      priceOnRequest: parsed.priceOnRequest,
       categoryId: parsed.categoryId,
       pincodeTemplateId: parsed.pincodeTemplateId,
       images: { create: parsed.savedImages },
@@ -290,7 +286,6 @@ export async function updateProductFromForm(productId: number, parsed: ParsedPro
         friendlyId: friendly.friendlyId,
         description: parsed.description,
         price: parsed.price,
-        priceOnRequest: parsed.priceOnRequest,
         categoryId: parsed.categoryId,
         pincodeTemplateId: parsed.pincodeTemplateId,
       },
