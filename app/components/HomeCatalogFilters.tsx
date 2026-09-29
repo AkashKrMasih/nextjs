@@ -1,34 +1,20 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { HomeCatalogSort } from '@/app/home/load-home-catalog';
+import type { HomeCatalogFilterValues, HomeCatalogSort } from '@/lib/home-catalog-query';
+import { useEffect, useRef, useState } from 'react';
 
 const fieldClass =
   'rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800';
 
 type CategoryOption = { id: number; name: string };
 
-function catalogHref(values: {
-  q: string;
-  category: string;
-  min: string;
-  max: string;
-  sort: string;
-}) {
-  const params = new URLSearchParams();
-  const trimmedQ = values.q.trim();
-  if (trimmedQ) params.set('q', trimmedQ);
-  if (values.category) params.set('category', values.category);
-  const min = values.min.trim();
-  const max = values.max.trim();
-  if (min) params.set('min', min);
-  if (max) params.set('max', max);
-  if (values.sort) params.set('sort', values.sort);
-  const qs = params.toString();
-  return qs ? `/?${qs}` : '/';
-}
+const emptyFilters: HomeCatalogFilterValues = {
+  q: '',
+  category: '',
+  min: '',
+  max: '',
+  sort: '',
+};
 
 export function HomeCatalogFilters({
   query,
@@ -38,6 +24,7 @@ export function HomeCatalogFilters({
   sort,
   hasFilters,
   categories,
+  onApplyFilters,
 }: {
   query: string;
   categoryId: number | null;
@@ -46,9 +33,9 @@ export function HomeCatalogFilters({
   sort: HomeCatalogSort;
   hasFilters: boolean;
   categories: CategoryOption[];
+  onApplyFilters: (values: HomeCatalogFilterValues) => void;
 }) {
-  const router = useRouter();
-  const skipDebouncedNavigation = useRef(true);
+  const skipDebouncedFetch = useRef(true);
 
   const [q, setQ] = useState(query);
   const [category, setCategory] = useState(categoryId ? String(categoryId) : '');
@@ -60,32 +47,30 @@ export function HomeCatalogFilters({
   filtersRef.current = { q, category, min, max, sort: sortValue };
 
   useEffect(() => {
-    setQ(query);
-    setCategory(categoryId ? String(categoryId) : '');
-    setMin(minPrice != null ? String(minPrice) : '');
-    setMax(maxPrice != null ? String(maxPrice) : '');
-    setSortValue(sort === 'newest' ? '' : sort);
-  }, [query, categoryId, minPrice, maxPrice, sort]);
-
-  const applyFilters = useCallback(
-    (values: { q: string; category: string; min: string; max: string; sort: string }) => {
-      router.replace(catalogHref(values));
-    },
-    [router]
-  );
-
-  useEffect(() => {
-    if (skipDebouncedNavigation.current) {
-      skipDebouncedNavigation.current = false;
+    if (skipDebouncedFetch.current) {
+      skipDebouncedFetch.current = false;
       return;
     }
 
     const timer = window.setTimeout(() => {
-      applyFilters(filtersRef.current);
+      onApplyFilters(filtersRef.current);
     }, 700);
 
     return () => window.clearTimeout(timer);
-  }, [q, min, max, applyFilters]);
+  }, [q, min, max, onApplyFilters]);
+
+  function applyImmediately(values: HomeCatalogFilterValues) {
+    onApplyFilters(values);
+  }
+
+  function handleClear() {
+    setQ('');
+    setCategory('');
+    setMin('');
+    setMax('');
+    setSortValue('');
+    onApplyFilters(emptyFilters);
+  }
 
   return (
     <>
@@ -110,7 +95,7 @@ export function HomeCatalogFilters({
               onChange={(event) => {
                 const next = event.target.value;
                 setCategory(next);
-                applyFilters({ q, category: next, min, max, sort: sortValue });
+                applyImmediately({ q, category: next, min, max, sort: sortValue });
               }}
               className={fieldClass}
             >
@@ -130,7 +115,7 @@ export function HomeCatalogFilters({
               onChange={(event) => {
                 const next = event.target.value;
                 setSortValue(next);
-                applyFilters({ q, category, min, max, sort: next });
+                applyImmediately({ q, category, min, max, sort: next });
               }}
               className={fieldClass}
             >
@@ -166,9 +151,13 @@ export function HomeCatalogFilters({
             </label>
           </div>
           {hasFilters ? (
-            <Link href="/" className="inline-block text-sm text-stone-500 hover:text-stone-900">
+            <button
+              type="button"
+              onClick={handleClear}
+              className="text-sm text-stone-500 hover:text-stone-900"
+            >
               Clear
-            </Link>
+            </button>
           ) : null}
         </div>
       </aside>
