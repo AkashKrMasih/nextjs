@@ -1,5 +1,6 @@
 import {formatPrice} from '@/lib/money';
 import Link from 'next/link';
+import {HomeCatalogFilters} from '@/app/components/HomeCatalogFilters';
 import {WishlistButton} from '@/app/components/WishlistButton';
 import {
   type HomeCatalogSearchParams,
@@ -27,88 +28,15 @@ export async function HomeCatalog({
   return (
     <main className="mx-auto max-w-7xl px-6 py-12">
       <div className="grid grid-cols-12 gap-8">
-        <form action="/" className="contents">
-          {/* Search: col-12, own row */}
-          <div className="col-span-12">
-            <input
-              type="search"
-              name="q"
-              defaultValue={query}
-              placeholder="Search by title or description"
-              className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
-            />
-          </div>
-
-          {/* Filters: col-4 */}
-          <aside className="col-span-12 md:col-span-4">
-            <div className="space-y-4 rounded-lg border border-stone-300 bg-white p-4">
-              <label className="flex flex-col gap-1 text-sm text-stone-600">
-                Category
-                <select
-                  name="category"
-                  defaultValue={categoryId ? String(categoryId) : ''}
-                  className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
-                >
-                  <option value="">All categories</option>
-                  {categories.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-col gap-1 text-sm text-stone-600">
-                Sort by
-                <select
-                  name="sort"
-                  defaultValue={sort === 'newest' ? '' : sort}
-                  className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
-                >
-                  <option value="">Newest</option>
-                  <option value="price">Price (low to high)</option>
-                  <option value="title">Title (A–Z)</option>
-                </select>
-              </label>
-              <div className="grid grid-cols-1 gap-3">
-                <label className="flex w-full flex-col gap-1 text-sm text-stone-600">
-                  Min price
-                  <input
-                    type="number"
-                    name="min"
-                    min="0"
-                    step="0.01"
-                    defaultValue={minPrice ?? ''}
-                    className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
-                  />
-                </label>
-                <label className="flex w-full flex-col gap-1 text-sm text-stone-600">
-                  Max price
-                  <input
-                    type="number"
-                    name="max"
-                    min="0"
-                    step="0.01"
-                    defaultValue={maxPrice ?? ''}
-                    className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
-                  />
-                </label>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="submit"
-                  className="rounded-md bg-green-800 px-4 py-2 text-sm font-medium text-white hover:bg-green-900"
-                >
-                  Search
-                </button>
-                {hasFilters ? (
-                  <Link href="/" className="text-sm text-stone-500 hover:text-stone-900">
-                    Clear
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-          </aside>
-        </form>
+        <HomeCatalogFilters
+          query={query}
+          categoryId={categoryId}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          sort={sort}
+          hasFilters={hasFilters}
+          categories={categories}
+        />
 
         {/* Products: col-8 */}
         <section className="col-span-12 md:col-span-8">
