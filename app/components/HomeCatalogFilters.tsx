@@ -93,9 +93,9 @@ export function HomeCatalogFilters({
               name="category"
               value={category}
               onChange={(event) => {
-                const next = event.target.value;
-                setCategory(next);
-                applyImmediately({ q, category: next, min, max, sort: sortValue });
+                const __category = event.target.value;
+                setCategory(__category);
+                applyImmediately({ q, category: __category, min, max, sort: sortValue });
               }}
               className={fieldClass}
             >
