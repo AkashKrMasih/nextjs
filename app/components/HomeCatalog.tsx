@@ -1,18 +1,23 @@
 import {formatPrice} from '@/lib/money';
 import Link from 'next/link';
 import {WishlistButton} from '@/app/components/WishlistButton';
-import {loadHomeCatalog, productStock} from '@/app/home/load-home-catalog';
+import {
+  type HomeCatalogSearchParams,
+  loadHomeCatalog,
+  productStock,
+} from '@/app/home/load-home-catalog';
 
 export async function HomeCatalog({
                                     searchParams,
                                   }: {
-  searchParams: Promise<{ q?: string; category?: string; min?: string; max?: string }>;
+  searchParams: Promise<HomeCatalogSearchParams>;
 }) {
   const {
           query,
           categoryId,
           minPrice,
           maxPrice,
+          sort,
           hasFilters,
           categories,
           products,
@@ -50,6 +55,18 @@ export async function HomeCatalog({
                       {item.name}
                     </option>
                   ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-sm text-stone-600">
+                Sort by
+                <select
+                  name="sort"
+                  defaultValue={sort === 'newest' ? '' : sort}
+                  className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
+                >
+                  <option value="">Newest</option>
+                  <option value="price">Price (low to high)</option>
+                  <option value="title">Title (A–Z)</option>
                 </select>
               </label>
               <div className="grid grid-cols-1 gap-3">

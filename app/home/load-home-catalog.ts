@@ -7,15 +7,36 @@ function numberParam(value: string | undefined) {
   return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
-export async function loadHomeCatalog(
-  searchParams: Promise<{ q?: string; category?: string; min?: string; max?: string }>
-) {
-  const { q: rawQuery, category, min, max } = await searchParams;
+export type HomeCatalogSearchParams = {
+  q?: string;
+  category?: string;
+  min?: string;
+  max?: string;
+  sort?: string;
+};
+
+export type HomeCatalogSort = 'newest' | 'price' | 'title';
+
+function parseSort(value: string | undefined): HomeCatalogSort {
+  if (value === 'price' || value === 'title') return value;
+  return 'newest';
+}
+
+export async function loadHomeCatalog(searchParams: Promise<HomeCatalogSearchParams>) {
+  const { q: rawQuery, category, min, max, sort: rawSort } = await searchParams;
   const query = rawQuery?.trim() ?? '';
   const categoryId = numberParam(category);
   const minPrice = numberParam(min);
   const maxPrice = numberParam(max);
+  const sort = parseSort(rawSort);
   const hasFilters = Boolean(query || categoryId || minPrice != null || maxPrice != null);
+
+  const productOrderBy =
+    sort === 'price'
+      ? { price: 'asc' as const }
+      : sort === 'title'
+        ? { name: 'asc' as const }
+        : { createdAt: 'desc' as const };
 
   const [categories, products, wishlistedIds] = await Promise.all([
     prisma.category.findMany({
@@ -42,7 +63,7 @@ export async function loadHomeCatalog(
             }
           : {}),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: productOrderBy,
       include: {
         images: { orderBy: { isPrimary: 'desc' } },
         variants: { include: { inventory: true } },
@@ -56,6 +77,7 @@ export async function loadHomeCatalog(
     categoryId,
     minPrice,
     maxPrice,
+    sort,
     hasFilters,
     categories,
     products,

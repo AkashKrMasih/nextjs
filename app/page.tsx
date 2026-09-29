@@ -1,4 +1,5 @@
 import { getSavedHomeLayout } from '@/app/home/home-layout';
+import type { HomeCatalogSearchParams } from '@/app/home/load-home-catalog';
 import { HomeCatalog } from '@/app/components/HomeCatalog';
 import { HomeLayoutPrompt } from '@/app/components/HomeLayoutPrompt';
 import { HomePagePromotions } from '@/app/components/HomePagePromotions';
@@ -8,7 +9,7 @@ import TabletHomePage from '@/app/responsive/home/tablet/page';
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; min?: string; max?: string }>;
+  searchParams: Promise<HomeCatalogSearchParams>;
 }) {
   const saved_layout = await getSavedHomeLayout();
 
