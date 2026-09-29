@@ -28,6 +28,9 @@ export async function POST(request: Request) {
   if (!message || message.length > 5000) {
     return NextResponse.json({ error: 'Message is required (max 5000 characters).' }, { status: 400 });
   }
+
+  // if (!CATEGORY_VALUES.has(category as 'DELIVERY' | 'ITEM_ISSUE' | 'REFUND' | 'ORDER_STATUS' | 'OTHER')) {
+
   if (!CATEGORY_VALUES.has(category as (typeof SUPPORT_TICKET_CATEGORIES)[number]['value'])) {
     return NextResponse.json({ error: 'Select a valid category.' }, { status: 400 });
   }
