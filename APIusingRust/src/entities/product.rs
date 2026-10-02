@@ -1,7 +1,7 @@
 use sea_orm::entity::prelude::*;
 use rust_decimal::Decimal;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "Product")]
 pub struct Model {
     #[sea_orm(primary_key)]

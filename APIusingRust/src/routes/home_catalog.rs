@@ -5,7 +5,7 @@ use axum::{
 };
 use rust_decimal::Decimal;
 use sea_orm::{
-    ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait,
+    ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder,
 };
 use serde::{Deserialize, Serialize};
 

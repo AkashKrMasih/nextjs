@@ -4,7 +4,7 @@ use axum::{
     routing::get,
 };
 use rust_decimal::Decimal;
-use sea_orm::{ColumnTrait, EntityTrait, QueryOrder};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QueryOrder};
 use serde::Serialize;
 
 use crate::{

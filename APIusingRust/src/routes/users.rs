@@ -2,12 +2,14 @@ use axum::{
     Json, Router,
     extract::State,
     http::StatusCode,
-    routing::{get, post},
+    routing::get,
 };
-use bcrypt::{DEFAULT_COST, hash_with_salt};
+use bcrypt::{hash, DEFAULT_COST};
 use chrono::Utc;
 use cuid2::create_id;
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryOrder};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, QueryOrder,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -92,18 +94,17 @@ async fn create_user(
         return Err(AppError::BadRequest("That email is already in use.".into()));
     }
 
-    let salt = bcrypt::gen_salt(DEFAULT_COST)
-        .map_err(|e| AppError::Internal(format!("password salt: {e}")))?;
-    let hashed = hash_with_salt(&body.password, DEFAULT_COST, &salt)
+    let hashed = hash(&body.password, DEFAULT_COST)
         .map_err(|e| AppError::Internal(format!("password hash: {e}")))?;
+    let password_salt = hashed.chars().take(29).collect::<String>();
 
     let now = Utc::now().naive_utc();
     let model = user::ActiveModel {
         id: Set(create_id()),
         email: Set(email.to_string()),
         name: Set(Some(name.to_string())),
-        password: Set(hashed.to_string()),
-        password_salt: Set(salt.to_string()),
+        password: Set(hashed),
+        password_salt: Set(password_salt),
         role: Set(role),
         email_verified: Set(true),
         created_at: Set(now),

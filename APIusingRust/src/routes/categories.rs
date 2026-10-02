@@ -2,7 +2,7 @@ use axum::{
     Json, Router,
     extract::State,
     http::StatusCode,
-    routing::{get, post},
+    routing::get,
 };
 use chrono::Utc;
 use sea_orm::{

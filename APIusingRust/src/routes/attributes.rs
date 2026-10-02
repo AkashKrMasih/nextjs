@@ -31,15 +31,15 @@ async fn list_attributes(State(state): State<AppState>) -> AppResult<Json<Vec<At
             continue;
         }
         let key = title.to_lowercase();
-        by_title
+        let entry = by_title
             .entry(key)
             .or_insert_with(|| (title.to_string(), std::collections::BTreeSet::new()));
         if let Some(value) = attr.value.as_deref().map(str::trim).filter(|v| !v.is_empty()) {
-            by_title.get_mut(&key).unwrap().1.insert(value.to_string());
+            entry.1.insert(value.to_string());
         }
     }
 
-    let result = by_title
+    let mut result = by_title
         .into_values()
         .map(|(title, values)| AttributeSuggestion {
             title,
