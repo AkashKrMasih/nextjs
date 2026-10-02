@@ -2,7 +2,6 @@
 
 require 'bigdecimal'
 require 'json'
-require 'pg'
 require 'time'
 
 module JsonEncoding
@@ -25,7 +24,7 @@ module JsonEncoding
     when BigDecimal
       value.to_s('F')
     else
-      value.is_a?(PG::Numeric) ? value.to_s : value
+      value
     end
   end
 

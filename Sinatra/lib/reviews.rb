@@ -79,7 +79,7 @@ module Reviews
     SQL
 
     reviews = Database.query_rows(reviews_sql, values)
-    total = Database.query_one(count_sql, values[0...(values.length - 2)])['total']
+    total = Database.query_one(count_sql, values[0...(values.length - 2)])['total'].to_i
     breakdown_rows = Database.query_rows(breakdown_sql, [product_id])
 
     {

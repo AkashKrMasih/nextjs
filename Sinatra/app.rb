@@ -82,6 +82,25 @@ class ShopApi < Sinatra::Base
     json_response(products)
   end
 
+  # GET /api/products/:id/reviews — must be registered before /api/products/:id
+  get '/api/products/:id/reviews' do
+    product_id = positive_id(params['id'])
+    return json_response({ error: 'Invalid id' }, 400) unless product_id
+
+    exists = Database.query_one('SELECT 1 FROM "Product" WHERE id = $1', [product_id])
+    return json_response({ error: 'Not found' }, 404) unless exists
+
+    query = Reviews.parse_list_params(params)
+    if params['rating'] && query[:rating].nil?
+      return json_response(
+        { error: 'Invalid query params', details: { rating: ['invalid'] } },
+        400
+      )
+    end
+
+    json_response(Reviews.list(product_id, query))
+  end
+
   # GET /api/products/:id — mirrors app/api/products/[id]/route.ts
   get '/api/products/:id' do
     id = positive_id(params['id'])
@@ -105,25 +124,6 @@ class ShopApi < Sinatra::Base
         products: rows.map { |row| HomeCatalog.serialize_row(row) }
       }
     )
-  end
-
-  # GET /api/products/:id/reviews — mirrors app/api/products/[id]/reviews/route.ts
-  get '/api/products/:id/reviews' do
-    product_id = positive_id(params['id'])
-    return json_response({ error: 'Invalid id' }, 400) unless product_id
-
-    exists = Database.query_one('SELECT 1 FROM "Product" WHERE id = $1', [product_id])
-    return json_response({ error: 'Not found' }, 404) unless exists
-
-    query = Reviews.parse_list_params(params)
-    if params['rating'] && query[:rating].nil?
-      return json_response(
-        { error: 'Invalid query params', details: { rating: ['invalid'] } },
-        400
-      )
-    end
-
-    json_response(Reviews.list(product_id, query))
   end
 
   error PG::Error do |exception|
