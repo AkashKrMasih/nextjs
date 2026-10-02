@@ -1,6 +1,0 @@
-.venv/
-__pycache__/
-*.py[cod]
-fastapi.db
-.env
-*.pyc
