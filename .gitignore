@@ -61,3 +61,4 @@ next-env.d.ts
 /nestjs/.idea/**
 /public/uploads/products/**
 /public/uploads/**
+/FastAPI/.venv/**
