@@ -54,6 +54,7 @@ function emptyValues(): ProductFormValues {
     price:           '',
     minOrderQuantity: '',
     maxOrderQuantity: '',
+    returnInDays:    '',
     categoryId:      '',
     pincodeTemplateId: '',
     customPincodes: '',
@@ -251,6 +252,7 @@ export function ProductForm({
     formData.set('price', values.price);
     formData.set('minOrderQuantity', values.minOrderQuantity);
     formData.set('maxOrderQuantity', values.maxOrderQuantity);
+    formData.set('returnInDays', values.returnInDays);
     formData.set('categoryId', values.categoryId);
     formData.set('pincodeTemplateId', values.pincodeTemplateId);
     formData.set('customPincodes', values.customPincodes);
@@ -385,6 +387,21 @@ export function ProductForm({
                   step="1"
                   value={values.maxOrderQuantity}
                   onChange={(e) => update('maxOrderQuantity', e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="returnInDays" className="block text-sm font-medium text-stone-700">
+                  Return window (days)
+                </label>
+                <input
+                  id="returnInDays"
+                  className="mt-1 w-full rounded border border-stone-300 bg-white p-2"
+                  placeholder="Optional"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={values.returnInDays}
+                  onChange={(e) => update('returnInDays', e.target.value)}
                 />
               </div>
             </div>
