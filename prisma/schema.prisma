@@ -20,6 +20,7 @@ model Product {
   price              Decimal  @db.Decimal(10, 2) // default price; a variant may override this
   minOrderQuantity   Int?
   maxOrderQuantity   Int?
+  returnInDays       Int?
   createdAt          DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

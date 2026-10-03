@@ -6,6 +6,7 @@ import { slugify } from '@/lib/categories';
 import { parsePincodeList } from '@/lib/delivery-pincodes';
 import {
   parseOrderQuantityField,
+  parseReturnInDaysField,
   validateOrderQuantityLimits,
 } from '@/lib/order-quantity';
 
@@ -32,6 +33,7 @@ export type ParsedProductForm = {
   price: string;
   minOrderQuantity: number | null;
   maxOrderQuantity: number | null;
+  returnInDays: number | null;
   friendlyId: string;
   friendlyIdExplicit: boolean;
   categoryId: number | null;
@@ -97,6 +99,11 @@ export async function parseProductFormData(
   }
   const limitsError = validateOrderQuantityLimits(minOrderQuantity, maxOrderQuantity);
   if (limitsError) return { error: limitsError };
+
+  const returnInDays = parseReturnInDaysField(formData.get('returnInDays'));
+  if (returnInDays !== null && typeof returnInDays === 'object') {
+    return returnInDays;
+  }
 
   const friendlyInput = String(formData.get('friendlyId') ?? '').trim();
   const friendlyId = slugify(friendlyInput || name);
@@ -190,6 +197,7 @@ export async function parseProductFormData(
     price: priceNumber.toFixed(2),
     minOrderQuantity,
     maxOrderQuantity,
+    returnInDays,
     friendlyId,
     friendlyIdExplicit: friendlyInput.length > 0,
     categoryId,
@@ -255,6 +263,7 @@ export async function createProductFromForm(parsed: ParsedProductForm) {
       price: parsed.price,
       minOrderQuantity: parsed.minOrderQuantity,
       maxOrderQuantity: parsed.maxOrderQuantity,
+      returnInDays: parsed.returnInDays,
       categoryId: parsed.categoryId,
       pincodeTemplateId: parsed.pincodeTemplateId,
       images: { create: parsed.savedImages },
@@ -310,6 +319,7 @@ export async function updateProductFromForm(productId: number, parsed: ParsedPro
         price: parsed.price,
         minOrderQuantity: parsed.minOrderQuantity,
         maxOrderQuantity: parsed.maxOrderQuantity,
+        returnInDays: parsed.returnInDays,
         categoryId: parsed.categoryId,
         pincodeTemplateId: parsed.pincodeTemplateId,
       },
