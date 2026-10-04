@@ -93,7 +93,8 @@ export async function login(
       userId: user.id,
       email: user.email,
       name: user.name ?? '',
-      role: user.role
+      role: user.role,
+      emailVerified: user.emailVerified,
     })
   } catch (err) {
     // Log the real error server-side so it shows up in your terminal/logs.

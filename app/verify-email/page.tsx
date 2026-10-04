@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { PageHeader } from '@/app/components/PageHeader';
 import { consumeVerificationToken } from '@/lib/email';
+import { createSession, getSession } from '@/lib/session';
 
 export default async function VerifyEmailPage({
   searchParams,
@@ -11,6 +12,11 @@ export default async function VerifyEmailPage({
   const { token } = await searchParams;
   const result = await consumeVerificationToken(token);
   if ('ok' in result) {
+    const session = await getSession();
+    if (session) {
+      await createSession({ ...session, emailVerified: true });
+      redirect('/');
+    }
     redirect('/login?verified=1');
   }
 
