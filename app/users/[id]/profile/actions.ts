@@ -98,11 +98,14 @@ export async function updateProfile(
     }
   }
 
+  const emailVerified = emailChanged ? false : existing.emailVerified;
+
   await createSession({
     userId,
     email,
     name: name || '',
     role: session.role,
+    emailVerified,
   });
 
   revalidatePath(`/users/${userId}/profile`);

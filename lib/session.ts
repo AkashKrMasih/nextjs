@@ -1,7 +1,12 @@
 // lib/session.ts
 import 'server-only';
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
+import {
+  SESSION_COOKIE_NAME,
+  type SessionPayload,
+  verifySessionToken,
+} from '@/lib/session-token';
 
 if (!process.env.JWT_SECRET) {
   throw new Error(
@@ -10,15 +15,9 @@ if (!process.env.JWT_SECRET) {
 }
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-const COOKIE_NAME = 'session';
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
-export type SessionPayload = {
-  userId: string;
-  email: string;
-  name: string;
-  role: string;
-};
+export type { SessionPayload };
 
 /**
  * Call this from your login server action after verifyPassword() succeeds.
@@ -31,7 +30,7 @@ export async function createSession(payload: SessionPayload) {
   .sign(secret);
 
   const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
+  cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -46,19 +45,12 @@ export async function createSession(payload: SessionPayload) {
  */
 export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
-
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    return payload as unknown as SessionPayload;
-  } catch {
-    // expired, tampered, or wrong secret
-    return null;
-  }
+  return verifySessionToken(token);
 }
 
 export async function destroySession() {
   const cookieStore = await cookies();
-  cookieStore.delete(COOKIE_NAME);
+  cookieStore.delete(SESSION_COOKIE_NAME);
 }
