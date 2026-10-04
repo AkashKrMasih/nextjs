@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation'
 import { createSession, destroySession } from '@/lib/session'
 import { findPasswordResetToken, sendPasswordResetEmail, sendVerificationEmail } from '@/lib/email'
 import { prisma } from '@/lib/prisma'
+import { upsertVerifiedEmail } from '@/lib/verified-email'
 import bcrypt from "bcryptjs";
 
 // Shape returned to useActionState/useFormState on the client.
@@ -33,9 +34,13 @@ export async function signup(
 
   try {
     const user = existing
-      ? await prisma.user.update({
-          where: { id: existing.id },
-          data: await hashPassword(password),
+      ? await prisma.$transaction(async (tx) => {
+          const updated = await tx.user.update({
+            where: { id: existing.id },
+            data: { ...(await hashPassword(password)), emailVerified: false },
+          })
+          await upsertVerifiedEmail(updated.id, updated.email, false, tx)
+          return updated
         })
       : await createUser(email, password, { emailVerified: false })
 

@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import nodemailer from 'nodemailer';
 import { render } from '@react-email/render';
 import { prisma } from '@/lib/prisma';
+import { upsertVerifiedEmail } from '@/lib/verified-email';
 import { VerifyEmail } from '@/emails/verify-email';
 import { ResetPasswordEmail } from '@/emails/reset-password';
 
@@ -119,10 +120,19 @@ export async function consumeVerificationToken(token: string | undefined) {
     return { error: 'This verification link is invalid or has expired.' };
   }
 
-  await prisma.$transaction([
-    prisma.user.update({ where: { id: record.userId }, data: { emailVerified: true } }),
-    prisma.emailVerificationToken.deleteMany({ where: { userId: record.userId } }),
-  ]);
+  const user = await prisma.user.findUnique({
+    where: { id: record.userId },
+    select: { email: true },
+  });
+  if (!user) {
+    return { error: 'This verification link is invalid.' };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: record.userId }, data: { emailVerified: true } });
+    await upsertVerifiedEmail(record.userId, user.email, true, tx);
+    await tx.emailVerificationToken.deleteMany({ where: { userId: record.userId } });
+  });
 
   return { ok: true as const };
 }
