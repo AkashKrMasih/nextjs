@@ -21,7 +21,8 @@ export default async function ProductPage({
   });
   if (!product) return notFound();
 
-  const [related, initialWishlisted, session, hasPincodeRestriction] = await Promise.all([
+  const [related, initialWishlisted, session, hasPincodeRestriction, userReview] =
+    await Promise.all([
     prisma.product.findMany({
       where: { id: { not: product.id } },
       orderBy: { id: 'desc' },
@@ -31,6 +32,14 @@ export default async function ProductPage({
     isProductWishlisted(product.id),
     getSession(),
     productHasPincodeRestriction(product.id),
+    session
+      ? prisma.review.findUnique({
+          where: {
+            productId_userId: { productId: product.id, userId: session.userId },
+          },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
   ]);
 
   // Prisma's Decimal type isn't a plain object, so it can't cross the
@@ -57,6 +66,8 @@ export default async function ProductPage({
       initialWishlisted={initialWishlisted}
       isLoggedIn={Boolean(session)}
       hasPincodeRestriction={hasPincodeRestriction}
+      currentUserId={session?.userId ?? null}
+      userHasReview={Boolean(userReview)}
     />
   );
 }

@@ -21,6 +21,7 @@ model Product {
   minOrderQuantity   Int?
   maxOrderQuantity   Int?
   returnInDays       Int?
+  reviewsEnabled     Boolean  @default(true) @map("reviews_enabled")
   createdAt          DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

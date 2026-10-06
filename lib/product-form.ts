@@ -34,6 +34,7 @@ export type ParsedProductForm = {
   minOrderQuantity: number | null;
   maxOrderQuantity: number | null;
   returnInDays: number | null;
+  reviewsEnabled: boolean;
   friendlyId: string;
   friendlyIdExplicit: boolean;
   categoryId: number | null;
@@ -104,6 +105,8 @@ export async function parseProductFormData(
   if (returnInDays !== null && typeof returnInDays === 'object') {
     return returnInDays;
   }
+
+  const reviewsEnabled = formData.get('reviewsEnabled') !== 'false';
 
   const friendlyInput = String(formData.get('friendlyId') ?? '').trim();
   const friendlyId = slugify(friendlyInput || name);
@@ -198,6 +201,7 @@ export async function parseProductFormData(
     minOrderQuantity,
     maxOrderQuantity,
     returnInDays,
+    reviewsEnabled,
     friendlyId,
     friendlyIdExplicit: friendlyInput.length > 0,
     categoryId,
@@ -264,6 +268,7 @@ export async function createProductFromForm(parsed: ParsedProductForm) {
       minOrderQuantity: parsed.minOrderQuantity,
       maxOrderQuantity: parsed.maxOrderQuantity,
       returnInDays: parsed.returnInDays,
+      reviewsEnabled: parsed.reviewsEnabled,
       categoryId: parsed.categoryId,
       pincodeTemplateId: parsed.pincodeTemplateId,
       images: { create: parsed.savedImages },
@@ -320,6 +325,7 @@ export async function updateProductFromForm(productId: number, parsed: ParsedPro
         minOrderQuantity: parsed.minOrderQuantity,
         maxOrderQuantity: parsed.maxOrderQuantity,
         returnInDays: parsed.returnInDays,
+        reviewsEnabled: parsed.reviewsEnabled,
         categoryId: parsed.categoryId,
         pincodeTemplateId: parsed.pincodeTemplateId,
       },

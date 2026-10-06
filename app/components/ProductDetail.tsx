@@ -21,6 +21,7 @@ import { DeleteProductButton } from '@/app/components/DeleteProductButton';
 import { toggleWishlist } from '@/app/wishlist/actions';
 import { ProductReportDialog } from '@/app/components/ProductReportDialog';
 import { ProductDiscountPanel } from '@/app/components/ProductDiscountPanel';
+import { ProductReviews } from '@/app/components/ProductReviews';
 import { minAllowedQuantity } from '@/lib/order-quantity';
 
 type ProductImage = {
@@ -46,6 +47,9 @@ type Product = {
   description: string | null;
   images: ProductImage[];
   attributes?: ProductAttribute[];
+  reviewsEnabled?: boolean;
+  avgRating?: number;
+  reviewCount?: number;
 };
 
 function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: string }) {
@@ -141,12 +145,16 @@ export function ProductDetail({
                                 initialWishlisted = false,
                                 isLoggedIn = false,
                                 hasPincodeRestriction = false,
+                                currentUserId = null,
+                                userHasReview = false,
                               }: {
   product: Product;
   related: Product[];
   initialWishlisted?: boolean;
   isLoggedIn?: boolean;
   hasPincodeRestriction?: boolean;
+  currentUserId?: string | null;
+  userHasReview?: boolean;
 }) {
   const router = useRouter();
   const minQuantity = minAllowedQuantity(product);
@@ -344,6 +352,17 @@ export function ProductDetail({
           </div>
         </div>
       </div>
+
+      <ProductReviews
+        productId={product.id}
+        friendlyId={product.friendlyId}
+        isLoggedIn={isLoggedIn}
+        currentUserId={currentUserId}
+        reviewsEnabled={product.reviewsEnabled ?? true}
+        initialAvgRating={product.avgRating ?? 0}
+        initialReviewCount={product.reviewCount ?? 0}
+        userHasReview={userHasReview}
+      />
 
       {/* Related products (real Prisma data) */}
       {related.length > 0 && (

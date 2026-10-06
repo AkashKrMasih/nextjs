@@ -55,6 +55,7 @@ export type ProductFormValues = {
   minOrderQuantity: string;
   maxOrderQuantity: string;
   returnInDays: string;
+  reviewsEnabled: boolean;
   categoryId: string; // '' = no category
   pincodeTemplateId: string;
   customPincodes: string;

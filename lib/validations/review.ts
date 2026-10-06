@@ -1,10 +1,9 @@
 import { z } from "zod";
 
-export const createReviewSchema = z.object({
-  rating: z.number().int().min(1).max(5),
+export const createReviewFieldsSchema = z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().trim().min(1).max(2000),
   title: z.string().max(120).optional(),
-  comment: z.string().max(2000).optional(),
-  images: z.array(z.string().url()).max(5).optional(),
 });
 
 export const updateReviewSchema = z.object({
@@ -16,10 +15,16 @@ export const updateReviewSchema = z.object({
 export const listReviewsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
-  sort: z.enum(["newest", "oldest", "highest", "lowest", "helpful"]).default("newest"),
-  rating: z.coerce.number().int().min(1).max(5).optional(), // filter by star rating
+  sort: z
+    .enum(["newest", "oldest", "highest", "lowest", "helpful"])
+    .default("newest"),
+  rating: z.coerce.number().int().min(1).max(5).optional(),
 });
 
-export type CreateReviewInput = z.infer<typeof createReviewSchema>;
+export const adminReviewStatusSchema = z.object({
+  status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
+});
+
+export type CreateReviewFields = z.infer<typeof createReviewFieldsSchema>;
 export type UpdateReviewInput = z.infer<typeof updateReviewSchema>;
 export type ListReviewsQuery = z.infer<typeof listReviewsQuerySchema>;
