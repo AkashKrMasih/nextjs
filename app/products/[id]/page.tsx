@@ -21,7 +21,8 @@ export default async function ProductPage({
   });
   if (!product) return notFound();
 
-  const [related, initialWishlisted, session, hasPincodeRestriction, userReview] =
+
+  const [related, initialWishlisted, session, hasPincodeRestriction] =
     await Promise.all([
     prisma.product.findMany({
       where: { id: { not: product.id } },
@@ -32,15 +33,29 @@ export default async function ProductPage({
     isProductWishlisted(product.id),
     getSession(),
     productHasPincodeRestriction(product.id),
-    session
-      ? prisma.review.findUnique({
-          where: {
-            productId_userId: { productId: product.id, userId: session.userId },
-          },
-          select: { id: true },
-        })
-      : Promise.resolve(null),
   ]);
+
+  const userReview = session
+    ? await prisma.review.findUnique({
+        where: {
+          productId_userId: { productId: product.id, userId: session.userId },
+        },
+        include: { images: true },
+      })
+    : null;
+
+  const serializedOwnReview = userReview
+    ? {
+        id: userReview.id,
+        rating: userReview.rating,
+        comment: userReview.comment ?? '',
+        isVerifiedPurchase: userReview.isVerifiedPurchase,
+        images: userReview.images.map((image) => ({
+          id: image.id,
+          url: image.url,
+        })),
+      }
+    : null;
 
   // Prisma's Decimal type isn't a plain object, so it can't cross the
   // server -> client boundary as-is. Serialize price to a string here;
@@ -67,7 +82,7 @@ export default async function ProductPage({
       isLoggedIn={Boolean(session)}
       hasPincodeRestriction={hasPincodeRestriction}
       currentUserId={session?.userId ?? null}
-      userHasReview={Boolean(userReview)}
+      ownReview={serializedOwnReview}
     />
   );
 }

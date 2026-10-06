@@ -1,16 +1,33 @@
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public/uploads/reviews");
+const UPLOAD_URL_PREFIX = "/uploads/reviews/";
 export const MAX_REVIEW_IMAGE_BYTES = 2 * 1024 * 1024;
 export const MAX_REVIEW_IMAGES = 2;
 
-export async function saveReviewImages(files: File[]): Promise<string[] | { error: string }> {
+export async function deleteReviewImageFiles(urls: string[]) {
+  for (const url of urls) {
+    if (!url.startsWith(UPLOAD_URL_PREFIX)) continue;
+    const filename = path.basename(url);
+    if (!filename || filename.includes("..")) continue;
+    try {
+      await unlink(path.join(UPLOAD_DIR, filename));
+    } catch {
+      // file may already be gone
+    }
+  }
+}
+
+export async function saveReviewImages(
+  files: File[],
+  maxCount = MAX_REVIEW_IMAGES
+): Promise<string[] | { error: string }> {
   const imageFiles = files.filter((file) => file instanceof File && file.size > 0);
 
-  if (imageFiles.length > MAX_REVIEW_IMAGES) {
-    return { error: `You can upload at most ${MAX_REVIEW_IMAGES} images` };
+  if (imageFiles.length > maxCount) {
+    return { error: `You can upload at most ${maxCount} image${maxCount === 1 ? "" : "s"}` };
   }
 
   await mkdir(UPLOAD_DIR, { recursive: true });

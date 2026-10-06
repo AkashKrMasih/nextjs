@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { recalculateProductRating } from "@/lib/recalculate-product-rating";
+import { deleteReviewImageFiles } from "@/lib/review-images";
 import { revalidatePath } from "next/cache";
 
 export async function updateReviewStatus(
@@ -32,12 +33,17 @@ export async function deleteReview(reviewId: string) {
   if (!session) return { ok: false as const, error: "Unauthorized" };
 
   try {
+    const existing = await prisma.review.findUnique({
+      where: { id: reviewId },
+      include: { images: true },
+    });
+    if (!existing) throw new Error("NOT_FOUND");
+
     await prisma.$transaction(async (tx) => {
-      const existing = await tx.review.findUnique({ where: { id: reviewId } });
-      if (!existing) throw new Error("NOT_FOUND");
       await tx.review.delete({ where: { id: reviewId } });
       await recalculateProductRating(tx, existing.productId);
     });
+    await deleteReviewImageFiles(existing.images.map((image) => image.url));
     revalidatePath("/admin/reviews");
     return { ok: true as const };
   } catch {
