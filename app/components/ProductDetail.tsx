@@ -146,7 +146,7 @@ export function ProductDetail({
                                 isLoggedIn = false,
                                 hasPincodeRestriction = false,
                                 currentUserId = null,
-                                userHasReview = false,
+                                ownReview = null,
                               }: {
   product: Product;
   related: Product[];
@@ -154,7 +154,13 @@ export function ProductDetail({
   isLoggedIn?: boolean;
   hasPincodeRestriction?: boolean;
   currentUserId?: string | null;
-  userHasReview?: boolean;
+  ownReview?: {
+    id: string;
+    rating: number;
+    comment: string;
+    isVerifiedPurchase: boolean;
+    images: { id: string; url: string }[];
+  } | null;
 }) {
   const router = useRouter();
   const minQuantity = minAllowedQuantity(product);
@@ -361,7 +367,7 @@ export function ProductDetail({
         reviewsEnabled={product.reviewsEnabled ?? true}
         initialAvgRating={product.avgRating ?? 0}
         initialReviewCount={product.reviewCount ?? 0}
-        userHasReview={userHasReview}
+        ownReview={ownReview}
       />
 
       {/* Related products (real Prisma data) */}
