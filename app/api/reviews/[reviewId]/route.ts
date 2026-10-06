@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
-import { auth } from "@/lib/auth"; // adjust to your auth solution
+import { auth } from "@/lib/auth";
 import { updateReviewSchema } from "@/lib/validations/review";
+import { recalculateProductRating } from "@/lib/recalculate-product-rating";
 
 // PATCH /api/reviews/[reviewId]
 export async function PATCH(
@@ -10,7 +10,7 @@ export async function PATCH(
   { params }: { params: Promise<{ reviewId: string }> }
 ) {
   const session = await auth();
-  if (!session?.user?.id) {
+  if (!session?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -29,8 +29,8 @@ export async function PATCH(
     return NextResponse.json({ error: "Review not found" }, { status: 404 });
   }
 
-  const isOwner = existing.userId === session.user.id;
-  const isAdmin = session.user.role === "ADMIN";
+  const isOwner = existing.userId === session.userId;
+  const isAdmin = session.role === "ADMIN";
   if (!isOwner && !isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -40,7 +40,6 @@ export async function PATCH(
       where: { id: reviewId },
       data: {
         ...parsed.data,
-        // if a non-admin edits their review, send it back for moderation
         ...(isOwner && !isAdmin ? { status: "PENDING" } : {}),
       },
     });
@@ -57,11 +56,11 @@ export async function PATCH(
 
 // DELETE /api/reviews/[reviewId]
 export async function DELETE(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ reviewId: string }> }
 ) {
   const session = await auth();
-  if (!session?.user?.id) {
+  if (!session?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -71,8 +70,8 @@ export async function DELETE(
     return NextResponse.json({ error: "Review not found" }, { status: 404 });
   }
 
-  const isOwner = existing.userId === session.user.id;
-  const isAdmin = session.user.role === "ADMIN";
+  const isOwner = existing.userId === session.userId;
+  const isAdmin = session.role === "ADMIN";
   if (!isOwner && !isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -83,23 +82,4 @@ export async function DELETE(
   });
 
   return NextResponse.json({ success: true });
-}
-
-async function recalculateProductRating(
-  tx: Prisma.TransactionClient,
-  productId: string
-) {
-  const agg = await tx.review.aggregate({
-    where: { productId, status: "APPROVED" },
-    _avg: { rating: true },
-    _count: true,
-  });
-
-  await tx.product.update({
-    where: { id: productId },
-    data: {
-      avgRating: agg._avg.rating ?? 0,
-      reviewCount: agg._count,
-    },
-  });
 }
