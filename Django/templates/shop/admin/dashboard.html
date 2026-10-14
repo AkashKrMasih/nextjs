@@ -1,0 +1,11 @@
+{% extends "shop/base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<h1>Admin</h1>
+<ul>
+  <li>Products: {{ stats.products }}</li>
+  <li>Users: {{ stats.users }}</li>
+  <li>Orders: {{ stats.orders }}</li>
+</ul>
+<p><a href="/admin/products/">Manage products</a> · <a href="/django-admin/">Django admin</a></p>
+{% endblock %}

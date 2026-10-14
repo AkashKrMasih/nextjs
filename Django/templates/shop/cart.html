@@ -1,0 +1,20 @@
+{% extends "shop/base.html" %}
+{% block title %}Cart{% endblock %}
+{% block content %}
+<h1>Cart</h1>
+<table>
+  <thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.name }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>{{ currency }}{{ item.price }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">Your cart is empty.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p><strong>Total:</strong> {{ currency }}{{ total|floatformat:2 }}</p>
+{% endblock %}
