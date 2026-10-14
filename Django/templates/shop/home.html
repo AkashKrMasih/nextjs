@@ -1,0 +1,37 @@
+{% extends "shop/base.html" %}
+{% block title %}Shop — Home{% endblock %}
+{% block content %}
+<h1>Catalog</h1>
+<form method="get" class="filters">
+  <input type="search" name="q" value="{{ filters.query }}" placeholder="Search" />
+  <input type="number" name="min" value="{{ filters.min_price|default_if_none:'' }}" placeholder="Min price" step="0.01" />
+  <input type="number" name="max" value="{{ filters.max_price|default_if_none:'' }}" placeholder="Max price" step="0.01" />
+  <select name="sort">
+    <option value="newest" {% if filters.sort == "newest" %}selected{% endif %}>Newest</option>
+    <option value="price" {% if filters.sort == "price" %}selected{% endif %}>Price</option>
+    <option value="title" {% if filters.sort == "title" %}selected{% endif %}>Title</option>
+  </select>
+  <button type="submit">Filter</button>
+</form>
+<div class="product-grid">
+  {% for product in products %}
+  <article class="product-card">
+    <a href="/products/{{ product.id }}/">
+      {% if product.imageUrl %}
+        <img src="{{ product.imageUrl }}" alt="" />
+      {% endif %}
+      <h2>{{ product.name }}</h2>
+      <p>{{ currency }}{{ product.price }}</p>
+      <p class="muted">Stock: {{ product.stock }}</p>
+    </a>
+    {% if shop_session %}
+    <a href="/wishlist/toggle/{{ product.id }}/" class="wishlist-link">
+      {% if product.wishlisted %}♥{% else %}♡{% endif %}
+    </a>
+    {% endif %}
+  </article>
+  {% empty %}
+  <p>No products yet. Run <code>python manage.py seed_shop</code>.</p>
+  {% endfor %}
+</div>
+{% endblock %}

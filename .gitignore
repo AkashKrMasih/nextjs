@@ -62,3 +62,6 @@ next-env.d.ts
 /public/uploads/products/**
 /public/uploads/**
 /FastAPI/.venv/**
+/Django/.venv/**
+/Django/**/__pycache__/**
+/Django/db.sqlite3

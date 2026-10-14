@@ -1,0 +1,12 @@
+{% extends "shop/base.html" %}
+{% block title %}Wishlist{% endblock %}
+{% block content %}
+<h1>Wishlist</h1>
+<ul>
+  {% for item in items %}
+  <li><a href="/products/{{ item.product_id }}/">{{ item.product.name }}</a></li>
+  {% empty %}
+  <li>Nothing saved yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
