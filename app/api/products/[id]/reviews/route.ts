@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
-import { auth } from "@/lib/auth"; // adjust to your auth solution (NextAuth `auth()`, Clerk, etc.)
+import { auth } from "@/lib/auth";
 import {
-  createReviewSchema,
+  createReviewFieldsSchema,
   listReviewsQuerySchema,
 } from "@/lib/validations/review";
+import { saveReviewImages } from "@/lib/review-images";
+import { userHasPurchasedProduct } from "@/lib/user-purchased-product";
+import { recalculateProductRating } from "@/lib/recalculate-product-rating";
 
 const SORT_MAP = {
   newest: { createdAt: "desc" as const },
@@ -15,14 +17,32 @@ const SORT_MAP = {
   helpful: { helpfulCount: "desc" as const },
 };
 
-// GET /api/products/[productId]/reviews?page=1&limit=10&sort=newest&rating=5
+function parseProductId(raw: string): number | null {
+  const id = Number(raw);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  return id;
+}
+
+// GET /api/products/[id]/reviews
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ productId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { productId } = await params;
-  const { searchParams } = new URL(req.url);
+  const { id } = await params;
+  const productId = parseProductId(id);
+  if (productId == null) {
+    return NextResponse.json({ error: "Invalid product id" }, { status: 400 });
+  }
 
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { id: true, reviewsEnabled: true },
+  });
+  if (!product) {
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  }
+
+  const { searchParams } = new URL(req.url);
   const parsed = listReviewsQuerySchema.safeParse(
     Object.fromEntries(searchParams)
   );
@@ -40,14 +60,14 @@ export async function GET(
     ...(rating ? { rating } : {}),
   };
 
-  const [reviews, total, ratingBreakdown] = await Promise.all([
+  const [reviews, total, ratingBreakdown, summary] = await Promise.all([
     prisma.review.findMany({
       where,
       orderBy: SORT_MAP[sort],
       skip: (page - 1) * limit,
       take: limit,
       include: {
-        user: { select: { id: true, name: true, image: true } },
+        user: { select: { id: true, name: true } },
         images: true,
       },
     }),
@@ -57,44 +77,81 @@ export async function GET(
       where: { productId, status: "APPROVED" },
       _count: true,
     }),
+    prisma.product.findUnique({
+      where: { id: productId },
+      select: { avgRating: true, reviewCount: true, reviewsEnabled: true },
+    }),
   ]);
 
   return NextResponse.json({
     reviews,
+    reviewsEnabled: summary?.reviewsEnabled ?? true,
+    avgRating: summary?.avgRating ?? 0,
+    reviewCount: summary?.reviewCount ?? 0,
     pagination: {
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit),
     },
-    ratingBreakdown, // e.g. [{ rating: 5, _count: 12 }, { rating: 4, _count: 3 }]
+    ratingBreakdown,
   });
 }
 
-// POST /api/products/[productId]/reviews
+// POST /api/products/[id]/reviews — multipart: rating, comment, title?, images[]
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ productId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
-  if (!session?.user?.id) {
+  if (!session?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { productId } = await params;
-  const body = await req.json();
-  const parsed = createReviewSchema.safeParse(body);
+  const { id } = await params;
+  const productId = parseProductId(id);
+  if (productId == null) {
+    return NextResponse.json({ error: "Invalid product id" }, { status: 400 });
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { id: true, reviewsEnabled: true },
+  });
+  if (!product) {
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  }
+  if (!product.reviewsEnabled) {
+    return NextResponse.json(
+      { error: "Reviews are disabled for this product" },
+      { status: 403 }
+    );
+  }
+
+  const formData = await req.formData();
+  const parsed = createReviewFieldsSchema.safeParse({
+    rating: formData.get("rating"),
+    comment: formData.get("comment"),
+    title: formData.get("title") || undefined,
+  });
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid input", details: parsed.error.flatten() },
       { status: 400 }
     );
   }
-  const { rating, title, comment, images } = parsed.data;
+  const { rating, title, comment } = parsed.data;
 
-  // Prevent duplicate reviews (also enforced by @@unique in schema)
+  const imageFiles = formData.getAll("images").filter(
+    (entry): entry is File => entry instanceof File
+  );
+  const savedImages = await saveReviewImages(imageFiles);
+  if ("error" in savedImages) {
+    return NextResponse.json({ error: savedImages.error }, { status: 400 });
+  }
+
   const existing = await prisma.review.findUnique({
-    where: { productId_userId: { productId, userId: session.user.id } },
+    where: { productId_userId: { productId, userId: session.userId } },
   });
   if (existing) {
     return NextResponse.json(
@@ -103,53 +160,34 @@ export async function POST(
     );
   }
 
-  // Optional: verify purchase before allowing review
-  const hasPurchased = await prisma.orderItem.findFirst({
-    where: {
-      productId,
-      order: { userId: session.user.id, status: "DELIVERED" },
-    },
-  });
+  const isVerifiedPurchase = await userHasPurchasedProduct(
+    session.userId,
+    productId
+  );
 
   const review = await prisma.$transaction(async (tx) => {
     const created = await tx.review.create({
       data: {
         productId,
-        userId: session.user.id,
+        userId: session.userId,
         rating,
         title,
         comment,
-        isVerifiedPurchase: !!hasPurchased,
-        images: images?.length
-                  ? { create: images.map((url) => ({ url })) }
-                  : undefined,
+        status: "APPROVED",
+        isVerifiedPurchase,
+        images: savedImages.length
+          ? { create: savedImages.map((url) => ({ url })) }
+          : undefined,
       },
-      include: { images: true },
+      include: {
+        images: true,
+        user: { select: { id: true, name: true } },
+      },
     });
 
     await recalculateProductRating(tx, productId);
-
     return created;
   });
 
   return NextResponse.json({ review }, { status: 201 });
-}
-
-async function recalculateProductRating(
-  tx: Prisma.TransactionClient,
-  productId: string
-) {
-  const agg = await tx.review.aggregate({
-    where: { productId, status: "APPROVED" },
-    _avg: { rating: true },
-    _count: true,
-  });
-
-  await tx.product.update({
-    where: { id: productId },
-    data: {
-      avgRating: agg._avg.rating ?? 0,
-      reviewCount: agg._count,
-    },
-  });
 }

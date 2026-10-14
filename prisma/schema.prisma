@@ -20,6 +20,8 @@ model Product {
   price              Decimal  @db.Decimal(10, 2) // default price; a variant may override this
   minOrderQuantity   Int?
   maxOrderQuantity   Int?
+  returnInDays       Int?
+  reviewsEnabled     Boolean  @default(true) @map("reviews_enabled")
   createdAt          DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -215,6 +217,21 @@ model User {
   wishlist                Wishlist?
   productReports          ProductReport[]
   supportTickets          SupportTicket[]
+  verifiedEmails          VerifiedEmail[]
+}
+
+model VerifiedEmail {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, email])
+  @@index([userId])
+  @@index([email])
 }
 
 model EmailVerificationToken {

@@ -16,6 +16,18 @@ export function parseOrderQuantityField(
   return value;
 }
 
+export function parseReturnInDaysField(
+  raw: FormDataEntryValue | null
+): number | null | { error: string } {
+  const trimmed = String(raw ?? '').trim();
+  if (!trimmed) return null;
+  const value = Number(trimmed);
+  if (!Number.isInteger(value) || value < 1) {
+    return { error: 'Return window must be a whole number of days of at least 1.' };
+  }
+  return value;
+}
+
 export function validateOrderQuantityLimits(
   minOrderQuantity: number | null,
   maxOrderQuantity: number | null

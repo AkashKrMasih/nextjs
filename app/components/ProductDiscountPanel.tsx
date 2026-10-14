@@ -15,6 +15,8 @@ type PreviewResult = {
   lines: { productId: number; unitPriceCents: number; originalUnitPriceCents: number }[];
 };
 
+const OFFERS_INITIAL_LIMIT = 5;
+
 export function ProductDiscountPanel({
   productId,
   basePrice,
@@ -26,10 +28,15 @@ export function ProductDiscountPanel({
 }) {
   const [offers, setOffers] = useState<ProductDiscountOffer[]>([]);
   const [offersLoading, setOffersLoading] = useState(true);
+  const [showAllOffers, setShowAllOffers] = useState(false);
   const [codeInput, setCodeInput] = useState('');
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [error, setError] = useState('');
   const [applying, setApplying] = useState(false);
+
+  useEffect(() => {
+    setShowAllOffers(false);
+  }, [productId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +106,10 @@ export function ProductDiscountPanel({
   }
 
   const previewLine = preview?.lines.find((line) => line.productId === productId);
+  const visibleOffers = showAllOffers
+    ? offers
+    : offers.slice(0, OFFERS_INITIAL_LIMIT);
+  const hasMoreOffers = offers.length > OFFERS_INITIAL_LIMIT;
 
   return (
     <div className="space-y-3 rounded-lg border border-stone-200 bg-stone-50/80 p-4">
@@ -112,27 +123,38 @@ export function ProductDiscountPanel({
       {offersLoading ? (
         <p className="text-xs text-stone-500">Loading offers…</p>
       ) : offers.length > 0 ? (
-        <ul className="flex flex-wrap gap-2">
-          {offers.map((offer) => (
-            <li key={offer.code}>
-              <button
-                type="button"
-                onClick={() => applyCode(offer.code)}
-                disabled={applying}
-                className="rounded-full border border-green-800/30 bg-white px-3 py-1 text-xs font-medium text-green-800 hover:bg-green-50 disabled:opacity-50"
-              >
-                <span className="font-mono">{offer.code}</span>
-                <span className="text-stone-500">
-                  {' '}
-                  · {formatDiscountOfferLabel(offer, (value) => formatPrice(value))}
-                </span>
-                {offer.scope === 'product' ? (
-                  <span className="text-stone-400"> · this item</span>
-                ) : null}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="space-y-2">
+          <ul className="flex flex-wrap gap-2">
+            {visibleOffers.map((offer) => (
+              <li key={offer.code}>
+                <button
+                  type="button"
+                  onClick={() => applyCode(offer.code)}
+                  disabled={applying}
+                  className="rounded-full border border-green-800/30 bg-white px-3 py-1 text-xs font-medium text-green-800 hover:bg-green-50 disabled:opacity-50"
+                >
+                  <span className="font-mono">{offer.code}</span>
+                  <span className="text-stone-500">
+                    {' '}
+                    · {formatDiscountOfferLabel(offer, (value) => formatPrice(value))}
+                  </span>
+                  {offer.scope === 'product' ? (
+                    <span className="text-stone-400"> · this item</span>
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {hasMoreOffers && !showAllOffers ? (
+            <button
+              type="button"
+              onClick={() => setShowAllOffers(true)}
+              className="text-xs font-medium text-green-800 hover:underline"
+            >
+              Show all
+            </button>
+          ) : null}
+        </div>
       ) : (
         <p className="text-xs text-stone-500">No public offers for this product right now.</p>
       )}

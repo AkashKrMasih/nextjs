@@ -21,6 +21,7 @@ import { DeleteProductButton } from '@/app/components/DeleteProductButton';
 import { toggleWishlist } from '@/app/wishlist/actions';
 import { ProductReportDialog } from '@/app/components/ProductReportDialog';
 import { ProductDiscountPanel } from '@/app/components/ProductDiscountPanel';
+import { ProductReviews } from '@/app/components/ProductReviews';
 import { minAllowedQuantity } from '@/lib/order-quantity';
 
 type ProductImage = {
@@ -41,10 +42,14 @@ type Product = {
   price: number | string;
   minOrderQuantity: number | null;
   maxOrderQuantity: number | null;
+  returnInDays: number | null;
   stock: number;
   description: string | null;
   images: ProductImage[];
   attributes?: ProductAttribute[];
+  reviewsEnabled?: boolean;
+  avgRating?: number;
+  reviewCount?: number;
 };
 
 function ProductImageCarousel({ images, name }: { images: ProductImage[]; name: string }) {
@@ -140,12 +145,22 @@ export function ProductDetail({
                                 initialWishlisted = false,
                                 isLoggedIn = false,
                                 hasPincodeRestriction = false,
+                                currentUserId = null,
+                                ownReview = null,
                               }: {
   product: Product;
   related: Product[];
   initialWishlisted?: boolean;
   isLoggedIn?: boolean;
   hasPincodeRestriction?: boolean;
+  currentUserId?: string | null;
+  ownReview?: {
+    id: string;
+    rating: number;
+    comment: string;
+    isVerifiedPurchase: boolean;
+    images: { id: string; url: string }[];
+  } | null;
 }) {
   const router = useRouter();
   const minQuantity = minAllowedQuantity(product);
@@ -154,6 +169,20 @@ export function ProductDetail({
   const [wishlisted, setWishlisted] = useState(initialWishlisted);
   const [isWishlistPending, startWishlistTransition] = useTransition();
   const inStock = product.stock > 0;
+
+  const trustBadges = [
+    { icon: Truck, label: 'Free delivery', sub: '2–4 days' },
+    { icon: ShieldCheck, label: 'Secure checkout', sub: 'Encrypted' },
+    ...(product.returnInDays != null
+      ? [
+          {
+            icon: RotateCcw,
+            label: 'Easy returns',
+            sub: `${product.returnInDays} ${product.returnInDays === 1 ? 'day' : 'days'}`,
+          },
+        ]
+      : []),
+  ];
 
   function handleShare() {
     if (typeof navigator !== 'undefined' && navigator.share) {
@@ -313,12 +342,13 @@ export function ProductDetail({
           </div>
 
           {/* Trust badges */}
-          <div className="grid grid-cols-3 gap-2 pt-4">
-            {[
-              { icon: Truck, label: 'Free delivery', sub: '2–4 days' },
-              { icon: ShieldCheck, label: 'Secure checkout', sub: 'Encrypted' },
-              { icon: RotateCcw, label: 'Easy returns', sub: '30 days' },
-            ].map(({ icon: Icon, label, sub }) => (
+          <div
+            className={[
+              'grid gap-2 pt-4',
+              trustBadges.length === 2 ? 'grid-cols-2' : 'grid-cols-3',
+            ].join(' ')}
+          >
+            {trustBadges.map(({ icon: Icon, label, sub }) => (
               <div key={label} className="flex flex-col items-center gap-1 rounded-2xl bg-stone-100/60 p-3 text-center">
                 <Icon className="size-5 text-green-800" />
                 <p className="text-xs font-medium leading-tight text-stone-900">{label}</p>
@@ -328,6 +358,17 @@ export function ProductDetail({
           </div>
         </div>
       </div>
+
+      <ProductReviews
+        productId={product.id}
+        friendlyId={product.friendlyId}
+        isLoggedIn={isLoggedIn}
+        currentUserId={currentUserId}
+        reviewsEnabled={product.reviewsEnabled ?? true}
+        initialAvgRating={product.avgRating ?? 0}
+        initialReviewCount={product.reviewCount ?? 0}
+        ownReview={ownReview}
+      />
 
       {/* Related products (real Prisma data) */}
       {related.length > 0 && (

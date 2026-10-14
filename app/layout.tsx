@@ -1,7 +1,9 @@
 import type {Metadata} from "next";
 import {Geist, Geist_Mono} from "next/font/google";
 import {SiteHeader} from "./components/SiteHeader";
+import {SiteFooter} from "./components/SiteFooter";
 import {ConditionalSiteHeader} from "./components/ConditionalSiteHeader";
+import {ConditionalSiteFooter} from "./components/ConditionalSiteFooter";
 import {ConditionalBody} from "./components/ConditionalBody";
 import "./globals.css";
 
@@ -28,7 +30,8 @@ export default function RootLayout({children}: LayoutProps<"/">) {
     >
     <ConditionalBody>
       <ConditionalSiteHeader siteHeader={<SiteHeader/>}/>
-      {children}
+      <main className="flex-1">{children}</main>
+      <ConditionalSiteFooter siteFooter={<SiteFooter/>}/>
     </ConditionalBody>
     </html>
   );

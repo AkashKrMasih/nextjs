@@ -54,6 +54,8 @@ function emptyValues(): ProductFormValues {
     price:           '',
     minOrderQuantity: '',
     maxOrderQuantity: '',
+    returnInDays:    '',
+    reviewsEnabled:  true,
     categoryId:      '',
     pincodeTemplateId: '',
     customPincodes: '',
@@ -251,6 +253,8 @@ export function ProductForm({
     formData.set('price', values.price);
     formData.set('minOrderQuantity', values.minOrderQuantity);
     formData.set('maxOrderQuantity', values.maxOrderQuantity);
+    formData.set('returnInDays', values.returnInDays);
+    formData.set('reviewsEnabled', values.reviewsEnabled ? 'true' : 'false');
     formData.set('categoryId', values.categoryId);
     formData.set('pincodeTemplateId', values.pincodeTemplateId);
     formData.set('customPincodes', values.customPincodes);
@@ -387,7 +391,31 @@ export function ProductForm({
                   onChange={(e) => update('maxOrderQuantity', e.target.value)}
                 />
               </div>
+              <div>
+                <label htmlFor="returnInDays" className="block text-sm font-medium text-stone-700">
+                  Return window (days)
+                </label>
+                <input
+                  id="returnInDays"
+                  className="mt-1 w-full rounded border border-stone-300 bg-white p-2"
+                  placeholder="Optional"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={values.returnInDays}
+                  onChange={(e) => update('returnInDays', e.target.value)}
+                />
+              </div>
             </div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-700">
+              <input
+                type="checkbox"
+                checked={values.reviewsEnabled}
+                onChange={(e) => update('reviewsEnabled', e.target.checked)}
+                className="size-4 rounded border-stone-300"
+              />
+              Allow customer reviews on this product
+            </label>
             <p className="text-sm text-stone-500">
               Optional per-product limits enforced when customers add items to the cart and at checkout.
             </p>

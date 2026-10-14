@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import nodemailer from 'nodemailer';
 import { render } from '@react-email/render';
 import { prisma } from '@/lib/prisma';
+import { upsertVerifiedEmail } from '@/lib/verified-email';
 import { VerifyEmail } from '@/emails/verify-email';
 import { ResetPasswordEmail } from '@/emails/reset-password';
 
@@ -31,12 +32,7 @@ async function appOrigin() {
   return `${proto}://${host}`;
 }
 
-export async function sendVerificationEmail(userId: string, email: string) {
-  const missing = missingEmailCredentials();
-  if (missing.length > 0) {
-    return { error: `Email is not configured. Set ${missing.join(' and ')} in .env.` };
-  }
-
+export async function issueEmailVerificationToken(userId: string) {
   const token = randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
 
@@ -46,6 +42,19 @@ export async function sendVerificationEmail(userId: string, email: string) {
   });
 
   const verifyUrl = `${await appOrigin()}/verify-email?token=${token}`;
+  console.log('[email verification token]', { userId, token, verifyUrl });
+
+  return { token, verifyUrl };
+}
+
+export async function sendVerificationEmail(userId: string, email: string) {
+  const { verifyUrl } = await issueEmailVerificationToken(userId);
+
+  const missing = missingEmailCredentials();
+  if (missing.length > 0) {
+    return { error: `Email is not configured. Set ${missing.join(' and ')} in .env.` };
+  }
+
   try {
     await sendMail(email, 'Verify your email', await render(VerifyEmail({ verifyUrl })));
   } catch (error) {
@@ -53,6 +62,32 @@ export async function sendVerificationEmail(userId: string, email: string) {
     return { error: 'Could not send the verification email. Try again.' };
   }
   return { ok: true as const };
+}
+
+/** Resend flow: always issues a token (logged to the server console) and sends email when SMTP is configured. */
+export async function resendVerificationEmail(userId: string, email: string) {
+  const { verifyUrl } = await issueEmailVerificationToken(userId);
+
+  const missing = missingEmailCredentials();
+  if (missing.length > 0) {
+    return {
+      ok: true as const,
+      message: 'A new verification link was generated. Check the server console for the token.',
+    };
+  }
+
+  try {
+    await sendMail(email, 'Verify your email', await render(VerifyEmail({ verifyUrl })));
+  } catch (error) {
+    console.error('Verification email failed:', error);
+    return {
+      ok: true as const,
+      message:
+        'A new verification link was generated (see server console). Email delivery failed — try again later.',
+    };
+  }
+
+  return { ok: true as const, message: 'Verification email sent. Check your inbox.' };
 }
 
 async function sendMail(to: string, subject: string, html: string) {
@@ -119,10 +154,19 @@ export async function consumeVerificationToken(token: string | undefined) {
     return { error: 'This verification link is invalid or has expired.' };
   }
 
-  await prisma.$transaction([
-    prisma.user.update({ where: { id: record.userId }, data: { emailVerified: true } }),
-    prisma.emailVerificationToken.deleteMany({ where: { userId: record.userId } }),
-  ]);
+  const user = await prisma.user.findUnique({
+    where: { id: record.userId },
+    select: { email: true },
+  });
+  if (!user) {
+    return { error: 'This verification link is invalid.' };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: record.userId }, data: { emailVerified: true } });
+    await upsertVerifiedEmail(record.userId, user.email, true, tx);
+    await tx.emailVerificationToken.deleteMany({ where: { userId: record.userId } });
+  });
 
   return { ok: true as const };
 }

@@ -3,6 +3,7 @@
 import bcrypt from 'bcryptjs'
 import {prisma} from '@/lib/prisma'
 import {getSession, destroySession} from '@/lib/session'
+import { upsertVerifiedEmail } from '@/lib/verified-email'
 
 export async function auth() {
   const session = await getSession()
@@ -35,15 +36,21 @@ export async function createUser(
 ) {
   const hashed = await hashPassword(plainPassword)
 
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name: options?.name ?? null,
-      role: options?.role ?? 'CUSTOMER',
-      emailVerified: options?.emailVerified ?? true,
-      password: hashed.password,
-      password_salt: hashed.password_salt,
-    },
+  const emailVerified = options?.emailVerified ?? true
+
+  const user = await prisma.$transaction(async (tx) => {
+    const created = await tx.user.create({
+      data: {
+        email,
+        name: options?.name ?? null,
+        role: options?.role ?? 'CUSTOMER',
+        emailVerified,
+        password: hashed.password,
+        password_salt: hashed.password_salt,
+      },
+    })
+    await upsertVerifiedEmail(created.id, created.email, emailVerified, tx)
+    return created
   })
 
   return user
